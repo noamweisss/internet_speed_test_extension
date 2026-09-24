@@ -191,13 +191,20 @@ public sealed class SpeedMeasurer
                     throw new SpeedTestException("The speed test server sent an unexpected response.");
                 }
 
-                // Each response is bounded by the bytes we asked for; anything past that is not read or counted.
+                // Each response is bounded by the bytes we asked for: every read is capped at the remainder, so
+                // a length-unknown response can never be read or counted past DownloadRequestBytes.
                 using var stream = await response.Content.ReadAsStreamAsync(phaseToken).ConfigureAwait(false);
                 long received = 0;
                 int read;
-                while (received < _options.DownloadRequestBytes
-                    && (read = await stream.ReadAsync(buffer, phaseToken).ConfigureAwait(false)) > 0)
+                while (received < _options.DownloadRequestBytes)
                 {
+                    var want = (int)Math.Min(buffer.Length, _options.DownloadRequestBytes - received);
+                    read = await stream.ReadAsync(buffer.AsMemory(0, want), phaseToken).ConfigureAwait(false);
+                    if (read <= 0)
+                    {
+                        break;
+                    }
+
                     received += read;
                     count(read);
                 }

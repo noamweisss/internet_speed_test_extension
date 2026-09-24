@@ -16,6 +16,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 - Extension: meter dashboard view, detailed results view with copyable rows, `Ctrl+L` to switch, `Ctrl+R` to rerun,
   and a "Default view" setting.
 - CI on GitHub Actions: rules check, Core tests on Linux, extension build on Windows (warning-free for project code).
+- Review round 2 follow-up (Codex): each download read is capped at the remaining requested bytes, so a
+  length-unknown response can never be counted past the request; the test asserts the exact bytes read.
 - Review round 2 (Codex via the owner, 6 findings): `/meta` body read has its own deadline (`MetaTimeout`);
   download responses are bounded by the requested byte count and an oversized `Content-Length` is rejected;
   R10/R12 inspect the staged manifest and sources, not the working tree; a failed run is retried when a view is

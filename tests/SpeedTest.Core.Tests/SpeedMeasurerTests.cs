@@ -129,10 +129,11 @@ public sealed class SpeedMeasurerTests
 
         var result = await measurer.MeasureAsync(null, CancellationToken.None);
 
-        // With 4096-byte requests and 60 ms, an unbounded read of 1 MB extra per response would dominate; the bound keeps
-        // the measurement finishing normally and the phase must have issued more than one request.
+        // No length-unknown response was read past the requested 4096 bytes (the response in flight when the phase
+        // timer fires may have been read partially or not at all), and full responses stopped exactly at 4096.
         Assert.Equal(SpeedTestPhase.Complete, result.Phase);
-        Assert.True(handler.Requests.Count(u => u.Query == "?bytes=4096") > 1);
+        Assert.Contains(4096L, handler.BytesReadPerLengthUnknownResponse);
+        Assert.All(handler.BytesReadPerLengthUnknownResponse, bytes => Assert.InRange(bytes, 0, 4096));
     }
 
     [Fact]

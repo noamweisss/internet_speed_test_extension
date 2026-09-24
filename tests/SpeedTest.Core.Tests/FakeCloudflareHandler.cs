@@ -36,6 +36,9 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
     /// <summary>When set, download responses omit Content-Length (chunked-style), so only the read loop can bound them.</summary>
     public bool DownloadWithoutContentLength { get; set; }
 
+    /// <summary>Bytes the measurer actually read from each length-unknown download body, in order.</summary>
+    public List<long> BytesReadPerLengthUnknownResponse { get; } = new();
+
     public double ServerDurationMs { get; set; }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -71,7 +74,7 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         HttpContent body = ResetDuringDownload && bytes > 0
             ? new StreamContent(new ResettingStream())
             : DownloadWithoutContentLength && bytes > 0
-                ? new StreamContent(new NonSeekableStream(payload))
+                ? new StreamContent(new NonSeekableStream(payload, this))
                 : new ByteArrayContent(payload);
         var response = new HttpResponseMessage(DownloadStatus) { Content = body };
         response.Headers.Add("cf-meta-ip", "198.51.100.9");
@@ -118,10 +121,11 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 
-    /// <summary>A readable body with unknown length, so StreamContent cannot set Content-Length.</summary>
-    private sealed class NonSeekableStream(byte[] data) : Stream
+    /// <summary>A readable body with unknown length, so StreamContent cannot set Content-Length. Reports bytes read on dispose.</summary>
+    private sealed class NonSeekableStream(byte[] data, FakeCloudflareHandler owner) : Stream
     {
         private int _position;
+        private bool _reported;
 
         public override bool CanRead => true;
 
@@ -150,6 +154,20 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         public override void SetLength(long value) => throw new NotSupportedException();
 
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (!_reported)
+            {
+                _reported = true;
+                lock (owner.BytesReadPerLengthUnknownResponse)
+                {
+                    owner.BytesReadPerLengthUnknownResponse.Add(_position);
+                }
+            }
+
+            base.Dispose(disposing);
+        }
     }
 
     /// <summary>A body whose first read fails like a dropped connection.</summary>
