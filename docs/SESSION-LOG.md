@@ -51,6 +51,13 @@ verified, blocked, next.
   curl earlier in the session (bare `city`/`colo`); the code now reads both. The tests previously mirrored the
   code's assumption, so they could not catch it: a reminder that fakes encode beliefs.
 
+**Operating notes for reviewers and CI (learned in this session)**
+- CodeRabbit does not review automatically on repositories with fewer than 10 stars: after every push, post
+  `@coderabbitai review` as a PR comment. The free tier also rate-limits reviews (about one per half hour);
+  a rate-limited trigger must be repeated later. Reply on each thread before pushing so it can verify the commit.
+- GitHub's "automatic dependency submission" (enabled by the owner under Security) runs `dotnet restore` on
+  Linux. The extension project sets `EnableWindowsTargeting` so that restore succeeds off Windows.
+
 **Pull request**
 - [noamweisss/internet_speed_test_extension#1](https://github.com/noamweisss/internet_speed_test_extension/pull/1),
   opened at the owner's request at the end of session 1. Its "Safety impact" section explains the guard layer.
