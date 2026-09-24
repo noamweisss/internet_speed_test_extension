@@ -13,6 +13,8 @@ verified, blocked, next.
 - Extension: `SpeedTestCommandsProvider`, `SettingsManager`, `SpeedTestSession`, `ViewCommands`, `MeterPage`,
   `DetailsPage`. Template types renamed per ADR-0005; `Program.cs` updated once (trailer `Protected-Change`).
 - CI workflow `.github/workflows/ci.yml` (rules, Core tests on Linux, extension build on Windows).
+- Safety layer for a non-developer owner: `docs/SAFETY-CONTRACT.md`, `scripts/safety-impact.sh` (R13, runs on
+  PRs), R12 capability check, `.github/workflows/codeql.yml`, `.github/dependabot.yml`, `.coderabbit.yaml`.
 
 **Verified**
 - Hook scripts self-tested with sample inputs (blocked and allowed cases). Claude hooks confirmed live in-session.
@@ -41,4 +43,6 @@ verified, blocked, next.
   Microsoft download hosts. Ookla hosts are not allowlisted (Option A chosen, ADR-0002).
 
 **Next**
-- Items 1.3–1.7 in `docs/PLAN.md`.
+- Session 2 in `docs/PLAN.md`. Item 2.0 is the owner's: enable scanners, install CodeRabbit, open the PR.
+- The safety-impact CI job has only been tested locally (`scripts/safety-impact.sh` with a fake PR body); its
+  first real run is on the first PR. CodeQL ran on push; check the Security tab for findings.

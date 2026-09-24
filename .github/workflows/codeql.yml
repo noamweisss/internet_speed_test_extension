@@ -1,0 +1,27 @@
+# CodeQL static analysis for C#. Findings appear under the Security tab and on pull requests.
+# build-mode none: analyses source without compiling, so it runs on Linux despite the Windows-only extension.
+name: CodeQL
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: CodeQL (C#)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v3

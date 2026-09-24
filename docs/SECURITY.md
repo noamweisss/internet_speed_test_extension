@@ -35,6 +35,8 @@ Git hooks, `.githooks/` (any git user, installed by `scripts/setup.sh`):
 | R9 | Guard-file changes carry a `Guard-Change:` trailer (commit-msg hook). |
 | R10 | The COM CLSID is identical in the manifest and the extension class. |
 | R11 | Changes to `Program.cs` carry a `Protected-Change:` trailer (commit-msg hook). |
+| R12 | Manifest capabilities are exactly `internetClient` and `runFullTrust`. |
+| R13 | A PR touching a safety-sensitive file declares its impact in the PR body (`scripts/safety-impact.sh`, CI on PRs). |
 | C1 | Conventional Commits first line. |
 | P1 | No pushes to `main`. |
 | P2 | No non-fast-forward pushes. |
@@ -58,6 +60,12 @@ Claude Code hooks, `.claude/settings.json` (main agent and subagents):
 
 What the hooks cannot do: they do not stop a determined human with shell access, and they are not a substitute for
 review. They exist to make accidental or careless violations impossible and deliberate ones visible.
+
+## Scanners
+
+`.github/dependabot.yml` (dependency alerts and update PRs), `.github/workflows/codeql.yml` (CodeQL for C#),
+GitHub secret scanning (on by default for public repositories), `.coderabbit.yaml` (review bot instructions).
+The owner-facing summary of all of this is `docs/SAFETY-CONTRACT.md`.
 
 ## Reporting
 

@@ -76,4 +76,10 @@ if [ -f internet_speed_test_extension/Package.appxmanifest ]; then
   [ "$IDS" != "1" ] && fail R10 "CLSID mismatch between Package.appxmanifest and the extension class"
 fi
 
+# R12: the manifest asks for exactly the two capabilities the template needs (docs/SAFETY-CONTRACT.md §1).
+if [ -f internet_speed_test_extension/Package.appxmanifest ]; then
+  CAPS="$(grep -oE 'Capability Name="[^"]+"' internet_speed_test_extension/Package.appxmanifest | sed 's/.*="//; s/"//' | sort | tr '\n' ' ')"
+  [ "$CAPS" != "internetClient runFullTrust " ] && fail R12 "manifest capabilities are '$CAPS', expected exactly 'internetClient runFullTrust'"
+fi
+
 exit $FAIL

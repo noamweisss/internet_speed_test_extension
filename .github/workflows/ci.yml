@@ -43,3 +43,15 @@ jobs:
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
           DOTNET_NOLOGO: 1
+
+  safety-impact:
+    name: Safety impact declared (docs/SAFETY-CONTRACT.md)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: bash scripts/safety-impact.sh "origin/${{ github.base_ref }}" HEAD
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}

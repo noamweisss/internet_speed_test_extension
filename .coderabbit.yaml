@@ -1,0 +1,24 @@
+# CodeRabbit configuration. Security first, then correctness, then style.
+# Reviewers must answer the five questions in docs/SAFETY-CONTRACT.md §3 on every PR.
+language: en-US
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  path_instructions:
+    - path: "**/*.cs"
+      instructions: |
+        Read docs/SAFETY-CONTRACT.md and docs/SECURITY.md first. In your summary, answer these five questions
+        explicitly with Yes/No and a location:
+        1. Can the code reach any host other than speed.cloudflare.com?
+        2. Does it read, write, or delete files, registry keys, or processes?
+        3. Does it store, log, or send anything about the user (IP, ISP, location, results)?
+        4. Does it add a dependency, a Windows capability, or weaken a guard?
+        5. Is any network input used without bounds on size, time, or format?
+        Treat any "Yes" without a linked ADR in docs/decisions/ as a blocking finding.
+        Then review for correctness. Style nits are welcome but label them as such.
+    - path: "{scripts,.githooks,.claude,.github}/**"
+      instructions: |
+        These are the project's guards. Any change that makes a rule weaker, adds a bypass, or removes a check
+        is a blocking finding unless the PR body's "Safety impact" section justifies it.

@@ -27,9 +27,13 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
   an ADR, and a `docs/SECURITY.md` update.
 - No process spawning, native interop, `unsafe`, reflection loading, plain `http://`, or TLS validation overrides.
 - Before a session ends, `docs/SESSION-LOG.md` gets a hand-off entry if anything changed.
+- A PR that touches a safety-sensitive file (`docs/SAFETY-CONTRACT.md` §2) must explain, in plain language, what
+  the extension can now do that it could not before, under "Safety impact" in the PR body (R13).
 
 ## 3. Non-negotiables (judgement, reviewed by humans and audit agents)
 
+- `docs/SAFETY-CONTRACT.md` is the owner's promise list. Never make it false. Reviewing agents answer its five
+  questions on every PR; building agents answer them in the PR body when any is "Yes".
 - Less code is better. Prefer deleting over adding. No speculative abstractions, no "might need later".
 - Meaningful names for everything: branches, files, types, variables, commits, PRs. No generated or placeholder
   names. If a name needs a comment to explain it, pick a better name.
