@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "internet_speed_test_extension (Package)": {
+      "commandName": "MsixPackage",
+      "doNotLaunchApp": true
+    },
+    "internet_speed_test_extension (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
