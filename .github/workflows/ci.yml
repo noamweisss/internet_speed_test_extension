@@ -77,9 +77,9 @@ jobs:
         run: |
           reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1
           ./install-package/Install-SpeedTestExtension.ps1
-          if (-not (Get-AppxPackage -Name internet_speed_test_extension)) { throw 'package not registered' }
+          if (-not (Get-AppxPackage -Name InternetSpeedTestExtension)) { throw 'package not registered' }
           ./install-package/Install-SpeedTestExtension.ps1 -Uninstall
-          if (Get-AppxPackage -Name internet_speed_test_extension) { throw 'package still registered' }
+          if (Get-AppxPackage -Name InternetSpeedTestExtension) { throw 'package still registered' }
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: internet-speed-test-extension-x64

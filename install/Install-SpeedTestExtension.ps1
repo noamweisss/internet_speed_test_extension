@@ -8,7 +8,7 @@
 
     What it changes on your PC, and nothing else:
     - the folder %LOCALAPPDATA%\InternetSpeedTestExtension (the extension's files), and
-    - the app registration of the package "internet_speed_test_extension" for your Windows user.
+    - the app registration of the package "InternetSpeedTestExtension" for your Windows user.
 
 .PARAMETER Uninstall
     Remove the extension and its folder instead of installing it.
@@ -20,7 +20,7 @@
 param([switch]$Uninstall)
 
 $ErrorActionPreference = 'Stop'
-$PackageName = 'internet_speed_test_extension'  # Identity Name in Package.appxmanifest
+$PackageName = 'InternetSpeedTestExtension'  # Identity Name in Package.appxmanifest
 $InstallDir = Join-Path $env:LOCALAPPDATA 'InternetSpeedTestExtension'
 
 if (-not $Uninstall) {

@@ -10,6 +10,10 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   `install/Install-SpeedTestExtension.ps1` as the `internet-speed-test-extension-x64` artifact, and proves on a
   clean Windows runner that the script installs and removes it (`docs/INSTALL.md`, ADR-0008).
 
+### Fixed
+- The MSIX package identity is now `InternetSpeedTestExtension`: the template name with underscores is invalid for
+  a Windows package, so no package could be built (ADR-0009).
+
 ### Changed
 - The extension project restores on Linux/macOS (`EnableWindowsTargeting`), so GitHub's automatic dependency
   submission and agents in containers can run `dotnet restore`; building still needs Windows.
