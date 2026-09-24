@@ -15,19 +15,27 @@ verified, blocked, next.
 - `install/` is safety-sensitive: added to R13 (`scripts/safety-impact.sh`), SAFETY-CONTRACT §2, CodeRabbit guard
   paths; R4 now scans `.ps1`.
 
+- Real bug found by the first package build: MSIX rejects underscores in `Identity Name` (C00CE169), so no
+  package could ever have been built, not even by Visual Studio. Identity is now `InternetSpeedTestExtension`
+  (ADR-0009); project, assembly, exe name, and CLSID unchanged.
+
 **Owner facts**
 - Windows 11 Pro: Windows Sandbox is available, so INSTALL.md path A (Sandbox) applies.
 
 **Verified**
-- `scripts/check.sh all` passes locally. Workflow YAML parses.
+- `scripts/check.sh all` passes locally.
+- CI run 36041156689 on commit 305f2cf: all jobs green. On the Windows runner the script installed the package,
+  `Get-AppxPackage` found it, and `-Uninstall` removed it. Artifact `internet-speed-test-extension-x64`: 14 MB zip,
+  two files (MSIX + script), expires 2026-12-23.
 
 **Not verified**
-- First CI run of the packaging and install-test steps was in progress at the time of this entry.
+- The extension has still never run inside Command Palette (the runner has no PowerToys). The Release build is
+  trimmed ("Optimizing assemblies for size" in the log); a trimming problem would only show at runtime.
 - Whether a folder-registered package keeps loading after Developer Mode is switched off (INSTALL.md says it may not).
 - Whether PowerToys Command Palette runs inside Windows Sandbox.
 
 **Next**
-- CI green on this branch, then the owner follows `docs/INSTALL.md` (Sandbox) and the `docs/TESTING.md` checklist
+- The owner can test now from the artifact of the latest green run on this branch, following `docs/INSTALL.md` (Sandbox) and the `docs/TESTING.md` checklist
   (item 2.2). Then 2.3 fixes, 2.4 release.
 
 ## Session 1 — 2026-09-24 — branch `feat/speedtest-core-and-ui`
