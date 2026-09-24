@@ -20,9 +20,9 @@ verified, blocked, next.
 - Toolkit API signatures taken from the NuGet package (Microsoft.CommandPalette.Extensions 0.9.260303001) via
   reflection, not from memory; sample pages from microsoft/PowerToys read for usage patterns.
 
+- CI run 1 on commit a02a46d: all three jobs green (rules, Core tests on Linux, extension build on Windows x64).
+
 **Not verified**
-- The extension project has not been compiled by a human-controlled machine; CI on Windows is the compiler.
-  See the CI status of the latest commit on this branch.
 - Nothing has run inside Command Palette. Unknowns to confirm in session 2: whether `MarkdownContent.Body`
   updates re-render live, whether `RaiseItemsChanged` on a `ContentPage` is needed/allowed, whether shortcut
   key chords fire on `ListItem.MoreCommands`, and whether `GetContent`/`GetItems` are only called on navigation

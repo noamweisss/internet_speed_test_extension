@@ -12,8 +12,8 @@ Status: `todo` · `doing` · `done` · `verified` (done and confirmed on a real 
 | 1.3 | `src/SpeedTest.Core`: result model, Cloudflare measurer, formatting, text meter | done |
 | 1.4 | `tests/SpeedTest.Core.Tests`: unit tests with faked network, passing locally | done |
 | 1.5 | Extension UI: settings (default view), MeterPage, DetailsPage, shared session, shortcuts | done |
-| 1.6 | CI on Windows: build extension, run tests, `check.sh all`; green on the feature branch | doing |
-| 1.7 | Hand-off: SESSION-LOG, CHANGELOG, PR opened | todo |
+| 1.6 | CI on Windows: build extension, run tests, `check.sh all`; green on the feature branch | done |
+| 1.7 | Hand-off: SESSION-LOG, CHANGELOG written; PR opened when the owner asks | done |
 
 Expected state at the end of session 1: the code compiles in CI and Core is unit-tested, but nothing has run inside
 Command Palette on a real PC yet. Treat the UI as unverified.
