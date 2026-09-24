@@ -21,6 +21,10 @@ verified, blocked, next.
 
 **Owner facts**
 - Windows 11 Pro: Windows Sandbox is available, so INSTALL.md path A (Sandbox) applies.
+- Sandbox attempt failed twice: Sandbox terminated with 0x80370106 ("virtual machine or container exited
+  unexpectedly") while the PowerToys installer hung and Task Manager was opened. Cause unknown. The owner is
+  setting up a persistent Hyper-V test VM (INSTALL.md path 2) with a checkpoint and a log-collection script,
+  driven by a local Claude session on the laptop. Nothing of the extension was installed yet.
 
 **Verified**
 - `scripts/check.sh all` passes locally.
