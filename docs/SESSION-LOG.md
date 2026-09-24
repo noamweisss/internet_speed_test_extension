@@ -4,6 +4,32 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 2 — 2026-09-24 — branch `feat/install-without-visual-studio`
+
+**Done**
+- Harness branch `claude/determined-curie-7om0u6` renamed to `feat/install-without-visual-studio` (AGENTS.md §4).
+  The generated remote branch still exists (same commit as `main`); not deleted, G6 blocks branch deletion.
+- Plan item 2.1: CI builds an unsigned, self-contained MSIX, checks its contents, runs
+  `install/Install-SpeedTestExtension.ps1` on the runner (install, verify, uninstall), and uploads the package
+  with the script as artifact `internet-speed-test-extension-x64`. `docs/INSTALL.md`, ADR-0008.
+- `install/` is safety-sensitive: added to R13 (`scripts/safety-impact.sh`), SAFETY-CONTRACT §2, CodeRabbit guard
+  paths; R4 now scans `.ps1`.
+
+**Owner facts**
+- Windows 11 Pro: Windows Sandbox is available, so INSTALL.md path A (Sandbox) applies.
+
+**Verified**
+- `scripts/check.sh all` passes locally. Workflow YAML parses.
+
+**Not verified**
+- First CI run of the packaging and install-test steps was in progress at the time of this entry.
+- Whether a folder-registered package keeps loading after Developer Mode is switched off (INSTALL.md says it may not).
+- Whether PowerToys Command Palette runs inside Windows Sandbox.
+
+**Next**
+- CI green on this branch, then the owner follows `docs/INSTALL.md` (Sandbox) and the `docs/TESTING.md` checklist
+  (item 2.2). Then 2.3 fixes, 2.4 release.
+
 ## Session 1 — 2026-09-24 — branch `feat/speedtest-core-and-ui`
 
 **Done**
