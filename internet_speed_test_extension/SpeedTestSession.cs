@@ -10,7 +10,7 @@ namespace SpeedTest.Extension;
 /// The one running (or last finished) measurement, shared by both views. Starting again cancels the
 /// previous run. <see cref="Changed"/> fires on every progress report; pages redraw from <see cref="Snapshot"/>.
 /// </summary>
-internal sealed class SpeedTestSession : IProgress<SpeedTestSnapshot>, IDisposable
+internal sealed partial class SpeedTestSession : IProgress<SpeedTestSnapshot>, IDisposable
 {
     /// <summary>A result older than this is stale: opening a view starts a fresh test.</summary>
     private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(1);
