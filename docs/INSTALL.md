@@ -38,6 +38,9 @@ One-time setup: Start → type **Turn Windows features on or off** → tick **Wi
 6. Press **Win+Alt+Space**, run **Reload**, then search **Internet Speed Test**.
 7. Run the checklist in `docs/TESTING.md`. Close Sandbox when done; nothing is kept.
 
+If your PC runs a Windows Insider (preview) build, Sandbox runs that same preview Windows and may crash. That
+happened on the owner's PC (a Windows bug, not the extension). Use a virtual machine instead (2C).
+
 ## 2B. Install on your real PC
 
 Same as 2A steps 3–6, without Sandbox, with these precautions:
@@ -46,6 +49,13 @@ Same as 2A steps 3–6, without Sandbox, with these precautions:
 - Turn Developer Mode on only for the install. If you turn it off afterwards and the extension stops loading,
   that is expected: turn it on again, or uninstall.
 - Turning Developer Mode on may ask for administrator approval. The script never does; if it does, stop.
+
+## 2C. Test in a Hyper-V virtual machine
+
+Like Sandbox, but it keeps its state and has its own released (non-preview) Windows. Set it up once: Windows 11
+in Hyper-V, PowerToys and Developer Mode inside, then save a checkpoint. For each build: copy the zip into the
+VM, do 2A steps 5–7 there, save the logs, then revert to the checkpoint. The owner's VM, and the scripts that copy
+files in and collect logs, live on the owner's laptop, not in this repository (`docs/SESSION-LOG.md`, session 2).
 
 ## Update or remove
 

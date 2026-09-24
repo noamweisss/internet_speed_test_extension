@@ -21,10 +21,15 @@ verified, blocked, next.
 
 **Owner facts**
 - Windows 11 Pro: Windows Sandbox is available, so INSTALL.md path A (Sandbox) applies.
-- Sandbox attempt failed twice: Sandbox terminated with 0x80370106 ("virtual machine or container exited
-  unexpectedly") while the PowerToys installer hung and Task Manager was opened. Cause unknown. The owner is
-  setting up a persistent Hyper-V test VM (INSTALL.md path 2) with a checkpoint and a log-collection script,
-  driven by a local Claude session on the laptop. Nothing of the extension was installed yet.
+- The laptop runs a Windows Insider build (26300.9539, 26H2), 31 GB RAM.
+- Sandbox failed twice (0x80370106). A local Claude session on the laptop found the cause: the Windows inside
+  Sandbox (which is the host's Insider build) blue-screened, bugcheck 0x3B, same code address both times, while
+  the PowerToys installer ran. Not memory. Not caused by the extension (it was never installed).
+- Test VM instead (set up by the local session, scripts outside the repo in `C:\Users\Noam\SpeedTestVM`):
+  Hyper-V `SpeedTest-Win11`, Windows 11 Pro 25H2 retail build 26200.8037, PowerToys 0.101.2652.0, Command
+  Palette 0.12.12651.0, Developer Mode on, checkpoint `clean-powertoys-devmode`. Scripts copy files in, collect
+  logs (event logs, PowerToys and package logs, crash dumps) to the laptop, and revert the checkpoint. The owner
+  pastes `summary.txt` and `errors-and-warnings.txt` from a log folder back into the cloud session.
 
 **Verified**
 - `scripts/check.sh all` passes locally.
@@ -36,10 +41,11 @@ verified, blocked, next.
 - The extension has still never run inside Command Palette (the runner has no PowerToys). The Release build is
   trimmed ("Optimizing assemblies for size" in the log); a trimming problem would only show at runtime.
 - Whether a folder-registered package keeps loading after Developer Mode is switched off (INSTALL.md says it may not).
-- Whether PowerToys Command Palette runs inside Windows Sandbox.
+- Whether PowerToys Command Palette runs inside Windows Sandbox on a retail Windows build (untested; the
+  owner's host is an Insider build, where Sandbox crashes).
 
 **Next**
-- The owner can test now from the artifact of the latest green run on this branch, following `docs/INSTALL.md` (Sandbox) and the `docs/TESTING.md` checklist
+- The owner tests in the VM from the artifact of the latest green run on this branch (`docs/INSTALL.md` 2C) and the `docs/TESTING.md` checklist
   (item 2.2). Then 2.3 fixes, 2.4 release.
 
 ## Session 1 — 2026-09-24 — branch `feat/speedtest-core-and-ui`
