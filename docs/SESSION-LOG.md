@@ -51,6 +51,15 @@ verified, blocked, next.
   curl earlier in the session (bare `city`/`colo`); the code now reads both. The tests previously mirrored the
   code's assumption, so they could not catch it: a reminder that fakes encode beliefs.
 
+**Review round 2 (Codex, posted by the owner using docs/REVIEW-PROMPT.md)**
+- 6 findings: 2 blockers (stalled `/meta` body not time-bounded because `HttpClient.Timeout` ends at the headers
+  with `ResponseHeadersRead`; download responses not bounded by the requested bytes), 1 major (R10/R12 read the
+  working tree in staged mode), 2 minor (Failed never retried on reopen; ownership check and publish not atomic),
+  1 nit (`Task.Run` around the transfer loops, kept: it guards the synchronous-completion case the tests exercise
+  and keeps the loops off the host's thread). Five fixed in one commit, 69 tests.
+- The two reviewers found different things: CodeRabbit the redirect and escaping issues, Codex the timeout and
+  byte bounds. Two independent models, same five questions, was worth it.
+
 **Operating notes for reviewers and CI (learned in this session)**
 - CodeRabbit does not review automatically on repositories with fewer than 10 stars: after every push, post
   `@coderabbitai review` as a PR comment. The free tier also rate-limits reviews (about one per half hour);

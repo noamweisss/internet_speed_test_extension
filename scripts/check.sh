@@ -76,16 +76,20 @@ fi
 # R9: guard files (hooks, checks, CI, agent rules) may only change with a 'Guard-Change:' commit trailer. Checked in commit-msg.
 
 # R10: the COM CLSID must be identical in the extension class and the manifest (template requirement).
-if [ -f internet_speed_test_extension/Package.appxmanifest ]; then
-  IDS="$(grep -ohE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' internet_speed_test_extension/Package.appxmanifest internet_speed_test_extension/*.cs 2>/dev/null | sort -u | wc -l)"
+# R10 and R12 read the same content the other rules do: the index in staged mode, the working tree in all mode.
+MANIFEST="internet_speed_test_extension/Package.appxmanifest"
+MANIFEST_CONTENT="$(show "$MANIFEST" 2>/dev/null || true)"
+if [ -n "$MANIFEST_CONTENT" ]; then
+  EXT_SOURCES="$( { printf '%s\n' "$MANIFEST_CONTENT"; git ls-files -z 'internet_speed_test_extension/*.cs' | while IFS= read -r -d '' cs; do show "$cs"; done; } )"
+  IDS="$(printf '%s' "$EXT_SOURCES" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | sort -u | wc -l)"
   [ "$IDS" != "1" ] && fail R10 "CLSID mismatch between Package.appxmanifest and the extension class"
 fi
 
 # R11: Program.cs changes need a 'Protected-Change:' trailer. Checked in commit-msg.
 
 # R12: the manifest asks for exactly the two capabilities the template needs (docs/SAFETY-CONTRACT.md §1).
-if [ -f internet_speed_test_extension/Package.appxmanifest ]; then
-  CAPS="$(grep -oE 'Capability Name="[^"]+"' internet_speed_test_extension/Package.appxmanifest | sed 's/.*="//; s/"//' | sort | tr '\n' ' ')"
+if [ -n "$MANIFEST_CONTENT" ]; then
+  CAPS="$(printf '%s' "$MANIFEST_CONTENT" | grep -oE 'Capability Name="[^"]+"' | sed 's/.*="//; s/"//' | sort | tr '\n' ' ')"
   [ "$CAPS" != "internetClient runFullTrust " ] && fail R12 "manifest capabilities are '$CAPS', expected exactly 'internetClient runFullTrust'"
 fi
 

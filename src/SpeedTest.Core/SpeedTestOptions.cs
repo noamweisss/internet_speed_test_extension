@@ -29,6 +29,9 @@ public sealed record SpeedTestOptions
     /// <summary>Bytes sent per upload request. Requests repeat until the phase ends.</summary>
     public long UploadRequestBytes { get; init; } = 10_000_000;
 
+    /// <summary>Deadline for the whole /meta request, headers and body. /meta is optional, so this is short.</summary>
+    public TimeSpan MetaTimeout { get; init; } = TimeSpan.FromSeconds(5);
+
     /// <summary>How often the live throughput is reported during a transfer phase.</summary>
     public TimeSpan ProgressInterval { get; init; } = TimeSpan.FromMilliseconds(200);
 }

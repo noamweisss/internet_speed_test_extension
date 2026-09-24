@@ -27,6 +27,15 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
     /// <summary>When set, download bodies throw this once read, simulating a connection reset mid-transfer.</summary>
     public bool ResetDuringDownload { get; set; }
 
+    /// <summary>When set, /meta sends headers and then never sends a body, simulating a stalled server.</summary>
+    public bool StallMetaBody { get; set; }
+
+    /// <summary>Extra bytes a download response carries beyond what was requested. Negative values are ignored.</summary>
+    public int DownloadExtraBytes { get; set; }
+
+    /// <summary>When set, download responses omit Content-Length (chunked-style), so only the read loop can bound them.</summary>
+    public bool DownloadWithoutContentLength { get; set; }
+
     public double ServerDurationMs { get; set; }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -44,7 +53,10 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         var path = request.RequestUri!.AbsolutePath;
         if (path == "/meta")
         {
-            return new HttpResponseMessage(MetaStatus) { Content = new StringContent(MetaJson, System.Text.Encoding.UTF8, "application/json") };
+            HttpContent metaBody = StallMetaBody
+                ? new StreamContent(new StallingStream())
+                : new StringContent(MetaJson, System.Text.Encoding.UTF8, "application/json");
+            return new HttpResponseMessage(MetaStatus) { Content = metaBody };
         }
 
         if (path == "/__up")
@@ -55,9 +67,12 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         }
 
         var bytes = long.Parse(request.RequestUri.Query.Replace("?bytes=", string.Empty), System.Globalization.CultureInfo.InvariantCulture);
+        var payload = new byte[bytes + (bytes > 0 ? Math.Max(0, DownloadExtraBytes) : 0)];
         HttpContent body = ResetDuringDownload && bytes > 0
             ? new StreamContent(new ResettingStream())
-            : new ByteArrayContent(new byte[bytes]);
+            : DownloadWithoutContentLength && bytes > 0
+                ? new StreamContent(new NonSeekableStream(payload))
+                : new ByteArrayContent(payload);
         var response = new HttpResponseMessage(DownloadStatus) { Content = body };
         response.Headers.Add("cf-meta-ip", "198.51.100.9");
         response.Headers.Add("cf-meta-city", "Haifa");
@@ -69,6 +84,72 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         }
 
         return response;
+    }
+
+    /// <summary>A body whose reads never complete until cancelled, like a server that stalls after the headers.</summary>
+    private sealed class StallingStream : Stream
+    {
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException("use ReadAsync");
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+            return 0;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    /// <summary>A readable body with unknown length, so StreamContent cannot set Content-Length.</summary>
+    private sealed class NonSeekableStream(byte[] data) : Stream
+    {
+        private int _position;
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            var n = Math.Min(count, data.Length - _position);
+            Array.Copy(data, _position, buffer, offset, n);
+            _position += n;
+            return n;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 
     /// <summary>A body whose first read fails like a dropped connection.</summary>

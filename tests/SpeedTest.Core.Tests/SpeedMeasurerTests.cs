@@ -98,6 +98,44 @@ public sealed class SpeedMeasurerTests
     }
 
     [Fact]
+    public async Task MeasureAsync_MetaBodyStalls_GivesUpAfterMetaTimeout()
+    {
+        var (measurer, handler) = Create(FastOptions with { MetaTimeout = TimeSpan.FromMilliseconds(200) });
+        handler.StallMetaBody = true;
+
+        var result = await measurer.MeasureAsync(null, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Equal(SpeedTestPhase.Complete, result.Phase);
+        Assert.Equal("198.51.100.9", result.Connection.Ip);
+    }
+
+    [Fact]
+    public async Task MeasureAsync_DownloadDeclaresMoreThanRequested_ThrowsSpeedTestException()
+    {
+        var (measurer, handler) = Create();
+        handler.DownloadExtraBytes = 1;
+
+        var error = await Assert.ThrowsAsync<SpeedTestException>(() => measurer.MeasureAsync(null, CancellationToken.None));
+
+        Assert.Contains("unexpected response", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task MeasureAsync_DownloadStreamsMoreThanRequested_StopsReadingAtRequestedBytes()
+    {
+        var (measurer, handler) = Create(FastOptions with { DownloadStreams = 1, PhaseDuration = TimeSpan.FromMilliseconds(60) });
+        handler.DownloadExtraBytes = 1_000_000;
+        handler.DownloadWithoutContentLength = true;
+
+        var result = await measurer.MeasureAsync(null, CancellationToken.None);
+
+        // With 4096-byte requests and 60 ms, an unbounded read of 1 MB extra per response would dominate; the bound keeps
+        // the measurement finishing normally and the phase must have issued more than one request.
+        Assert.Equal(SpeedTestPhase.Complete, result.Phase);
+        Assert.True(handler.Requests.Count(u => u.Query == "?bytes=4096") > 1);
+    }
+
+    [Fact]
     public async Task MeasureAsync_ConnectionResetDuringDownload_ThrowsSpeedTestException()
     {
         var (measurer, handler) = Create();

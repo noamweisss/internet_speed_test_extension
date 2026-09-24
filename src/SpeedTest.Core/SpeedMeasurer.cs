@@ -76,24 +76,28 @@ public sealed class SpeedMeasurer
     }
 
     /// <summary>
-    /// /meta is optional: any failure (status, transport, malformed or oversized JSON) yields an empty record and the
-    /// latency probes' headers fill in what they can. A real outage still fails the latency phase.
+    /// /meta is optional: any failure (status, transport, malformed or oversized JSON, or a stalled body past
+    /// MetaTimeout) yields an empty record and the latency probes' headers fill in what they can. A real outage still
+    /// fails the latency phase. HttpClient.Timeout stops at the headers for ResponseHeadersRead, so the body read has
+    /// its own deadline here.
     /// </summary>
     private async Task<ConnectionInfo> FetchConnectionInfoAsync(CancellationToken cancellationToken)
     {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(_options.MetaTimeout);
         try
         {
-            using var response = await _http.GetAsync(CloudflareEndpoints.Meta, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            using var response = await _http.GetAsync(CloudflareEndpoints.Meta, HttpCompletionOption.ResponseHeadersRead, deadline.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 return ConnectionInfo.Empty;
             }
 
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            using var stream = await response.Content.ReadAsStreamAsync(deadline.Token).ConfigureAwait(false);
             var buffer = new byte[MaxMetaBytes + 1];
             var total = 0;
             int read;
-            while (total < buffer.Length && (read = await stream.ReadAsync(buffer.AsMemory(total), cancellationToken).ConfigureAwait(false)) > 0)
+            while (total < buffer.Length && (read = await stream.ReadAsync(buffer.AsMemory(total), deadline.Token).ConfigureAwait(false)) > 0)
             {
                 total += read;
             }
@@ -107,6 +111,10 @@ public sealed class SpeedMeasurer
             return meta?.ToConnectionInfo() ?? ConnectionInfo.Empty;
         }
         catch (Exception e) when (e is HttpRequestException or IOException or JsonException)
+        {
+            return ConnectionInfo.Empty;
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             return ConnectionInfo.Empty;
         }
@@ -178,10 +186,19 @@ public sealed class SpeedMeasurer
                 using var response = await _http.GetAsync(
                     CloudflareEndpoints.Download(_options.DownloadRequestBytes), HttpCompletionOption.ResponseHeadersRead, phaseToken).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                using var stream = await response.Content.ReadAsStreamAsync(phaseToken).ConfigureAwait(false);
-                int read;
-                while ((read = await stream.ReadAsync(buffer, phaseToken).ConfigureAwait(false)) > 0)
+                if (response.Content.Headers.ContentLength > _options.DownloadRequestBytes)
                 {
+                    throw new SpeedTestException("The speed test server sent an unexpected response.");
+                }
+
+                // Each response is bounded by the bytes we asked for; anything past that is not read or counted.
+                using var stream = await response.Content.ReadAsStreamAsync(phaseToken).ConfigureAwait(false);
+                long received = 0;
+                int read;
+                while (received < _options.DownloadRequestBytes
+                    && (read = await stream.ReadAsync(buffer, phaseToken).ConfigureAwait(false)) > 0)
+                {
+                    received += read;
                     count(read);
                 }
             }
