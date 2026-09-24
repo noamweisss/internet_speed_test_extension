@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>internet_speed_test_extension</RootNamespace>
+    <RootNamespace>SpeedTest.Extension</RootNamespace>
+    <!-- AssemblyName stays the template name: it is wired into the manifest and publish profiles (ADR-0005). -->
+    <AssemblyName>internet_speed_test_extension</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
     <WindowsSdkPackageVersion>10.0.26100.68-preview</WindowsSdkPackageVersion>
@@ -13,6 +15,11 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
+    <!-- Lets "dotnet restore" succeed on Linux/macOS (GitHub's dependency submission, agents in containers).
+         Building still needs Windows; CI does that. No effect on Windows builds. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- CA1707 complains about underscores in the assembly name, which is kept on purpose (ADR-0005). -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,6 +43,9 @@
   -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\SpeedTest.Core\SpeedTest.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CommandPalette.Extensions" />

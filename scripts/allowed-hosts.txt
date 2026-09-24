@@ -1,0 +1,4 @@
+# Hosts the extension may contact. One host per line. Lines starting with # are comments.
+# Enforced by scripts/check.sh: every https:// literal in C# source must resolve to a host listed here.
+# Adding a host is a security decision: record it in docs/SECURITY.md and an ADR.
+speed.cloudflare.com

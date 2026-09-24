@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Enforces Conventional Commits (docs/CONVENTIONS.md) and the Guard-Change trailer for guard files (rule R9).
+set -u
+MSG_FILE="$1"
+FIRST="$(head -n1 "$MSG_FILE")"
+if ! printf '%s' "$FIRST" | grep -qE '^(feat|fix|docs|chore|refactor|test|ci|build|perf|revert)(\([a-z0-9./-]+\))?!?: [^ ].{0,70}$'; then
+  echo "RULE C1: first line must be Conventional Commits, e.g. 'feat(core): add latency phase' (max 72 chars)" >&2
+  exit 1
+fi
+GUARD="$(git diff --cached --name-only | grep -E '^(\.githooks/|\.claude/|scripts/|\.github/workflows/|AGENTS\.md|CLAUDE\.md)' || true)"
+if [ -n "$GUARD" ] && ! grep -qE '^Guard-Change: .+' "$MSG_FILE"; then
+  echo "RULE R9: this commit changes guard files ($(echo "$GUARD" | tr '\n' ' ')). Add a trailer line 'Guard-Change: <why>' to the commit message." >&2
+  exit 1
+fi
+# R11: Program.cs is the template's COM host. Any change to it needs a 'Protected-Change:' trailer (ADR-0005).
+if git diff --cached --name-only | grep -qx 'internet_speed_test_extension/Program.cs' && ! grep -qE '^Protected-Change: .+' "$MSG_FILE"; then
+  echo "RULE R11: this commit changes internet_speed_test_extension/Program.cs. Add a trailer line 'Protected-Change: <why>' and an ADR reference." >&2
+  exit 1
+fi
+exit 0
