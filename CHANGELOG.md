@@ -22,5 +22,6 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   progress from superseded runs dropped; workflow actions pinned to commit SHAs; rule fixes (R2 depth, R8 scope,
   NUL-safe file loop, G1–G8 after git global options, R13 requires real text, session marker per worktree); docs
   aligned; ADR-0007 on HTTPS transport metadata.
+- `docs/REVIEW-PROMPT.md`: one prompt any reviewer agent can be given, so second opinions are comparable.
 - Owner-facing safety contract (`docs/SAFETY-CONTRACT.md`), safety-impact PR check (R13), manifest capability
   check (R12), CodeQL workflow, Dependabot config, and CodeRabbit review instructions.

@@ -33,7 +33,8 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 ## 3. Non-negotiables (judgement, reviewed by humans and audit agents)
 
 - `docs/SAFETY-CONTRACT.md` is the owner's promise list. Never make it false. Reviewing agents answer its five
-  questions on every PR; building agents answer them in the PR body when any is "Yes".
+  questions on every PR (the exact prompt is `docs/REVIEW-PROMPT.md`); building agents answer them in the PR
+  body when any is "Yes".
 - Less code is better. Prefer deleting over adding. No speculative abstractions, no "might need later".
 - Meaningful names for everything: branches, files, types, variables, commits, PRs. No generated or placeholder
   names. If a name needs a comment to explain it, pick a better name.

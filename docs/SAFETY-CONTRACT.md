@@ -44,7 +44,8 @@ Also treat these phrases in a PR, commit, or chat as red flags until explained i
 4. Does this change add a dependency, a capability, or weaken a guard? Yes/No, which.
 5. Is any input from the network trusted without bounds (size, time, format)? Yes/No, where.
 
-A "Yes" without a linked ADR is a blocker. `.coderabbit.yaml` and `AGENTS.md` carry these questions.
+A "Yes" without a linked ADR is a blocker. `.coderabbit.yaml` and `AGENTS.md` carry these questions, and
+`docs/REVIEW-PROMPT.md` is the copy-paste prompt for any other reviewer agent (Codex, Gemini, Claude, Copilot).
 
 ## 4. Free scanners to switch on (one-time, in the repository's Settings → Security)
 
