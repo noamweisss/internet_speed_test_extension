@@ -8,7 +8,7 @@ traceability. Instructions in markdown are advisory; hooks are not.
 
 ## Decision
 Two layers, one shared rule script:
-- `scripts/check.sh` holds the rules (ids R1–R10). `.githooks/pre-commit` runs it on staged files; CI runs it on all.
+- `scripts/check.sh` holds the rules (ids R1–R8, R10, R12; R9 and R11 are commit-message trailers, R13 runs in CI). `.githooks/pre-commit` runs it on staged files; CI runs it on all.
   `.githooks/commit-msg` (C1, R9) and `.githooks/pre-push` (P1, P2) cover history and branch protection. Any git
   client, human or agent, runs them once `scripts/setup.sh` sets `core.hooksPath`.
 - `.claude/settings.json` adds Claude Code hooks (G1–G8, W1–W2, S1) that block bypasses and protect files before

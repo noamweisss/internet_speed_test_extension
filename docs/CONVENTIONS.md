@@ -33,7 +33,7 @@ Types inside it use the `SpeedTest.Extension` namespace and PascalCase names.
 
 - Conventional Commits (`C1`): `type(scope): summary`. Types: `feat fix docs chore refactor test ci build perf revert`.
   Scopes: `core`, `ext`, `tests`, `ci`, `docs`, `hooks`.
-- One logical change per commit. Code change ⇒ `CHANGELOG.md` line under `Unreleased` in the same commit (`R8`).
+- One logical change per commit. Code or test change (`src/`, `tests/`, extension) ⇒ `CHANGELOG.md` line under `Unreleased` in the same commit (`R8`).
 - Guard file change ⇒ `Guard-Change: <reason>` trailer (`R9`).
 - Never commit on `main` (`R1`), never push to `main` (`P1`, `G3`), never rewrite pushed history (`P2`, `G2`, `G6`, `G8`).
 - Merge to `main` only through a pull request.

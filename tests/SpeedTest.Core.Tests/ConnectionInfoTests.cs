@@ -6,7 +6,19 @@ namespace SpeedTest.Core.Tests;
 public sealed class ConnectionInfoTests
 {
     [Fact]
-    public void FromHeaders_ReadsCloudflareMetaHeaders()
+    public void FromHeaders_ReadsDocumentedCfMetaHeaders()
+    {
+        using var response = new HttpResponseMessage();
+        response.Headers.Add("cf-meta-ip", "198.51.100.9");
+        response.Headers.Add("cf-meta-city", "Haifa");
+        response.Headers.Add("cf-meta-country", "IL");
+        response.Headers.Add("cf-meta-colo", "HFA");
+
+        Assert.Equal(new ConnectionInfo(null, "198.51.100.9", "Haifa", "IL", "HFA"), ConnectionInfo.FromHeaders(response.Headers));
+    }
+
+    [Fact]
+    public void FromHeaders_FallsBackToBareHeaderNames()
     {
         using var response = new HttpResponseMessage();
         response.Headers.Add("cf-meta-ip", "198.51.100.9");

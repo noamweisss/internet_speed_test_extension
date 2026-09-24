@@ -11,7 +11,7 @@ Written for a non-developer. This is the page you check on every pull request. T
 | Show text inside Command Palette | Run other programs, scripts, or installers | R5 |
 | Copy a value to the clipboard when you press Enter | Read, write, or delete files on your PC | R5 + code review question 2 below |
 | Let Command Palette save your settings | Store your IP, results, or anything else | Review question 3 below |
-| Send zero-filled test data upstream | Send any of your data anywhere | Review question 3 below |
+| Send zero-filled test data upstream | Send any of your data anywhere, except the metadata every HTTPS request carries (public IP, TLS fingerprint), see ADR-0007 | Review question 3 below; `docs/decisions/ADR-0007-https-transport-metadata.md` |
 | Ask for `internetClient` + `runFullTrust` (template requirement) | Ask for any other Windows capability | R12 |
 | Use the packages the template shipped with | Add dependencies silently | R13 (safety-impact check) |
 

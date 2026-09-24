@@ -33,10 +33,10 @@ public sealed class SpeedMeasurerTests
     public async Task MeasureAsync_HappyPath_ReportsPhasesInOrderAndCompletes()
     {
         var (measurer, _) = Create();
-        var reported = new List<SpeedTestSnapshot>();
+        var recorder = new SnapshotRecorder();
 
-        var result = await measurer.MeasureAsync(new Progress<SpeedTestSnapshot>(reported.Add), CancellationToken.None);
-        await Task.Delay(50); // Progress<T> posts asynchronously; let the last reports land.
+        var result = await measurer.MeasureAsync(recorder, CancellationToken.None);
+        var reported = recorder.Snapshots;
 
         Assert.Equal(SpeedTestPhase.Complete, result.Phase);
         Assert.NotNull(result.CompletedAt);
@@ -61,15 +61,51 @@ public sealed class SpeedMeasurerTests
         Assert.Equal(new ConnectionInfo("Example ISP", "203.0.113.7", "Tel Aviv", "IL", "TLV"), result.Connection);
     }
 
-    [Fact]
-    public async Task MeasureAsync_MetaEmpty_FallsBackToResponseHeaders()
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("not json at all")]
+    public async Task MeasureAsync_MetaEmptyOrMalformed_FallsBackToResponseHeaders(string metaJson)
     {
         var (measurer, handler) = Create();
-        handler.MetaJson = "{}";
+        handler.MetaJson = metaJson;
 
         var result = await measurer.MeasureAsync(null, CancellationToken.None);
 
         Assert.Equal(new ConnectionInfo(null, "198.51.100.9", "Haifa", "IL", "HFA"), result.Connection);
+    }
+
+    [Fact]
+    public async Task MeasureAsync_MetaFails_IsNotFatal()
+    {
+        var (measurer, handler) = Create();
+        handler.MetaStatus = HttpStatusCode.NotFound;
+
+        var result = await measurer.MeasureAsync(null, CancellationToken.None);
+
+        Assert.Equal(SpeedTestPhase.Complete, result.Phase);
+        Assert.Equal("198.51.100.9", result.Connection.Ip);
+    }
+
+    [Fact]
+    public async Task MeasureAsync_MetaOversized_IsIgnored()
+    {
+        var (measurer, handler) = Create();
+        handler.MetaJson = "{\"clientIp\":\"203.0.113.7\",\"pad\":\"" + new string('x', 70_000) + "\"}";
+
+        var result = await measurer.MeasureAsync(null, CancellationToken.None);
+
+        Assert.Equal("198.51.100.9", result.Connection.Ip);
+    }
+
+    [Fact]
+    public async Task MeasureAsync_ConnectionResetDuringDownload_ThrowsSpeedTestException()
+    {
+        var (measurer, handler) = Create();
+        handler.ResetDuringDownload = true;
+
+        var error = await Assert.ThrowsAsync<SpeedTestException>(() => measurer.MeasureAsync(null, CancellationToken.None));
+
+        Assert.IsAssignableFrom<System.IO.IOException>(error.InnerException);
     }
 
     [Fact]
@@ -88,10 +124,10 @@ public sealed class SpeedMeasurerTests
     public async Task MeasureAsync_LiveProgress_ReportsDownloadDuringDownloadPhase()
     {
         var (measurer, _) = Create();
-        var reported = new List<SpeedTestSnapshot>();
+        var recorder = new SnapshotRecorder();
 
-        await measurer.MeasureAsync(new Progress<SpeedTestSnapshot>(reported.Add), CancellationToken.None);
-        await Task.Delay(50);
+        await measurer.MeasureAsync(recorder, CancellationToken.None);
+        var reported = recorder.Snapshots;
 
         Assert.Contains(reported, s => s.Phase == SpeedTestPhase.Download && s.DownloadMbps > 0);
         Assert.Contains(reported, s => s.Phase == SpeedTestPhase.Upload && s.UploadMbps > 0);
@@ -123,7 +159,7 @@ public sealed class SpeedMeasurerTests
     {
         var (measurer, _) = Create(FastOptions with { PhaseDuration = TimeSpan.FromSeconds(30) });
         using var cts = new CancellationTokenSource();
-        var progress = new Progress<SpeedTestSnapshot>(s =>
+        var progress = new SnapshotRecorder(s =>
         {
             if (s.Phase == SpeedTestPhase.Download)
             {

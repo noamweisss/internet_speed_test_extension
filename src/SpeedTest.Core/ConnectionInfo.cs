@@ -15,11 +15,20 @@ public sealed record ConnectionInfo(string? Isp, string? Ip, string? City, strin
 {
     public static ConnectionInfo Empty { get; } = new(null, null, null, null, null);
 
-    /// <summary>Every response from speed.cloudflare.com carries these headers; used when /meta is unavailable.</summary>
+    /// <summary>
+    /// Every response from speed.cloudflare.com carries these headers; used when /meta is unavailable.
+    /// Cloudflare documents the <c>cf-meta-*</c> names and has also been observed sending bare names, so both are read.
+    /// </summary>
     public static ConnectionInfo FromHeaders(HttpResponseHeaders headers)
     {
         string? Get(string name) => headers.TryGetValues(name, out var values) ? values.FirstOrDefault() : null;
-        return new(Isp: null, Ip: Get("cf-meta-ip"), City: Get("city"), Country: Get("country"), Server: Get("colo"));
+        string? First(string preferred, string fallback) => Get(preferred) is { Length: > 0 } value ? value : Get(fallback);
+        return new(
+            Isp: null,
+            Ip: Get("cf-meta-ip"),
+            City: First("cf-meta-city", "city"),
+            Country: First("cf-meta-country", "country"),
+            Server: First("cf-meta-colo", "colo"));
     }
 
     /// <summary>Fills each null field of this instance from <paramref name="fallback"/>.</summary>

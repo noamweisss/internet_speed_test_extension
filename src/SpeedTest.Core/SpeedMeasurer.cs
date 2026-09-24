@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +18,10 @@ namespace SpeedTest.Core;
 public sealed class SpeedMeasurer
 {
     private const int ReadBufferBytes = 64 * 1024;
+
+    /// <summary>/meta is a few hundred bytes; anything past this is ignored rather than buffered.</summary>
+    private const int MaxMetaBytes = 64 * 1024;
+
     private readonly HttpClient _http;
     private readonly SpeedTestOptions _options;
 
@@ -26,7 +31,7 @@ public sealed class SpeedMeasurer
         _options = options ?? SpeedTestOptions.Default;
     }
 
-    /// <exception cref="SpeedTestException">The server could not be reached or answered with an error.</exception>
+    /// <exception cref="SpeedTestException">The server could not be reached, answered with an error, or the connection broke.</exception>
     /// <exception cref="OperationCanceledException">The caller cancelled.</exception>
     public async Task<SpeedTestSnapshot> MeasureAsync(IProgress<SpeedTestSnapshot>? progress, CancellationToken cancellationToken)
     {
@@ -59,8 +64,9 @@ public sealed class SpeedMeasurer
             progress?.Report(snapshot);
             return snapshot;
         }
-        catch (HttpRequestException e)
+        catch (Exception e) when (e is HttpRequestException or IOException)
         {
+            // IOException covers a connection that resets mid-transfer (HttpIOException derives from it).
             throw new SpeedTestException("Could not reach the speed test server. Check your internet connection.", e);
         }
         catch (OperationCanceledException e) when (!cancellationToken.IsCancellationRequested)
@@ -69,11 +75,41 @@ public sealed class SpeedMeasurer
         }
     }
 
+    /// <summary>
+    /// /meta is optional: any failure (status, transport, malformed or oversized JSON) yields an empty record and the
+    /// latency probes' headers fill in what they can. A real outage still fails the latency phase.
+    /// </summary>
     private async Task<ConnectionInfo> FetchConnectionInfoAsync(CancellationToken cancellationToken)
     {
-        var meta = await _http.GetFromJsonAsync(CloudflareEndpoints.Meta, CloudflareJsonContext.Default.CloudflareMeta, cancellationToken)
-            .ConfigureAwait(false);
-        return meta?.ToConnectionInfo() ?? ConnectionInfo.Empty;
+        try
+        {
+            using var response = await _http.GetAsync(CloudflareEndpoints.Meta, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                return ConnectionInfo.Empty;
+            }
+
+            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            var buffer = new byte[MaxMetaBytes + 1];
+            var total = 0;
+            int read;
+            while (total < buffer.Length && (read = await stream.ReadAsync(buffer.AsMemory(total), cancellationToken).ConfigureAwait(false)) > 0)
+            {
+                total += read;
+            }
+
+            if (total > MaxMetaBytes)
+            {
+                return ConnectionInfo.Empty;
+            }
+
+            var meta = JsonSerializer.Deserialize(buffer.AsSpan(0, total), CloudflareJsonContext.Default.CloudflareMeta);
+            return meta?.ToConnectionInfo() ?? ConnectionInfo.Empty;
+        }
+        catch (Exception e) when (e is HttpRequestException or IOException or JsonException)
+        {
+            return ConnectionInfo.Empty;
+        }
     }
 
     private async Task<(double LatencyMs, double JitterMs, ConnectionInfo HeaderInfo)> MeasureLatencyAsync(CancellationToken cancellationToken)

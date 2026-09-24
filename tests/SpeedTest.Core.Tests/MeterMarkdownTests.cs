@@ -51,6 +51,23 @@ public sealed class MeterMarkdownTests
     }
 
     [Fact]
+    public void Render_EscapesServerSuppliedConnectionFields()
+    {
+        var snapshot = new SpeedTestSnapshot
+        {
+            Phase = SpeedTestPhase.Complete,
+            Connection = new ConnectionInfo("![x](//tracker.example/p.png)", "1.2.3.4", "<b>City</b>", "IL", "`code`"),
+        };
+
+        var markdown = MeterMarkdown.Render(snapshot);
+
+        Assert.DoesNotContain("![x](", markdown);
+        Assert.DoesNotContain("<b>", markdown);
+        Assert.DoesNotContain("`code`", markdown);
+        Assert.Contains("1.2.3.4", markdown);
+    }
+
+    [Fact]
     public void Render_Failed_ShowsError()
     {
         var markdown = MeterMarkdown.Render(new SpeedTestSnapshot { Phase = SpeedTestPhase.Failed, Error = "No network" });

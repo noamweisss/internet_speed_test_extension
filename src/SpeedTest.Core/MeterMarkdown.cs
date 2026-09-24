@@ -22,11 +22,12 @@ public static class MeterMarkdown
         }
 
         text.Append("\n\n---\n\n");
+        // Connection fields come from the server and are escaped before they touch the markdown.
         var c = snapshot.Connection;
-        text.Append("**ISP** ").Append(c.Isp ?? SpeedFormatter.Unknown)
-            .Append("  ·  **IP** ").Append(c.Ip ?? SpeedFormatter.Unknown)
-            .Append("  ·  **Location** ").Append(c.Location.Length > 0 ? c.Location : SpeedFormatter.Unknown)
-            .Append("  ·  **Server** ").Append(c.Server ?? SpeedFormatter.Unknown)
+        text.Append("**ISP** ").Append(Field(c.Isp))
+            .Append("  ·  **IP** ").Append(Field(c.Ip))
+            .Append("  ·  **Location** ").Append(Field(c.Location))
+            .Append("  ·  **Server** ").Append(Field(c.Server))
             .Append('\n');
         return text.ToString();
     }
@@ -42,6 +43,9 @@ public static class MeterMarkdown
         SpeedTestPhase.Failed => "**Failed:** " + (snapshot.Error ?? "unknown error"),
         _ => string.Empty,
     };
+
+    private static string Field(string? value) =>
+        string.IsNullOrEmpty(value) ? SpeedFormatter.Unknown : MarkdownText.Escape(value);
 
     private static void AppendMeter(StringBuilder text, string title, double? mbps, bool active)
     {

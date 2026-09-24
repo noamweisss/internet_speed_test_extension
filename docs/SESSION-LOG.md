@@ -42,6 +42,15 @@ verified, blocked, next.
 - Cloud environment has .NET 10 SDK via setup script and network access to `speed.cloudflare.com`, NuGet, and
   Microsoft download hosts. Ookla hosts are not allowlisted (Option A chosen, ADR-0002).
 
+**Review round 1**
+- CodeRabbit (assertive profile) returned 17 findings on PR #1: 8 security, 4 stability/correctness, 5 docs and
+  test quality. Every one was verified against the code and fixed in one commit; none were disputed. Notable:
+  redirects were followed by default (fixed), `/meta` failures were fatal (now optional), non-HTTP exceptions
+  could leave the UI stuck (now surface as Failed), server text reached markdown unescaped (now escaped).
+- Observation for future sessions: the reviewer's "cf-meta-*" header claim conflicted with headers observed by
+  curl earlier in the session (bare `city`/`colo`); the code now reads both. The tests previously mirrored the
+  code's assumption, so they could not catch it: a reminder that fakes encode beliefs.
+
 **Pull request**
 - [noamweisss/internet_speed_test_extension#1](https://github.com/noamweisss/internet_speed_test_extension/pull/1),
   opened at the owner's request at the end of session 1. Its "Safety impact" section explains the guard layer.

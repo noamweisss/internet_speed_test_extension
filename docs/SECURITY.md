@@ -31,7 +31,7 @@ Git hooks, `.githooks/` (any git user, installed by `scripts/setup.sh`):
 | R5 | No process spawning, interop, `unsafe`, reflection loading, TLS overrides in C#. |
 | R6 | No plain `http://` in C#. |
 | R7 | Every `https://` host in C# is in `scripts/allowed-hosts.txt`. |
-| R8 | Code changes are committed together with a `CHANGELOG.md` change. |
+| R8 | Code or test changes (`src/`, `tests/`, the extension project) are committed together with a `CHANGELOG.md` change. |
 | R9 | Guard-file changes carry a `Guard-Change:` trailer (commit-msg hook). |
 | R10 | The COM CLSID is identical in the manifest and the extension class. |
 | R11 | Changes to `Program.cs` carry a `Protected-Change:` trailer (commit-msg hook). |

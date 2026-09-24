@@ -18,7 +18,7 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 
 - Work on a feature branch. Never commit on `main`; never push to `main`; never force-push or rewrite history.
 - Never bypass hooks (the `no-verify` flag), never change `core.hooksPath` except through `scripts/setup.sh`.
-- Commit messages follow Conventional Commits. Code changes ship with a `CHANGELOG.md` line in the same commit.
+- Commit messages follow Conventional Commits. Code or test changes ship with a `CHANGELOG.md` line in the same commit.
 - Changes to guard files (`.githooks/`, `.claude/`, `scripts/`, `.github/workflows/`, `AGENTS.md`, `CLAUDE.md`)
   need a `Guard-Change: <reason>` trailer in the commit message.
 - `internet_speed_test_extension/Program.cs` (the COM host) is not edited by agents (W1). If a human decides it must

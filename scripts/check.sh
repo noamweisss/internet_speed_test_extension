@@ -2,6 +2,7 @@
 # Deterministic project checks. Used by .githooks/pre-commit (staged files) and CI (all files).
 # Usage: scripts/check.sh staged | scripts/check.sh all
 # Every rule prints "RULE <id>: <message>" on failure so a reader can trace which rule fired.
+# File names are read NUL-delimited so a name with spaces is still checked as one file.
 set -u
 MODE="${1:-staged}"
 ROOT="$(git rev-parse --show-toplevel)"
@@ -10,13 +11,12 @@ FAIL=0
 fail() { echo "RULE $1: $2" >&2; FAIL=1; }
 
 if [ "$MODE" = "staged" ]; then
-  FILES="$(git diff --cached --name-only --diff-filter=ACMR)"
+  list() { git diff --cached --name-only --diff-filter=ACMR -z; }
   show() { git show ":$1"; }
 else
-  FILES="$(git ls-files)"
+  list() { git ls-files -z; }
   show() { cat "$1"; }
 fi
-[ -z "$FILES" ] && exit 0
 
 # R1: never commit on the default branch (main). Work happens on feature branches.
 if [ "$MODE" = "staged" ]; then
@@ -24,11 +24,15 @@ if [ "$MODE" = "staged" ]; then
   case "$BRANCH" in main|master) fail R1 "commits on '$BRANCH' are not allowed; create a feature branch (docs/CONVENTIONS.md)";; esac
 fi
 
+ANY=0
 CODE_CHANGED=0
-for f in $FILES; do
-  # R2: forbidden file types (secrets, certificates, local env files).
+CHANGELOG_STAGED=0
+while IFS= read -r -d '' f; do
+  ANY=1
+  [ "$f" = "CHANGELOG.md" ] && CHANGELOG_STAGED=1
+  # R2: forbidden file types (secrets, certificates, local env files) at any directory depth.
   case "$f" in
-    *.pfx|*.p12|*.snk|*.pem|*.key|*.cer|.env|.env.*|*id_rsa*) fail R2 "forbidden file type: $f";;
+    *.pfx|*.p12|*.snk|*.pem|*.key|*.cer|.env|*/.env|.env.*|*/.env.*|*id_rsa*) fail R2 "forbidden file type: $f";;
   esac
   # R3: no files over 1 MB (keeps the repo lean; binaries go through releases, not git).
   if [ "$MODE" = "staged" ]; then SIZE=$(git cat-file -s ":$f" 2>/dev/null || echo 0); else SIZE=$(stat -c %s "$f" 2>/dev/null || echo 0); fi
@@ -46,7 +50,7 @@ for f in $FILES; do
 
   case "$f" in
     *.cs)
-      case "$f" in src/*|internet_speed_test_extension/*) CODE_CHANGED=1;; esac
+      case "$f" in src/*|tests/*|internet_speed_test_extension/*) CODE_CHANGED=1;; esac
       CONTENT="$(show "$f")"
       # R5: no process spawning, native interop, reflection loading, or TLS validation overrides in this project.
       #     Program.cs (the template's COM host) is the only file allowed to use the WinRT server APIs.
@@ -61,11 +65,12 @@ for f in $FILES; do
       done
       ;;
   esac
-done
+done < <(list)
+[ "$ANY" = 0 ] && exit 0
 
-# R8: code changes must be accompanied by a CHANGELOG.md entry in the same commit.
-if [ "$MODE" = "staged" ] && [ "$CODE_CHANGED" = 1 ]; then
-  printf '%s\n' "$FILES" | grep -qx 'CHANGELOG.md' || fail R8 "code changed but CHANGELOG.md is not staged (docs/CONVENTIONS.md)"
+# R8: code or test changes (src/, tests/, the extension) must be accompanied by a CHANGELOG.md entry in the same commit.
+if [ "$MODE" = "staged" ] && [ "$CODE_CHANGED" = 1 ] && [ "$CHANGELOG_STAGED" = 0 ]; then
+  fail R8 "code changed but CHANGELOG.md is not staged (docs/CONVENTIONS.md)"
 fi
 
 # R9: guard files (hooks, checks, CI, agent rules) may only change with a 'Guard-Change:' commit trailer. Checked in commit-msg.
@@ -75,6 +80,8 @@ if [ -f internet_speed_test_extension/Package.appxmanifest ]; then
   IDS="$(grep -ohE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' internet_speed_test_extension/Package.appxmanifest internet_speed_test_extension/*.cs 2>/dev/null | sort -u | wc -l)"
   [ "$IDS" != "1" ] && fail R10 "CLSID mismatch between Package.appxmanifest and the extension class"
 fi
+
+# R11: Program.cs changes need a 'Protected-Change:' trailer. Checked in commit-msg.
 
 # R12: the manifest asks for exactly the two capabilities the template needs (docs/SAFETY-CONTRACT.md §1).
 if [ -f internet_speed_test_extension/Package.appxmanifest ]; then
