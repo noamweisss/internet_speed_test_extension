@@ -69,9 +69,17 @@ verified, blocked, next.
 
 **Pull request**
 - [noamweisss/internet_speed_test_extension#1](https://github.com/noamweisss/internet_speed_test_extension/pull/1),
-  opened at the owner's request at the end of session 1. Its "Safety impact" section explains the guard layer.
+  opened at the owner's request at the end of session 1 and **merged into main on 2026-09-24** after two
+  independent reviews (CodeRabbit round 1: 17 findings; Codex rounds 2 and 2b: 7 findings) with every finding
+  fixed or answered. The owner dismissed CodeRabbit's stale "changes requested" verdict and merged with a merge
+  commit. The owner is adding a ruleset on `main` (pull request + status checks required).
+
+**Session 1 final state**
+- `main` = session-1 result. 69 Core tests. Nothing has yet run inside Command Palette on a real PC.
+- Owner has not yet said which Windows edition they use; ask before writing `docs/INSTALL.md` (Sandbox needs Pro).
 
 **Next**
-- Session 2 in `docs/PLAN.md`. Item 2.0 is the owner's: enable scanners, install CodeRabbit, review and merge PR #1.
+- Session 2 in `docs/PLAN.md`, starting at item 2.1: CI artifact + install script without Visual Studio, then the
+  owner runs the manual checklist. Rename the harness branch first (AGENTS.md §4).
 - The safety-impact CI job has only been tested locally (`scripts/safety-impact.sh` with a fake PR body); its
   first real run is on the first PR. CodeQL ran on push; check the Security tab for findings.
