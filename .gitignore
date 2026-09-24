@@ -1,0 +1,17 @@
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+# MSIX build output and local signing material (never commit certificates)
+AppPackages/
+BundleArtifacts/
+*.pfx
+*.p12
+*.snk
+*.cer
+# Local tooling
+.dotnet/
+# Kept on purpose (the template needs them for deployment): Properties/launchSettings.json, *.pubxml

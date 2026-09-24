@@ -1,0 +1,43 @@
+# Plan
+
+Roadmap by agent session. A "session" is one Claude Code conversation, stopped at roughly 60–70 % of its context.
+Status: `todo` · `doing` · `done` · `verified` (done and confirmed on a real Windows machine) · `dropped`.
+
+## Session 1 — foundations and a compiling, tested core (this session)
+
+| # | Item | Status |
+|---|------|--------|
+| 1.1 | Guard hooks: git hooks + Claude Code hooks + `scripts/check.sh` | done |
+| 1.2 | Documentation scaffolding: AGENTS.md, CLAUDE.md pointer, docs/*, ADRs 0001–0006, PR template | done |
+| 1.3 | `src/SpeedTest.Core`: result model, Cloudflare measurer, formatting, text meter | todo |
+| 1.4 | `tests/SpeedTest.Core.Tests`: unit tests with faked network, passing locally | todo |
+| 1.5 | Extension UI: settings (default view), MeterPage, DetailsPage, shared session, shortcuts | todo |
+| 1.6 | CI on Windows: build extension, run tests, `check.sh all`; green on the feature branch | todo |
+| 1.7 | Hand-off: SESSION-LOG, CHANGELOG, PR opened | todo |
+
+Expected state at the end of session 1: the code compiles in CI and Core is unit-tested, but nothing has run inside
+Command Palette on a real PC yet. Treat the UI as unverified.
+
+## Session 2 — first real run and fixes
+
+| # | Item | Status |
+|---|------|--------|
+| 2.1 | Human installs the build on Windows (docs/INSTALL.md written in this session) and runs the manual checklist | todo |
+| 2.2 | Fix whatever the real host reveals (API mismatches, layout, shortcuts, timing) | todo |
+| 2.3 | CI publishes an MSIX artifact so future sessions need no Visual Studio round-trip | todo |
+| 2.4 | Tag `v0.1.0`, GitHub release with the MSIX and install notes | todo |
+
+Expected state at the end of session 2: a usable v0.1.0 you can install and run daily.
+
+## Session 3 — polish (only what real use asks for)
+
+| # | Item | Status |
+|---|------|--------|
+| 3.1 | Meter view as an image gauge if the markdown renderer supports it (ADR-0006 revisit) | todo |
+| 3.2 | Copy full summary; optional "result as markdown" | todo |
+| 3.3 | Measurement tuning (parallel streams, durations) against real connections | todo |
+| 3.4 | Optional: publish to WinGet / Store (template skill `publish-extension`) | todo |
+
+## Out of scope (unless asked)
+
+Result history, charts over time, server selection, speedtest.net results and share links (ADR-0002), telemetry.

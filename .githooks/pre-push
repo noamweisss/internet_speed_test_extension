@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Blocks pushes to main and non-fast-forward (history rewriting) pushes.
+set -u
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in refs/heads/main|refs/heads/master)
+    echo "RULE P1: direct pushes to $remote_ref are not allowed; open a pull request (docs/CONVENTIONS.md)" >&2; exit 1;;
+  esac
+  if [ "$remote_sha" != "0000000000000000000000000000000000000000" ] && [ "$local_sha" != "0000000000000000000000000000000000000000" ]; then
+    if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+      echo "RULE P2: non-fast-forward push to $remote_ref refused (no history rewriting on shared branches)" >&2; exit 1
+    fi
+  fi
+done
+exit 0
