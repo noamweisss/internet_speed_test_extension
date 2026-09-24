@@ -2,6 +2,10 @@
 # Blocks pushes to main and non-fast-forward (history rewriting) pushes.
 set -u
 while read -r local_ref local_sha remote_ref remote_sha; do
+  # P3: no auto-generated branch names. Cloud agent sessions must rename their branch first (AGENTS.md §4).
+  if printf '%s' "$remote_ref" | grep -qE '^refs/heads/claude/[a-z]+-[a-z]+-[a-z0-9]{6,}$'; then
+    echo "RULE P3: '$remote_ref' is an auto-generated branch name. Rename it: git branch -m <type>/<meaningful-topic> (docs/CONVENTIONS.md)" >&2; exit 1
+  fi
   case "$remote_ref" in refs/heads/main|refs/heads/master)
     echo "RULE P1: direct pushes to $remote_ref are not allowed; open a pull request (docs/CONVENTIONS.md)" >&2; exit 1;;
   esac

@@ -15,7 +15,7 @@ Short and enforced where possible. Rule ids in brackets refer to `docs/SECURITY.
 | Setting ids (persisted strings) | camelCase, defined once in `SettingsManager` | `defaultView` |
 | Test methods | `Method_Scenario_Expectation` | `Format_BelowOneMbps_UsesKbps` |
 | Docs and ADRs | `docs/UPPERCASE.md`, `docs/decisions/ADR-NNNN-kebab-title.md` | `ADR-0002-cloudflare-backend.md` |
-| Branches | `<type>/<kebab-topic>`; Claude cloud sessions use the branch the harness assigns (`claude/...`) | `feat/latency-phase` |
+| Branches | `<type>/<kebab-topic>` that says what the branch delivers. Auto-generated names (`claude/<word>-<word>-<id>`) are refused by the pre-push hook (P3); rename with `git branch -m` first | `feat/latency-phase` |
 
 The project, assembly, and MSIX identity keep the template name `internet_speed_test_extension` (ADR-0005).
 Types inside it use the `SpeedTest.Extension` namespace and PascalCase names.

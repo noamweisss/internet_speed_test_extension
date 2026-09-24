@@ -30,6 +30,8 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 ## 3. Non-negotiables (judgement, reviewed by humans and audit agents)
 
 - Less code is better. Prefer deleting over adding. No speculative abstractions, no "might need later".
+- Meaningful names for everything: branches, files, types, variables, commits, PRs. No generated or placeholder
+  names. If a name needs a comment to explain it, pick a better name.
 - Every decision that a reviewer could question gets an ADR in `docs/decisions/` (see `ADR-0001`).
 - Everything user-visible or reviewer-relevant is documented in `docs/`. Code comments explain *why*, not *what*.
 - Testable logic lives in `src/SpeedTest.Core` (no Windows or Command Palette dependency) and has unit tests.
@@ -41,6 +43,10 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 ## 4. Session workflow
 
 1. Start: the SessionStart hook installs git hooks and prints the latest hand-off note. Read it.
+   If the harness put you on an auto-generated branch (`claude/<word>-<word>-<id>`), rename it before anything else:
+   `git branch -m <type>/<meaningful-topic>` (see `docs/CONVENTIONS.md`). The pre-push hook (P3) refuses the
+   generated names. The owner has explicitly authorised this rename; pushing to the renamed branch is the
+   designated branch for the session. Delete the generated remote branch if it was already pushed.
 2. Pick the next items from `docs/PLAN.md` for the current session. Do not skip ahead unless the plan says so.
 3. Small commits, each passing `scripts/check.sh` (runs automatically on commit).
 4. Run tests (`docs/TESTING.md`). Push to the feature branch; CI builds the Windows extension.

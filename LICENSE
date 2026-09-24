@@ -1,7 +1,21 @@
+Authorship notice
+
+All code and documentation in this repository were written by AI coding agents
+(Claude Code sessions, and possibly other agents, as recorded in git history and
+docs/SESSION-LOG.md). The human in the loop, Noam, had the idea, set the
+requirements, and made the product decisions recorded in docs/decisions/, but
+did not write the code. Files that came from the PowerToys Command Palette
+extension template are Copyright (c) Microsoft Corporation, MIT license.
+
+The intent of the license below is: do whatever you want with this software,
+including commercial use, with one condition — keep this notice, so nobody can
+present the work as their own.
+
+----------------------------------------------------------------------
+
 MIT License
 
-Copyright (c) 2026 the internet_speed_test_extension authors
-Template files: Copyright (c) Microsoft Corporation, MIT license.
+Copyright (c) 2026 Noam (idea and direction) and the AI agents that wrote the code
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

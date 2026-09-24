@@ -37,6 +37,7 @@ Git hooks, `.githooks/` (any git user, installed by `scripts/setup.sh`):
 | C1 | Conventional Commits first line. |
 | P1 | No pushes to `main`. |
 | P2 | No non-fast-forward pushes. |
+| P3 | No auto-generated branch names (`claude/<word>-<word>-<id>`). |
 
 Claude Code hooks, `.claude/settings.json` (main agent and subagents):
 

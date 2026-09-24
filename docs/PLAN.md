@@ -22,9 +22,9 @@ Command Palette on a real PC yet. Treat the UI as unverified.
 
 | # | Item | Status |
 |---|------|--------|
-| 2.1 | Human installs the build on Windows (docs/INSTALL.md written in this session) and runs the manual checklist | todo |
-| 2.2 | Fix whatever the real host reveals (API mismatches, layout, shortcuts, timing) | todo |
-| 2.3 | CI publishes an MSIX artifact so future sessions need no Visual Studio round-trip | todo |
+| 2.1 | CI publishes the built extension as a downloadable artifact plus a PowerShell install script (Developer Mode + `Add-AppxPackage -Register`), so the owner never needs Visual Studio (`docs/INSTALL.md`) | todo |
+| 2.2 | Owner installs it and runs the manual checklist in `docs/TESTING.md` | todo |
+| 2.3 | Fix whatever the real host reveals (API mismatches, layout, shortcuts, timing) | todo |
 | 2.4 | Tag `v0.1.0`, GitHub release with the MSIX and install notes | todo |
 
 Expected state at the end of session 2: a usable v0.1.0 you can install and run daily.

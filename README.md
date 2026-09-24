@@ -24,6 +24,13 @@ Not yet packaged. `docs/PLAN.md` says when a downloadable build arrives; until t
 Read `AGENTS.md` first (it applies to humans too). Then `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`,
 `docs/TESTING.md`, `docs/SECURITY.md`. Run `scripts/setup.sh` once after cloning to install the git hooks.
 
+## Authorship
+
+Every line of code and documentation here was written by AI coding agents. The human owner, Noam, had the idea,
+set the requirements, and made the product decisions (`docs/decisions/`), and did not write the code.
+Reviewers should read the project with that in mind: `docs/SESSION-LOG.md` and git history show which session
+produced what.
+
 ## License
 
-MIT, see `LICENSE`.
+MIT with an authorship notice, see `LICENSE`. Use it however you like; just keep the notice.
