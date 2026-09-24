@@ -3,7 +3,8 @@
 set -u
 while read -r local_ref local_sha remote_ref remote_sha; do
   # P3: no auto-generated branch names. Cloud agent sessions must rename their branch first (AGENTS.md §4).
-  if printf '%s' "$remote_ref" | grep -qE '^refs/heads/claude/[a-z]+-[a-z]+-[a-z0-9]{6,}$'; then
+  # Deleting such a branch (local_sha all zeros) is allowed; that is the clean-up the rule asks for.
+  if [ "$local_sha" != "0000000000000000000000000000000000000000" ] && printf '%s' "$remote_ref" | grep -qE '^refs/heads/claude/[a-z]+-[a-z]+-[a-z0-9]{6,}$'; then
     echo "RULE P3: '$remote_ref' is an auto-generated branch name. Rename it: git branch -m <type>/<meaningful-topic> (docs/CONVENTIONS.md)" >&2; exit 1
   fi
   case "$remote_ref" in refs/heads/main|refs/heads/master)
