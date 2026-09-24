@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>internet_speed_test_extension</RootNamespace>
+    <RootNamespace>SpeedTest.Extension</RootNamespace>
+    <!-- AssemblyName stays the template name: it is wired into the manifest and publish profiles (ADR-0005). -->
+    <AssemblyName>internet_speed_test_extension</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
     <WindowsSdkPackageVersion>10.0.26100.68-preview</WindowsSdkPackageVersion>
@@ -36,6 +38,9 @@
   -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\SpeedTest.Core\SpeedTest.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CommandPalette.Extensions" />

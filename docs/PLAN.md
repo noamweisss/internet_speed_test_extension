@@ -9,10 +9,10 @@ Status: `todo` · `doing` · `done` · `verified` (done and confirmed on a real 
 |---|------|--------|
 | 1.1 | Guard hooks: git hooks + Claude Code hooks + `scripts/check.sh` | done |
 | 1.2 | Documentation scaffolding: AGENTS.md, CLAUDE.md pointer, docs/*, ADRs 0001–0006, PR template | done |
-| 1.3 | `src/SpeedTest.Core`: result model, Cloudflare measurer, formatting, text meter | todo |
-| 1.4 | `tests/SpeedTest.Core.Tests`: unit tests with faked network, passing locally | todo |
-| 1.5 | Extension UI: settings (default view), MeterPage, DetailsPage, shared session, shortcuts | todo |
-| 1.6 | CI on Windows: build extension, run tests, `check.sh all`; green on the feature branch | todo |
+| 1.3 | `src/SpeedTest.Core`: result model, Cloudflare measurer, formatting, text meter | done |
+| 1.4 | `tests/SpeedTest.Core.Tests`: unit tests with faked network, passing locally | done |
+| 1.5 | Extension UI: settings (default view), MeterPage, DetailsPage, shared session, shortcuts | done |
+| 1.6 | CI on Windows: build extension, run tests, `check.sh all`; green on the feature branch | doing |
 | 1.7 | Hand-off: SESSION-LOG, CHANGELOG, PR opened | todo |
 
 Expected state at the end of session 1: the code compiles in CI and Core is unit-tested, but nothing has run inside

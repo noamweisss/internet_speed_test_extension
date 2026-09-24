@@ -7,18 +7,19 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.CommandPalette.Extensions;
 
-namespace internet_speed_test_extension;
+namespace SpeedTest.Extension;
 
+/// <summary>Extension root: the COM class Command Palette activates. The GUID must match Package.appxmanifest (rule R10).</summary>
 [Guid("80081f57-4220-4ebb-bbff-3364a57d0625")]
-public sealed partial class internet_speed_test_extension : IExtension, IDisposable
+public sealed partial class SpeedTestExtension : IExtension, IDisposable
 {
     private readonly ManualResetEvent _extensionDisposedEvent;
 
-    private readonly internet_speed_test_extensionCommandsProvider _provider = new();
+    private readonly SpeedTestCommandsProvider _provider = new();
 
-    public internet_speed_test_extension(ManualResetEvent extensionDisposedEvent)
+    public SpeedTestExtension(ManualResetEvent extensionDisposedEvent)
     {
-        this._extensionDisposedEvent = extensionDisposedEvent;
+        _extensionDisposedEvent = extensionDisposedEvent;
     }
 
     public object? GetProvider(ProviderType providerType)
@@ -30,5 +31,9 @@ public sealed partial class internet_speed_test_extension : IExtension, IDisposa
         };
     }
 
-    public void Dispose() => this._extensionDisposedEvent.Set();
+    public void Dispose()
+    {
+        _provider.Dispose();
+        _extensionDisposedEvent.Set();
+    }
 }

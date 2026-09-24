@@ -21,7 +21,8 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 - Commit messages follow Conventional Commits. Code changes ship with a `CHANGELOG.md` line in the same commit.
 - Changes to guard files (`.githooks/`, `.claude/`, `scripts/`, `.github/workflows/`, `AGENTS.md`, `CLAUDE.md`)
   need a `Guard-Change: <reason>` trailer in the commit message.
-- `internet_speed_test_extension/Program.cs` (the COM host) is never edited.
+- `internet_speed_test_extension/Program.cs` (the COM host) is not edited by agents (W1). If a human decides it must
+  change, the commit carries a `Protected-Change: <why>` trailer (R11) and references an ADR.
 - The extension talks only to hosts listed in `scripts/allowed-hosts.txt`. Adding a host requires a human decision,
   an ADR, and a `docs/SECURITY.md` update.
 - No process spawning, native interop, `unsafe`, reflection loading, plain `http://`, or TLS validation overrides.

@@ -34,6 +34,7 @@ Git hooks, `.githooks/` (any git user, installed by `scripts/setup.sh`):
 | R8 | Code changes are committed together with a `CHANGELOG.md` change. |
 | R9 | Guard-file changes carry a `Guard-Change:` trailer (commit-msg hook). |
 | R10 | The COM CLSID is identical in the manifest and the extension class. |
+| R11 | Changes to `Program.cs` carry a `Protected-Change:` trailer (commit-msg hook). |
 | C1 | Conventional Commits first line. |
 | P1 | No pushes to `main`. |
 | P2 | No non-fast-forward pushes. |
