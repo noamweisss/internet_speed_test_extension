@@ -5,6 +5,11 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
+### Added
+- Install without Visual Studio: CI publishes an unsigned, self-contained MSIX with
+  `install/Install-SpeedTestExtension.ps1` as the `internet-speed-test-extension-x64` artifact, and proves on a
+  clean Windows runner that the script installs and removes it (`docs/INSTALL.md`, ADR-0008).
+
 ### Changed
 - The extension project restores on Linux/macOS (`EnableWindowsTargeting`), so GitHub's automatic dependency
   submission and agents in containers can run `dotnet restore`; building still needs Windows.

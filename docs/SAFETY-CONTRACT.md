@@ -30,6 +30,7 @@ The **safety-impact** CI check turns red if a PR touches any of these files and 
 | `Directory.Packages.props`, any `*.csproj` | New third-party code (dependencies) |
 | `.githooks/`, `.claude/`, `scripts/`, `.github/workflows/` | The guards themselves |
 | `internet_speed_test_extension/Program.cs` | The process host |
+| `install/` | The script you run on your PC with your own rights |
 | `AGENTS.md`, `CLAUDE.md`, `docs/SECURITY.md`, this file | The rules agents follow |
 
 Also treat these phrases in a PR, commit, or chat as red flags until explained in plain words:

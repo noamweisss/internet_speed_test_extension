@@ -46,10 +46,45 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           dotnet-version: 10.0.x
-      - run: dotnet build internet_speed_test_extension/internet_speed_test_extension.csproj -c Release -p:Platform=x64
+      # The build also produces an unsigned, self-contained MSIX: the owner installs it without Visual Studio,
+      # without a certificate, and without a .NET runtime on the PC (docs/INSTALL.md, ADR-0008).
+      - name: Build and package
+        shell: pwsh
+        run: >-
+          dotnet build internet_speed_test_extension/internet_speed_test_extension.csproj -c Release
+          -p:Platform=x64 -p:RuntimeIdentifier=win-x64 -p:SelfContained=true
+          -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Never
+          -p:AppxPackageDir=${{ github.workspace }}/AppPackages/
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
           DOTNET_NOLOGO: 1
+      - name: Collect package and install script
+        shell: pwsh
+        run: |
+          $msix = @(Get-ChildItem AppPackages -Recurse -Filter *.msix)
+          if ($msix.Count -ne 1) { throw "expected one .msix, found $($msix.Count)" }
+          New-Item -ItemType Directory install-package | Out-Null
+          Copy-Item $msix[0].FullName, install/Install-SpeedTestExtension.ps1 install-package/
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $entries = [System.IO.Compression.ZipFile]::OpenRead($msix[0].FullName).Entries.FullName
+          foreach ($required in 'AppxManifest.xml', 'internet_speed_test_extension.exe', 'coreclr.dll') {
+            if ($entries -notcontains $required) { throw "package is missing $required" }
+          }
+      # Proves on a clean Windows that the script installs and removes the package. Developer Mode is switched
+      # on only on this throwaway runner; on the owner's PC it is the owner's choice (docs/INSTALL.md).
+      - name: Install and uninstall with the script
+        shell: pwsh
+        run: |
+          reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1
+          ./install-package/Install-SpeedTestExtension.ps1
+          if (-not (Get-AppxPackage -Name internet_speed_test_extension)) { throw 'package not registered' }
+          ./install-package/Install-SpeedTestExtension.ps1 -Uninstall
+          if (Get-AppxPackage -Name internet_speed_test_extension) { throw 'package still registered' }
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: internet-speed-test-extension-x64
+          path: install-package/
+          if-no-files-found: error
 
   safety-impact:
     name: Safety impact declared (docs/SAFETY-CONTRACT.md)
