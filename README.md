@@ -16,8 +16,8 @@ Pre-release. See `docs/PLAN.md` for the roadmap and `CHANGELOG.md` for what exis
 
 ## Install
 
-Not yet packaged. `docs/PLAN.md` says when a downloadable build arrives; until then, build with Visual Studio 2022
-(Windows App SDK workload) using **Build > Deploy**, then run **Reload** in Command Palette.
+Pre-release builds come from CI: download the `internet-speed-test-extension-x64` artifact and follow
+`docs/INSTALL.md` (no Visual Studio, no certificate; Windows Sandbox recommended).
 
 ## Development
 

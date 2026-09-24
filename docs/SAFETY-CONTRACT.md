@@ -67,9 +67,9 @@ Best to worst, pick the first one you can:
 2. **A virtual machine** (Hyper-V on Pro, or VirtualBox on Home). Same idea, more setup, survives reboots.
 3. **Your real PC, reduced blast radius.** Use a standard (non-administrator) user account. Enable Developer
    Mode only for the duration of the test. Do not install any certificate into "Trusted Root"; the install
-   script in session 2 avoids certificates entirely. Take a restore point first.
+   script avoids certificates entirely (ADR-0008). Take a restore point first.
 
-`docs/INSTALL.md` (session 2) gives the exact commands for the path you choose.
+`docs/INSTALL.md` gives the exact steps for paths 1 and 3 (a VM follows the Sandbox steps).
 
 ## 6. Watching what it actually does
 
