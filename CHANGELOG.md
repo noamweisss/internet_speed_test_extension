@@ -5,6 +5,10 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
+### Changed
+- The extension project restores on Linux/macOS (`EnableWindowsTargeting`), so GitHub's automatic dependency
+  submission and agents in containers can run `dotnet restore`; building still needs Windows.
+
 ### Added
 - Project rules, guard hooks (git and Claude Code), documentation scaffolding, roadmap, and ADRs 0001–0006.
 - `SpeedTest.Core`: Cloudflare-based measurement (connection info, latency, jitter, download, upload), formatting,

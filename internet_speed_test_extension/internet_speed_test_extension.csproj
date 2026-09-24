@@ -15,6 +15,9 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
+    <!-- Lets "dotnet restore" succeed on Linux/macOS (GitHub's dependency submission, agents in containers).
+         Building still needs Windows; CI does that. No effect on Windows builds. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <!-- CA1707 complains about underscores in the assembly name, which is kept on purpose (ADR-0005). -->
     <NoWarn>$(NoWarn);CA1707</NoWarn>
   </PropertyGroup>
