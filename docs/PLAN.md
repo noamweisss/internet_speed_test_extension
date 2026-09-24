@@ -22,7 +22,7 @@ Command Palette on a real PC yet. Treat the UI as unverified.
 
 | # | Item | Status |
 |---|------|--------|
-| 2.0 | Owner: enable Dependabot alerts and confirm secret scanning (repo Settings → Security); install CodeRabbit; open the session-1 PR | todo |
+| 2.0 | Owner: enable Dependabot alerts and confirm secret scanning (repo Settings → Security); install CodeRabbit; review and merge PR #1 | doing |
 | 2.1 | CI publishes the built extension as a downloadable artifact plus a PowerShell install script (Developer Mode + `Add-AppxPackage -Register`), so the owner never needs Visual Studio (`docs/INSTALL.md`, with the Windows Sandbox path from `docs/SAFETY-CONTRACT.md` §5 first) | todo |
 | 2.2 | Owner installs it and runs the manual checklist in `docs/TESTING.md` | todo |
 | 2.3 | Fix whatever the real host reveals (API mismatches, layout, shortcuts, timing) | todo |

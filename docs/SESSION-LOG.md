@@ -42,7 +42,11 @@ verified, blocked, next.
 - Cloud environment has .NET 10 SDK via setup script and network access to `speed.cloudflare.com`, NuGet, and
   Microsoft download hosts. Ookla hosts are not allowlisted (Option A chosen, ADR-0002).
 
+**Pull request**
+- [noamweisss/internet_speed_test_extension#1](https://github.com/noamweisss/internet_speed_test_extension/pull/1),
+  opened at the owner's request at the end of session 1. Its "Safety impact" section explains the guard layer.
+
 **Next**
-- Session 2 in `docs/PLAN.md`. Item 2.0 is the owner's: enable scanners, install CodeRabbit, open the PR.
+- Session 2 in `docs/PLAN.md`. Item 2.0 is the owner's: enable scanners, install CodeRabbit, review and merge PR #1.
 - The safety-impact CI job has only been tested locally (`scripts/safety-impact.sh` with a fake PR body); its
   first real run is on the first PR. CodeQL ran on push; check the Security tab for findings.
