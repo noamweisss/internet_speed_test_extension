@@ -37,9 +37,13 @@ verified, blocked, next.
   `Get-AppxPackage` found it, and `-Uninstall` removed it. Artifact `internet-speed-test-extension-x64`: 14 MB zip,
   two files (MSIX + script), expires 2026-12-23.
 
+- First real run (2026-09-25, owner, test VM): the CI build installs with the script, the extension appears in
+  Command Palette and opens. So the packaging, COM activation, and the trimmed Release build load. The VM had no
+  internet, so no measurement ran yet.
+
 **Not verified**
-- The extension has still never run inside Command Palette (the runner has no PowerToys). The Release build is
-  trimmed ("Optimizing assemblies for size" in the log); a trimming problem would only show at runtime.
+- A measurement against Cloudflare inside Command Palette (VM had no internet), and the rest of the
+  `docs/TESTING.md` checklist.
 - Whether a folder-registered package keeps loading after Developer Mode is switched off (INSTALL.md says it may not).
 - Whether PowerToys Command Palette runs inside Windows Sandbox on a retail Windows build (untested; the
   owner's host is an Insider build, where Sandbox crashes).
