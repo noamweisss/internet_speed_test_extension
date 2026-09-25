@@ -4,7 +4,12 @@ using SpeedTest.Core;
 
 namespace SpeedTest.Extension.Pages;
 
-/// <summary>The meter dashboard: one markdown block rendered by <see cref="MeterMarkdown"/> (ADR-0006).</summary>
+/// <summary>
+/// The meter dashboard: one markdown block rendered by <see cref="MeterMarkdown"/> (ADR-0006).
+/// Live updates go through the same MarkdownContent: setting Body raises PropChanged and Command Palette re-reads it.
+/// Never RaiseItemsChanged here: the host answers it by calling GetContent again on the same thread
+/// (ContentPageViewModel.Model_ItemsChanged in PowerToys), which looped and froze the first real run.
+/// </summary>
 internal sealed partial class MeterPage : ContentPage
 {
     private readonly SpeedTestSession _session;
@@ -31,6 +36,5 @@ internal sealed partial class MeterPage : ContentPage
         var snapshot = _session.Snapshot;
         _content.Body = MeterMarkdown.Render(snapshot);
         IsLoading = snapshot.IsRunning;
-        RaiseItemsChanged();
     }
 }

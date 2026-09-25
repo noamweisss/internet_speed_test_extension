@@ -4,6 +4,91 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 2 — 2026-09-24 — branch `feat/install-without-visual-studio`
+
+**Done**
+- Harness branch `claude/determined-curie-7om0u6` renamed to `feat/install-without-visual-studio` (AGENTS.md §4).
+  The generated remote branch still exists (same commit as `main`); not deleted, G6 blocks branch deletion.
+- Plan item 2.1: CI builds an unsigned, self-contained MSIX, checks its contents, runs
+  `install/Install-SpeedTestExtension.ps1` on the runner (install, verify, uninstall), and uploads the package
+  with the script as artifact `internet-speed-test-extension-x64`. `docs/INSTALL.md`, ADR-0008.
+- `install/` is safety-sensitive: added to R13 (`scripts/safety-impact.sh`), SAFETY-CONTRACT §2, CodeRabbit guard
+  paths; R4 now scans `.ps1`.
+
+- Real bug found by the first package build: MSIX rejects underscores in `Identity Name` (C00CE169), so no
+  package could ever have been built, not even by Visual Studio. Identity is now `InternetSpeedTestExtension`
+  (ADR-0009); project, assembly, exe name, and CLSID unchanged.
+
+**Owner facts**
+- Windows 11 Pro: Windows Sandbox is available, so INSTALL.md path A (Sandbox) applies.
+- The laptop runs a Windows Insider build (26300.9539, 26H2), 31 GB RAM.
+- Sandbox failed twice (0x80370106). A local Claude session on the laptop found the cause: the Windows inside
+  Sandbox (which is the host's Insider build) blue-screened, bugcheck 0x3B, same code address both times, while
+  the PowerToys installer ran. Not memory. Not caused by the extension (it was never installed).
+- Test VM instead (set up by the local session, scripts outside the repo in `C:\Users\Noam\SpeedTestVM`):
+  Hyper-V `SpeedTest-Win11`, Windows 11 Pro 25H2 retail build 26200.8037, PowerToys 0.101.2652.0, Command
+  Palette 0.12.12651.0, Developer Mode on, checkpoint `clean-powertoys-devmode`. Scripts copy files in, collect
+  logs (event logs, PowerToys and package logs, crash dumps) to the laptop, and revert the checkpoint. The owner
+  pastes `summary.txt` and `errors-and-warnings.txt` from a log folder back into the cloud session.
+
+**Verified**
+- `scripts/check.sh all` passes locally.
+- CI run 36041156689 on commit 305f2cf: all jobs green. On the Windows runner the script installed the package,
+  `Get-AppxPackage` found it, and `-Uninstall` removed it. Artifact `internet-speed-test-extension-x64`: 14 MB zip,
+  two files (MSIX + script), expires 2026-12-23.
+
+- First real run (2026-09-25, owner, test VM): the CI build installs with the script, the extension appears in
+  Command Palette and opens. So the packaging, COM activation, and the trimmed Release build load. The VM had no
+  internet, so no measurement ran yet.
+- Offline runs (owner): some failed at once with "Could not reach the speed test server", others stayed on
+  "Measuring latency" about 30 s (owner pressed Esc). Command Palette and the VM stayed responsive throughout.
+  Cause of the wait: 5 s /meta + 30 s request timeout when packets are dropped. Fixed in 6a09d4c with a 5 s
+  `ConnectTimeout`. A second, icon-less "Internet Speed Test" entry (the package's app, which only works as a COM
+  server) did nothing; hidden with `AppListEntry="none"` in 6a09d4c. Both fixes not yet re-tested.
+- Found by reading the code after the run: nothing cancels a run when the page closes (the SDK was not seen to
+  offer a page-closed signal). Esc leaves the test running in the background, bounded by its timeouts and
+  2 × 8 s transfers; reopening shows it. `docs/TESTING.md` step 4 expects the test to stop: owner decides which.
+- Owner decisions: Esc keeps the test running (TESTING.md updated); meter lists Latency first (20d43a9, 2 tests,
+  71 total). CI artifacts are now named `internet-speed-test-extension-x64-<short sha>` (first: `…-20d43a9`,
+  run 36114691892, green). The owner's local session is adding a VM-side script that downloads the newest green
+  artifact with `gh` (read-only fine-grained token) and installs it; that script lives outside the repo.
+  Its log is on branch `docs/local-vm-setup-log` (`docs/VM-SETUP-LOCAL-SESSION-LOG.md`, not merged).
+- First online run (owner, VM with internet, build 20d43a9): the meter froze on "Measuring latency"; reopening
+  showed partial results. Cause, confirmed in PowerToys source (`ContentPageViewModel.Model_ItemsChanged` calls
+  `GetContent()` synchronously): `MeterPage` raised ItemsChanged on every redraw, including inside `GetContent`,
+  so each redraw triggered another, looping and blocking the measurement thread. Fixed in 5fbf29a: the page only
+  sets `MarkdownContent.Body` (the host listens to its PropChanged). Rule added to CONVENTIONS. Not yet re-tested.
+- Session-1 unknowns answered from the source: Body updates re-render live (PropChanged is handled);
+  RaiseItemsChanged on a ContentPage makes the host re-call GetContent (so never from inside it).
+
+**Pull request**
+- [noamweisss/internet_speed_test_extension#7](https://github.com/noamweisss/internet_speed_test_extension/pull/7)
+  opened 2026-09-25 at the owner's request. CI green on 0971b9a (safety-impact check passed on its first real run).
+- Codex: 1 finding (missing `Guard-Change:` trailers). Did not reproduce, all four guard commits carry it; answered
+  with evidence and resolved.
+- CodeRabbit: 3 findings on the install script, all valid, fixed in 6bd7c2e. The script now checks the new
+  package's file count, unpacked size and package name before removing the installed one. INSTALL.md documents
+  0x80073D02 (package in use). Replied on each thread. Whether an update over a running extension hits
+  0x80073D02 is not yet tested. CodeRabbit follow-up (partial extraction after removal) fixed in 39bd686: the
+  script extracts into `InternetSpeedTestExtension.new`, checks it, and only then replaces the old install.
+- Real package size (CI log): 73 files, 32.5 MB unpacked; the script's limits are 5000 files and 500 MB.
+- Artifacts are uploaded only by push runs: pull_request runs build a merge commit that exists on no branch.
+
+**Not verified**
+- A full measurement shown live in Command Palette: the first online run froze (ItemsChanged loop); the fix
+  5fbf29a is not yet re-tested. The rest of the `docs/TESTING.md` checklist.
+- Whether a folder-registered package keeps loading after Developer Mode is switched off (INSTALL.md says it may not).
+- Whether PowerToys Command Palette runs inside Windows Sandbox on a retail Windows build (untested; the
+  owner's host is an Insider build, where Sandbox crashes).
+
+**Next** (state at 8274d25: CI green on 8447721, all review threads resolved. CodeRabbit's latest review of
+8447721 only commented; its older "changes requested" from 0971b9a stays until the owner dismisses it, as in
+session 1. Its last minor point, the artifact name in README, is fixed in 8274d25.)
+- Owner re-tests in the VM with artifact `internet-speed-test-extension-x64-<head sha>`: live meter (latency →
+  download → upload), duplicate entry gone, an update over the installed version while Command Palette is open
+  (0x80073D02 or not), then the rest of `docs/TESTING.md` (item 2.2). Record the result here and in PR #7.
+- Fix whatever that run shows (2.3). Then the owner approves and merges PR #7; then 2.4 (tag `v0.1.0`, release).
+
 ## Session 1 — 2026-09-24 — branch `feat/speedtest-core-and-ui`
 
 **Done**

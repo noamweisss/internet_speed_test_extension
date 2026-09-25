@@ -17,7 +17,8 @@ Short and enforced where possible. Rule ids in brackets refer to `docs/SECURITY.
 | Docs and ADRs | `docs/UPPERCASE.md`, `docs/decisions/ADR-NNNN-kebab-title.md` | `ADR-0002-cloudflare-backend.md` |
 | Branches | `<type>/<kebab-topic>` that says what the branch delivers. Auto-generated names (`claude/<word>-<word>-<id>`) are refused by the pre-push hook (P3); rename with `git branch -m` first | `feat/latency-phase` |
 
-The project, assembly, and MSIX identity keep the template name `internet_speed_test_extension` (ADR-0005).
+The project and assembly keep the template name `internet_speed_test_extension` (ADR-0005). The MSIX identity is
+`InternetSpeedTestExtension`, because package names may not contain underscores (ADR-0009).
 Types inside it use the `SpeedTest.Extension` namespace and PascalCase names.
 
 ## C# style
@@ -28,6 +29,8 @@ Types inside it use the `SpeedTest.Extension` namespace and PascalCase names.
 - Every network call has a timeout and a byte bound. Every loop that waits on the network checks the token.
 - No `Console.WriteLine` outside `Program.cs`. Diagnostics via `System.Diagnostics.Debug` only, never with IP addresses.
 - `GetItems()` and `GetContent()` are hot paths: return cached state, never start work there.
+- Never call `RaiseItemsChanged()` from inside `GetItems()`/`GetContent()` or from code they call: the host answers it
+  by calling them again. A content page updates live by changing its content objects (`MarkdownContent.Body`).
 
 ## Git
 
