@@ -52,6 +52,14 @@ verified, blocked, next.
   71 total). CI artifacts are now named `internet-speed-test-extension-x64-<short sha>` (first: `…-20d43a9`,
   run 36114691892, green). The owner's local session is adding a VM-side script that downloads the newest green
   artifact with `gh` (read-only fine-grained token) and installs it; that script lives outside the repo.
+  Its log is on branch `docs/local-vm-setup-log` (`docs/VM-SETUP-LOCAL-SESSION-LOG.md`, not merged).
+- First online run (owner, VM with internet, build 20d43a9): the meter froze on "Measuring latency"; reopening
+  showed partial results. Cause, confirmed in PowerToys source (`ContentPageViewModel.Model_ItemsChanged` calls
+  `GetContent()` synchronously): `MeterPage` raised ItemsChanged on every redraw, including inside `GetContent`,
+  so each redraw triggered another, looping and blocking the measurement thread. Fixed in 5fbf29a: the page only
+  sets `MarkdownContent.Body` (the host listens to its PropChanged). Rule added to CONVENTIONS. Not yet re-tested.
+- Session-1 unknowns answered from the source: Body updates re-render live (PropChanged is handled);
+  RaiseItemsChanged on a ContentPage makes the host re-call GetContent (so never from inside it).
 
 **Not verified**
 - A measurement against Cloudflare inside Command Palette (VM had no internet), and the rest of the
