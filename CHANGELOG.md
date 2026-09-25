@@ -9,8 +9,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 - Install without Visual Studio: CI publishes an unsigned, self-contained MSIX with
   `install/Install-SpeedTestExtension.ps1` as the `internet-speed-test-extension-x64-<commit>` artifact, and proves on a
   clean Windows runner that the script installs and removes it (`docs/INSTALL.md`, ADR-0008). Before it removes an
-  installed version, the script checks the new package's size, file count, and package name, so a broken or
-  foreign download leaves the current install untouched.
+  installed version, the script checks the new package's size and file count, unpacks it into a separate
+  folder, and checks its package name there, so a broken or foreign download leaves the current install untouched.
 
 ### Fixed
 - The meter view now updates live during a test. Before, it froze on "Measuring latency" and showed results only

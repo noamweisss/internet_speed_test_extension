@@ -7,7 +7,8 @@
     Mode, but no administrator rights, no certificate, and no Visual Studio (ADR-0008).
 
     What it changes on your PC, and nothing else:
-    - the folder %LOCALAPPDATA%\InternetSpeedTestExtension (the extension's files), and
+    - the folder %LOCALAPPDATA%\InternetSpeedTestExtension (the extension's files; an install unpacks into
+      InternetSpeedTestExtension.new next to it first), and
     - the app registration of the package "InternetSpeedTestExtension" for your Windows user.
 
 .PARAMETER Uninstall
@@ -38,23 +39,37 @@ if (-not $Uninstall) {
         throw "Expected exactly one .msix file next to this script in $PSScriptRoot, found $($msix.Count)."
     }
 
-    # Check the new package before touching the installed one, so a corrupt, oversized, or foreign .msix leaves the
-    # current installation as it is.
+    # Bound the unpack before writing anything: the declared sizes are what extraction writes.
     $zip = [System.IO.Compression.ZipFile]::OpenRead($msix[0].FullName)
     try {
         $unpackedBytes = ($zip.Entries | Measure-Object -Property Length -Sum).Sum
         if ($zip.Entries.Count -gt $MaxEntries -or $unpackedBytes -gt $MaxUnpackedBytes) {
             throw "The .msix is too large ($($zip.Entries.Count) files, $unpackedBytes bytes unpacked). Nothing was changed."
         }
-        $entry = $zip.GetEntry('AppxManifest.xml')
-        if (-not $entry) { throw 'The .msix has no AppxManifest.xml. Nothing was changed.' }
-        $reader = [System.IO.StreamReader]::new($entry.Open())
-        try { [xml]$manifest = $reader.ReadToEnd() } finally { $reader.Dispose() }
-        if ($manifest.Package.Identity.Name -ne $PackageName) {
-            throw "The .msix is not this extension (package name '$($manifest.Package.Identity.Name)'). Nothing was changed."
-        }
     }
     finally { $zip.Dispose() }
+
+    # Unpack and check the new package next to the installed one, so a broken or foreign .msix never costs the
+    # working installation.
+    $StagingDir = "$InstallDir.new"
+    if (Test-Path -LiteralPath $StagingDir) { Remove-Item -LiteralPath $StagingDir -Recurse -Force }
+    try {
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($msix[0].FullName, $StagingDir)
+        [xml]$manifest = Get-Content -LiteralPath (Join-Path $StagingDir 'AppxManifest.xml') -Raw
+        if ($manifest.Package.Identity.Name -ne $PackageName) {
+            throw "package name is '$($manifest.Package.Identity.Name)'"
+        }
+    }
+    catch {
+        if (Test-Path -LiteralPath $StagingDir) { Remove-Item -LiteralPath $StagingDir -Recurse -Force }
+        throw "The .msix could not be unpacked or is not this extension ($($_.Exception.Message)). Nothing was changed."
+    }
+    # Container metadata of the .msix file, not part of the app. Removing it leaves the same folder layout that
+    # Visual Studio registers when it deploys a build.
+    foreach ($name in 'AppxBlockMap.xml', 'AppxSignature.p7x', '[Content_Types].xml', 'AppxMetadata') {
+        $path = Join-Path $StagingDir $name
+        if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Recurse -Force }
+    }
 }
 
 # A registered folder cannot be replaced while registered, so an update is a removal followed by an install.
@@ -65,13 +80,7 @@ if ($Uninstall) {
     return
 }
 
-[System.IO.Compression.ZipFile]::ExtractToDirectory($msix[0].FullName, $InstallDir)
-# Container metadata of the .msix file, not part of the app. Removing it leaves the same folder layout that
-# Visual Studio registers when it deploys a build.
-foreach ($name in 'AppxBlockMap.xml', 'AppxSignature.p7x', '[Content_Types].xml', 'AppxMetadata') {
-    $path = Join-Path $InstallDir $name
-    if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Recurse -Force }
-}
+Move-Item -LiteralPath $StagingDir -Destination $InstallDir
 Add-AppxPackage -Register (Join-Path $InstallDir 'AppxManifest.xml')
 
 Write-Host 'Installed. Open Command Palette (Win+Alt+Space), run "Reload", then search for "Internet Speed Test".'
