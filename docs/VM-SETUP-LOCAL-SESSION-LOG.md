@@ -123,6 +123,14 @@ Not changed (fallback if the Default Switch ever stops handing out addresses): a
   `Invoke-Command -VMName SpeedTest-Win11 -Credential (Import-Clixml C:\Users\Noam\SpeedTestVM\vm-credential.xml) { … }`
   for commands inside it. Commands that need the VM user's gh keyring token (e.g. `gh run download`) may fail over
   PowerShell Direct; the owner runs the update script in the VM window.
+- **Fix (13:05):** the first double-click failed with "The argument 'C:\Users\Public\Desktop\Update-SpeedTestExtension.ps1'
+  to the -File parameter does not exist": the `.cmd` located the script with `%~dp0` (its own folder), and the
+  desktop copy's folder is the Desktop. The `.cmd` now uses the full path `C:\SpeedTest\Update-SpeedTestExtension.ps1`.
+  Verified over PowerShell Direct: the desktop `.cmd` with `-Branch does-not-exist` reaches the script, gh answers
+  with the keyring token, and the script stops with `FAILED: No successful CI run…`, exit 1, nothing installed.
+  Checkpoint `clean-powertoys-devmode-gh` retaken (13:05:16) from the freshly restored, clean state.
+- Verified: after the owner's Windows sign-in, the Hyper-V Administrators membership is active; the local session ran
+  `Get-VM`, PowerShell Direct, `Copy-Item -ToSession` and `Checkpoint-VM` without elevation or UAC prompts.
 
 ---
 
@@ -489,9 +497,10 @@ Write-Host "Done: commit $short is installed." -ForegroundColor Green
 
 ```bat
 @echo off
-rem Runs Update-SpeedTestExtension.ps1 without changing the VM's script execution policy.
+rem Runs C:\SpeedTest\Update-SpeedTestExtension.ps1 without changing the VM's script execution policy.
+rem Full path on purpose: a copy of this file sits on the Desktop, away from the script.
 rem Arguments are passed through, e.g.  Update-SpeedTestExtension.cmd -Branch main
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Update-SpeedTestExtension.ps1" %*
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\SpeedTest\Update-SpeedTestExtension.ps1" %*
 set EXITCODE=%ERRORLEVEL%
 rem Keep the window open when started by double-click.
 echo %CMDCMDLINE% | find /i "/c" >nul && pause
