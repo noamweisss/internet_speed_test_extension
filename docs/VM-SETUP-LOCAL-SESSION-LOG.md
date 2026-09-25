@@ -81,15 +81,60 @@ Not changed (fallback if the Default Switch ever stops handing out addresses): a
 - Start a test session with `.\Reset-SpeedTestVM.ps1 -SkipLogs`: restores the clean checkpoint (a saved running
   state, so the desktop is back in seconds), starts it, renews the address.
 
+## Entry 5 — 2026-09-25 — one-command install of the newest CI build inside the VM
+
+- **GitHub CLI 2.101.0** installed in the VM from the official MSI (`gh_2.101.0_windows_amd64.msi`, SHA-256
+  `9ba92256…aef83` checked against the release's `checksums.txt`), machine-wide in `C:\Program Files\GitHub CLI`.
+- **Token:** the owner created a fine-grained personal access token and signed gh in inside the VM
+  (`gh auth login`, paste token; the local session never sees tokens). Scope: only repository
+  `noamweisss/internet_speed_test_extension`, **Actions: read-only, Contents: read-only** (Metadata read-only added by
+  GitHub). Verified: `gh auth status` shows a `github_pat_` token (fine-grained) stored in the Windows keyring, and it
+  can list the repo's runs. `gh repo list` still shows the owner's other **public** repositories — expected, public
+  repositories are readable without any token; the token grants nothing on them.
+  During login the owner answered "Authenticate Git: Yes", so gh asked for Git; Git for Windows 2.55.0.3 was installed
+  in the VM with winget (`Git.Git`). Harmless; the update script does not use git.
+- **`C:\SpeedTest\Update-SpeedTestExtension.ps1`** (+ `.cmd` wrapper, also on the VM's Public Desktop). Runs inside
+  the VM under Windows PowerShell 5.1:
+  1. checks gh is installed and signed in;
+  2. `gh run list --workflow CI --branch <Branch> --event push --status success --limit 1` — default branch
+     `feat/install-without-visual-studio`, `-Branch` to override. **Push runs only**: a pull request from a fork can
+     use the same branch name, and its build must never be installed (`docs/INSTALL.md` §1);
+  3. prints branch, short commit id, commit title, build time and run URL;
+  4. requires an artifact named exactly `internet-speed-test-extension-x64-<first 7 of headSha>` (the CI naming from
+     `ci.yml`, "Name the artifact after the commit") that has not expired;
+  5. `gh run download <run> --name <artifact>` into `%TEMP%\SpeedTestBuild`, then runs the artifact's own
+     `Install-SpeedTestExtension.ps1` with `powershell -ExecutionPolicy Bypass -File` (the `.cmd` uses the same
+     flag, so the VM's execution policy stays unchanged);
+  6. any failure prints a red `FAILED: <reason>` and exits 1 before installing.
+  PowerShell 5.1 detail: redirected stderr of a native command becomes a terminating error under
+  `$ErrorActionPreference = 'Stop'`, so the `gh auth status` probe runs under `Continue`.
+  Lookup tested read-only from the laptop's gh: newest run `36114926349`, commit `8fd3685`, artifact present
+  (14.9 MB). **Not yet verified: the full download + install inside the VM** (next step for the owner).
+- **Checkpoint `clean-powertoys-devmode-gh`** (2026-09-25 12:46): the old checkpoint plus gh (signed in), Git and the
+  update script. It is now the default of `Reset-SpeedTestVM.ps1`; `-Checkpoint clean-powertoys-devmode` still
+  restores the older one. The token lives inside both the VM disk and this checkpoint; when it expires, sign in again
+  and retake the checkpoint.
+- **Commit-named artifacts:** only the `Send-ToSpeedTestVM.ps1` help example used the old fixed zip name; updated.
+  Nothing else in the VM scripts depended on it.
+- **Direct VM access for local agents:** the owner added their laptop account to the local **Hyper-V Administrators**
+  group. After the next Windows sign-in, Hyper-V cmdlets and PowerShell Direct work without elevation, so
+  `#Requires -RunAsAdministrator` was removed from the four laptop scripts. Until that sign-in, every Hyper-V action
+  still triggers a UAC prompt. How an agent reaches the VM: Hyper-V cmdlets for the VM, and
+  `Invoke-Command -VMName SpeedTest-Win11 -Credential (Import-Clixml C:\Users\Noam\SpeedTestVM\vm-credential.xml) { … }`
+  for commands inside it. Commands that need the VM user's gh keyring token (e.g. `gh run download`) may fail over
+  PowerShell Direct; the owner runs the update script in the VM window.
+
 ---
 
 ## How the owner drives the VM
 
-Everything runs **on the laptop**, in an **administrator PowerShell**, in `C:\Users\Noam\SpeedTestVM`:
+Everything runs **on the laptop**, in PowerShell (no elevation needed once the Hyper-V Administrators membership is
+active), in `C:\Users\Noam\SpeedTestVM`:
 
 | Task | Command |
 |------|---------|
 | Start a clean VM for testing | `.\Reset-SpeedTestVM.ps1 -SkipLogs` |
+| Install the newest CI build (**in the VM**) | double-click **Update-SpeedTestExtension** on the desktop, or `C:\SpeedTest\Update-SpeedTestExtension.cmd [-Branch <name>]` |
 | Open the VM window | `vmconnect.exe localhost SpeedTest-Win11` |
 | Open it with display settings first | `vmconnect.exe localhost SpeedTest-Win11 /edit` |
 | Copy a file onto the VM desktop | `.\Send-ToSpeedTestVM.ps1 "<path on laptop>"` (lands in `C:\Users\Public\Desktop\`) |
@@ -103,13 +148,13 @@ saved in `vm-credential.xml`, encrypted with Windows DPAPI for the owner's lapto
 
 ### One test cycle (plan item 2.2)
 
-1. Laptop: download the CI artifact zip (`docs/INSTALL.md` §1), then
-   `.\Send-ToSpeedTestVM.ps1 "$env:USERPROFILE\Downloads\<artifact>.zip"`.
-2. VM: right-click the zip on the desktop → Extract All → open the folder → right-click an empty area →
-   Open in Terminal → `powershell -ExecutionPolicy Bypass -File .\Install-SpeedTestExtension.ps1`
-   (`docs/INSTALL.md` 2A steps 5–7; PowerToys and Developer Mode are already in the checkpoint).
+1. Laptop: `.\Reset-SpeedTestVM.ps1 -SkipLogs`, then `vmconnect.exe localhost SpeedTest-Win11`.
+2. VM: double-click **Update-SpeedTestExtension** on the desktop. Note the commit id and run URL it prints.
 3. VM: Win+Alt+Space → Reload → search "Internet Speed Test" → `docs/TESTING.md` checklist.
 4. Laptop: `.\Reset-SpeedTestVM.ps1` — saves the logs, reverts, renews the network.
+
+Manual fallback (a zip downloaded by hand): `.\Send-ToSpeedTestVM.ps1 "<zip>"`, then in the VM Extract All →
+Open in Terminal → `powershell -ExecutionPolicy Bypass -File .\Install-SpeedTestExtension.ps1`.
 
 ### What the logs contain
 
@@ -134,12 +179,11 @@ AGENTS.md §3: no tooling that only works on one OS unless CI covers it. These a
 The cloud session decides whether to adopt them (e.g. under `install/vm/` with an ADR) or only document the VM path
 in `INSTALL.md`.
 
-## Appendix: script sources (as on the laptop, 2026-09-25)
+## Appendix: script sources (as on the laptop, updated with each entry)
 
 ### `New-SpeedTestVM.ps1`
 
 ```powershell
-#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
   Creates the Hyper-V test VM for the Command Palette speed-test extension and boots it from the Windows 11 ISO.
@@ -182,12 +226,11 @@ Write-Host "VM '$VMName' started. In the VM window, press any key when it says '
 ### `Send-ToSpeedTestVM.ps1`
 
 ```powershell
-#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
   Copies files from this laptop onto the Public Desktop of the test VM (visible to every user in the VM).
 .EXAMPLE
-  .\Send-ToSpeedTestVM.ps1 "$env:USERPROFILE\Downloads\internet-speed-test-extension-x64.zip"
+  .\Send-ToSpeedTestVM.ps1 "$env:USERPROFILE\Downloads\internet-speed-test-extension-x64-8fd3685.zip"
 .EXAMPLE
   .\Send-ToSpeedTestVM.ps1 first.zip, second.exe
 #>
@@ -208,7 +251,6 @@ foreach ($file in $Path) {
 ### `Get-SpeedTestVMLogs.ps1`
 
 ```powershell
-#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
   Collects PowerToys / Command Palette logs, AppX install errors and crash reports from the test VM
@@ -325,7 +367,6 @@ finally { Remove-PSSession $session }
 ### `Reset-SpeedTestVM.ps1`
 
 ```powershell
-#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
   Saves the VM's logs to this laptop, reverts the VM to the clean checkpoint, and gives it a fresh network address.
@@ -334,7 +375,7 @@ finally { Remove-PSSession $session }
 #>
 param(
     [string]$VMName = 'SpeedTest-Win11',
-    [string]$Checkpoint = 'clean-powertoys-devmode',
+    [string]$Checkpoint = 'clean-powertoys-devmode-gh',
     [switch]$SkipLogs
 )
 $ErrorActionPreference = 'Stop'
@@ -367,4 +408,92 @@ if (Wait-Job $job -Timeout 90) {
 }
 else { Write-Warning "VM did not answer within 90 s. In the VM run: ipconfig /release; ipconfig /renew" }
 Remove-Job $job -Force
+```
+
+### `guest/Update-SpeedTestExtension.ps1`
+
+```powershell
+<#
+.SYNOPSIS
+  Runs INSIDE the test VM. Downloads the newest successful CI build of the extension and installs it.
+.DESCRIPTION
+  Finds the newest successful "CI" run for a push to the branch, downloads its artifact
+  internet-speed-test-extension-x64-<short commit id>, then runs the Install-SpeedTestExtension.ps1 that came with it.
+  Needs GitHub CLI signed in with a read-only token for the repository (gh auth login).
+  Windows PowerShell 5.1 compatible: the VM has no PowerShell 7.
+.EXAMPLE
+  C:\SpeedTest\Update-SpeedTestExtension.cmd
+.EXAMPLE
+  C:\SpeedTest\Update-SpeedTestExtension.cmd -Branch main
+#>
+param(
+    [string]$Branch = 'feat/install-without-visual-studio',
+    [string]$Repo = 'noamweisss/internet_speed_test_extension'
+)
+$ErrorActionPreference = 'Stop'
+
+function Stop-WithError([string]$Message) {
+    Write-Host ''
+    Write-Host "FAILED: $Message" -ForegroundColor Red
+    exit 1
+}
+
+$gh = (Get-Command gh -ErrorAction SilentlyContinue).Source
+if (-not $gh) { $gh = "$env:ProgramFiles\GitHub CLI\gh.exe" }
+if (-not (Test-Path $gh)) { Stop-WithError 'GitHub CLI (gh) is not installed in this VM.' }
+
+# Windows PowerShell 5.1 turns redirected stderr of a program into a terminating error under 'Stop'.
+$ErrorActionPreference = 'Continue'
+& $gh auth status --hostname github.com *> $null
+$signedIn = $LASTEXITCODE -eq 0
+$ErrorActionPreference = 'Stop'
+if (-not $signedIn) { Stop-WithError 'GitHub CLI is not signed in. Run "gh auth login" and paste the read-only token.' }
+
+# Push runs only: a pull request from a fork can carry the same branch name, and its build must never be installed.
+$json = & $gh run list --repo $Repo --workflow CI --branch $Branch --event push --status success --limit 1 `
+                       --json databaseId,headSha,url,displayTitle,createdAt
+if ($LASTEXITCODE -ne 0) { Stop-WithError "Could not list CI runs of $Repo (token expired or missing Actions: read?)." }
+$run = @($json | ConvertFrom-Json) | Select-Object -First 1
+if (-not $run) { Stop-WithError "No successful CI run for a push to branch '$Branch'." }
+
+$short = $run.headSha.Substring(0, 7)
+$artifact = "internet-speed-test-extension-x64-$short"
+Write-Host "Branch:  $Branch"
+Write-Host "Commit:  $short  $($run.displayTitle)"
+Write-Host "Built:   $($run.createdAt)"
+Write-Host "Run:     $($run.url)"
+
+$artifacts = & $gh api "repos/$Repo/actions/runs/$($run.databaseId)/artifacts" | ConvertFrom-Json
+$match = $artifacts.artifacts | Where-Object { $_.name -eq $artifact }
+if (-not $match) { Stop-WithError "Run has no artifact '$artifact'. Found: $(($artifacts.artifacts.name) -join ', ')" }
+if ($match.expired) { Stop-WithError "Artifact '$artifact' has expired. Re-run CI for that commit." }
+
+$dest = Join-Path $env:TEMP 'SpeedTestBuild'
+if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+& $gh run download $run.databaseId --repo $Repo --name $artifact --dir $dest
+if ($LASTEXITCODE -ne 0) { Stop-WithError "Download of '$artifact' failed." }
+
+$installer = Join-Path $dest 'Install-SpeedTestExtension.ps1'
+if (-not (Test-Path $installer)) { Stop-WithError "The artifact has no Install-SpeedTestExtension.ps1." }
+
+Write-Host ''
+Write-Host "Installing $artifact ..."
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer
+if ($LASTEXITCODE -ne 0) { Stop-WithError 'Install-SpeedTestExtension.ps1 failed (see the red text above).' }
+
+Write-Host ''
+Write-Host "Done: commit $short is installed." -ForegroundColor Green
+```
+
+### `guest/Update-SpeedTestExtension.cmd`
+
+```bat
+@echo off
+rem Runs Update-SpeedTestExtension.ps1 without changing the VM's script execution policy.
+rem Arguments are passed through, e.g.  Update-SpeedTestExtension.cmd -Branch main
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Update-SpeedTestExtension.ps1" %*
+set EXITCODE=%ERRORLEVEL%
+rem Keep the window open when started by double-click.
+echo %CMDCMDLINE% | find /i "/c" >nul && pause
+exit /b %EXITCODE%
 ```
