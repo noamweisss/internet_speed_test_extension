@@ -82,6 +82,8 @@ files in and collect logs, live on the owner's laptop, not in this repository (`
 | `Developer Mode is off` | Turn it on (step 4), run again. |
 | `Expected exactly one .msix file` | Run the command inside the extracted folder, with only one `.msix` in it. |
 | `...cannot be loaded because running scripts is disabled` | You ran `.\Install-...ps1` directly. Use the full command above. |
+| `0x80073D02` (package in use) | Command Palette is using the extension. Exit PowerToys (tray icon → Exit), run again. |
+| `The .msix is too large` / `is not this extension` / `has no AppxManifest.xml` | Not a build of this extension, or a broken download. Download it again from a green run. Nothing was changed. |
 | Extension not listed after install | Run **Reload** in Command Palette, or restart PowerToys. |
 
 Anything else: copy the red text into a GitHub issue.

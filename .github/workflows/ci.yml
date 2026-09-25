@@ -66,7 +66,10 @@ jobs:
           New-Item -ItemType Directory install-package | Out-Null
           Copy-Item $msix[0].FullName, install/Install-SpeedTestExtension.ps1 install-package/
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $entries = [System.IO.Compression.ZipFile]::OpenRead($msix[0].FullName).Entries.FullName
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($msix[0].FullName)
+          $entries = $zip.Entries.FullName
+          Write-Host "Package: $($entries.Count) files, $(($zip.Entries | Measure-Object -Property Length -Sum).Sum) bytes unpacked"
+          $zip.Dispose()
           foreach ($required in 'AppxManifest.xml', 'internet_speed_test_extension.exe', 'coreclr.dll') {
             if ($entries -notcontains $required) { throw "package is missing $required" }
           }
