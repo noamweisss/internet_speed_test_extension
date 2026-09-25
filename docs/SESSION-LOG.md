@@ -74,21 +74,19 @@ verified, blocked, next.
 - Real package size (CI log): 73 files, 32.5 MB unpacked; the script's limits are 5000 files and 500 MB.
 - Artifacts are uploaded only by push runs: pull_request runs build a merge commit that exists on no branch.
 
-**Next**
-- CI result on 6bd7c2e; resolve the CodeRabbit threads once green; `@coderabbitai review` after its hourly limit.
-- Owner re-tests in the VM with the newest artifact: live meter, duplicate entry gone, update over an installed
-  version, then the rest of `docs/TESTING.md`. Then 2.4 (v0.1.0).
-
 **Not verified**
-- A measurement against Cloudflare inside Command Palette (VM had no internet), and the rest of the
-  `docs/TESTING.md` checklist.
+- A full measurement shown live in Command Palette: the first online run froze (ItemsChanged loop); the fix
+  5fbf29a is not yet re-tested. The rest of the `docs/TESTING.md` checklist.
 - Whether a folder-registered package keeps loading after Developer Mode is switched off (INSTALL.md says it may not).
 - Whether PowerToys Command Palette runs inside Windows Sandbox on a retail Windows build (untested; the
   owner's host is an Insider build, where Sandbox crashes).
 
-**Next**
-- The owner tests in the VM from the artifact of the latest green run on this branch (`docs/INSTALL.md` 2C) and the `docs/TESTING.md` checklist
-  (item 2.2). Then 2.3 fixes, 2.4 release.
+**Next** (state at ebe4bba: CI green, all review threads resolved, CodeRabbit re-review of 39bd686/ebe4bba
+done with one doc finding fixed in the commit that adds this line)
+- Owner re-tests in the VM with artifact `internet-speed-test-extension-x64-<head sha>`: live meter (latency →
+  download → upload), duplicate entry gone, an update over the installed version while Command Palette is open
+  (0x80073D02 or not), then the rest of `docs/TESTING.md` (item 2.2). Record the result here and in PR #7.
+- Fix whatever that run shows (2.3). Then the owner approves and merges PR #7; then 2.4 (tag `v0.1.0`, release).
 
 ## Session 1 — 2026-09-24 — branch `feat/speedtest-core-and-ui`
 
