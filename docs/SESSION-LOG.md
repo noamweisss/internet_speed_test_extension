@@ -61,6 +61,21 @@ verified, blocked, next.
 - Session-1 unknowns answered from the source: Body updates re-render live (PropChanged is handled);
   RaiseItemsChanged on a ContentPage makes the host re-call GetContent (so never from inside it).
 
+**Pull request**
+- [noamweisss/internet_speed_test_extension#7](https://github.com/noamweisss/internet_speed_test_extension/pull/7)
+  opened 2026-09-25 at the owner's request. CI green on 0971b9a (safety-impact check passed on its first real run).
+- Codex: 1 finding (missing `Guard-Change:` trailers). Did not reproduce, all four guard commits carry it; answered
+  with evidence and resolved.
+- CodeRabbit: 3 findings on the install script, all valid, fixed in 6bd7c2e. The script now checks the new
+  package's file count, unpacked size and package name before removing the installed one. INSTALL.md documents
+  0x80073D02 (package in use). Replied on each thread. Whether an update over a running extension hits
+  0x80073D02 is not yet tested.
+
+**Next**
+- CI result on 6bd7c2e; resolve the CodeRabbit threads once green; `@coderabbitai review` after its hourly limit.
+- Owner re-tests in the VM with the newest artifact: live meter, duplicate entry gone, update over an installed
+  version, then the rest of `docs/TESTING.md`. Then 2.4 (v0.1.0).
+
 **Not verified**
 - A measurement against Cloudflare inside Command Palette (VM had no internet), and the rest of the
   `docs/TESTING.md` checklist.
