@@ -11,6 +11,9 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   clean Windows runner that the script installs and removes it (`docs/INSTALL.md`, ADR-0008).
 
 ### Fixed
+- The meter view now updates live during a test. Before, it froze on "Measuring latency" and showed results only
+  when reopened: redrawing asked Command Palette to reload the page, and the reload redrew again, in a loop that
+  also stalled the test.
 - Without a working network the test now fails within about 10 s instead of up to 35 s: connecting to the server
   has its own 5 s limit.
 - Command Palette no longer lists a second, icon-less "Internet Speed Test" entry that did nothing: the package's

@@ -29,6 +29,8 @@ Types inside it use the `SpeedTest.Extension` namespace and PascalCase names.
 - Every network call has a timeout and a byte bound. Every loop that waits on the network checks the token.
 - No `Console.WriteLine` outside `Program.cs`. Diagnostics via `System.Diagnostics.Debug` only, never with IP addresses.
 - `GetItems()` and `GetContent()` are hot paths: return cached state, never start work there.
+- Never call `RaiseItemsChanged()` from inside `GetItems()`/`GetContent()` or from code they call: the host answers it
+  by calling them again. A content page updates live by changing its content objects (`MarkdownContent.Body`).
 
 ## Git
 
