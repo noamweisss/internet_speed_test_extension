@@ -69,7 +69,10 @@ verified, blocked, next.
 - CodeRabbit: 3 findings on the install script, all valid, fixed in 6bd7c2e. The script now checks the new
   package's file count, unpacked size and package name before removing the installed one. INSTALL.md documents
   0x80073D02 (package in use). Replied on each thread. Whether an update over a running extension hits
-  0x80073D02 is not yet tested.
+  0x80073D02 is not yet tested. CodeRabbit follow-up (partial extraction after removal) fixed in 39bd686: the
+  script extracts into `InternetSpeedTestExtension.new`, checks it, and only then replaces the old install.
+- Real package size (CI log): 73 files, 32.5 MB unpacked; the script's limits are 5000 files and 500 MB.
+- Artifacts are uploaded only by push runs: pull_request runs build a merge commit that exists on no branch.
 
 **Next**
 - CI result on 6bd7c2e; resolve the CodeRabbit threads once green; `@coderabbitai review` after its hourly limit.
