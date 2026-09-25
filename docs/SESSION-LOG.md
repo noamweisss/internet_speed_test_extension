@@ -40,6 +40,14 @@ verified, blocked, next.
 - First real run (2026-09-25, owner, test VM): the CI build installs with the script, the extension appears in
   Command Palette and opens. So the packaging, COM activation, and the trimmed Release build load. The VM had no
   internet, so no measurement ran yet.
+- Offline runs (owner): some failed at once with "Could not reach the speed test server", others stayed on
+  "Measuring latency" about 30 s (owner pressed Esc). Command Palette and the VM stayed responsive throughout.
+  Cause of the wait: 5 s /meta + 30 s request timeout when packets are dropped. Fixed in 6a09d4c with a 5 s
+  `ConnectTimeout`. A second, icon-less "Internet Speed Test" entry (the package's app, which only works as a COM
+  server) did nothing; hidden with `AppListEntry="none"` in 6a09d4c. Both fixes not yet re-tested.
+- Found by reading the code after the run: nothing cancels a run when the page closes (the SDK was not seen to
+  offer a page-closed signal). Esc leaves the test running in the background, bounded by its timeouts and
+  2 × 8 s transfers; reopening shows it. `docs/TESTING.md` step 4 expects the test to stop: owner decides which.
 
 **Not verified**
 - A measurement against Cloudflare inside Command Palette (VM had no internet), and the rest of the
