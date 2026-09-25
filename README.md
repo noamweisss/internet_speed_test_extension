@@ -16,7 +16,7 @@ Pre-release. See `docs/PLAN.md` for the roadmap and `CHANGELOG.md` for what exis
 
 ## Install
 
-Pre-release builds come from CI: download the `internet-speed-test-extension-x64` artifact and follow
+Pre-release builds come from CI: download the `internet-speed-test-extension-x64-<commit>` artifact and follow
 `docs/INSTALL.md` (no Visual Studio, no certificate; Windows Sandbox recommended).
 
 ## Development
