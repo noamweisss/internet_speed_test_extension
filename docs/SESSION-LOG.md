@@ -81,8 +81,9 @@ verified, blocked, next.
 - Whether PowerToys Command Palette runs inside Windows Sandbox on a retail Windows build (untested; the
   owner's host is an Insider build, where Sandbox crashes).
 
-**Next** (state at ebe4bba: CI green, all review threads resolved, CodeRabbit re-review of 39bd686/ebe4bba
-done with one doc finding fixed in the commit that adds this line)
+**Next** (state at 8274d25: CI green on 8447721, all review threads resolved. CodeRabbit's latest review of
+8447721 only commented; its older "changes requested" from 0971b9a stays until the owner dismisses it, as in
+session 1. Its last minor point, the artifact name in README, is fixed in 8274d25.)
 - Owner re-tests in the VM with artifact `internet-speed-test-extension-x64-<head sha>`: live meter (latency →
   download → upload), duplicate entry gone, an update over the installed version while Command Palette is open
   (0x80073D02 or not), then the rest of `docs/TESTING.md` (item 2.2). Record the result here and in PR #7.
