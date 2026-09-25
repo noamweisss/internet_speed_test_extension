@@ -132,6 +132,40 @@ Not changed (fallback if the Default Switch ever stops handing out addresses): a
 - Verified: after the owner's Windows sign-in, the Hyper-V Administrators membership is active; the local session ran
   `Get-VM`, PowerShell Direct, `Copy-Item -ToSession` and `Checkpoint-VM` without elevation or UAC prompts.
 
+## Entry 6 — 2026-09-25 — end-to-end install verified; local session closed for the day
+
+**Verified (owner, in the VM):** double-clicking **Update-SpeedTestExtension** on the VM desktop found the newest
+successful push run on `feat/install-without-visual-studio`, downloaded artifact
+`internet-speed-test-extension-x64-8fd3685`, ran its `Install-SpeedTestExtension.ps1`, and the extension then showed up
+in Command Palette search. So the whole chain works: gh with the read-only token, run lookup, artifact name check,
+download, install.
+
+**Not working yet:** the owner reports the extension "still doesn't work" after install. No details, no logs
+collected yet; the owner will look at it in a later session. Nothing was concluded about the cause.
+
+**State left behind:**
+- VM `SpeedTest-Win11` has build `8fd3685` installed (not reverted). To capture evidence before reverting, run
+  `.\Get-SpeedTestVMLogs.ps1` on the laptop (or `.\Reset-SpeedTestVM.ps1`, which saves logs first).
+- Checkpoints: `clean-powertoys-devmode-gh` (default: PowerToys, Developer Mode, gh signed in, update script) and the
+  older fallback `clean-powertoys-devmode`.
+- VM scripts, README and credential: `C:\Users\Noam\SpeedTestVM\` (not in the repo).
+
+**Next (for the cloud session):**
+1. Ask the owner what "doesn't work" means: what they did, what Command Palette showed. Ask for `summary.txt` and
+   `EventLogs\errors-and-warnings.txt` from a fresh `Get-SpeedTestVMLogs.ps1` run, taken before any revert.
+2. Each new build reaches the VM by: push, wait for green CI, `.\Reset-SpeedTestVM.ps1 -SkipLogs`, then double-click
+   **Update-SpeedTestExtension** in the VM. No manual downloads needed.
+3. Decide whether to fold this log into `docs/SESSION-LOG.md` / `docs/INSTALL.md` and whether the VM scripts belong
+   in the repo (AGENTS.md §3), then delete this file.
+
+**Process note (stop hook S1):** the owner told the local session not to edit `docs/SESSION-LOG.md`, to avoid
+conflicts with the cloud session. `scripts/hooks/stop-check.sh` therefore blocked at the end of every turn once the
+journal was committed. The owner told the session to ignore it and ends such turns by hand. The hook never blocked
+commits or pushes; every entry of this log, this one included, is on `docs/local-vm-setup-log`. If parallel local and
+cloud sessions stay a pattern,
+the cloud session may want a sanctioned way for a second session to satisfy S1 (e.g. accepting a
+`docs/*-LOCAL-SESSION-LOG.md` update). That is a guard change and needs the owner's decision.
+
 ---
 
 ## How the owner drives the VM
