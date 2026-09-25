@@ -48,6 +48,10 @@ verified, blocked, next.
 - Found by reading the code after the run: nothing cancels a run when the page closes (the SDK was not seen to
   offer a page-closed signal). Esc leaves the test running in the background, bounded by its timeouts and
   2 × 8 s transfers; reopening shows it. `docs/TESTING.md` step 4 expects the test to stop: owner decides which.
+- Owner decisions: Esc keeps the test running (TESTING.md updated); meter lists Latency first (20d43a9, 2 tests,
+  71 total). CI artifacts are now named `internet-speed-test-extension-x64-<short sha>` (first: `…-20d43a9`,
+  run 36114691892, green). The owner's local session is adding a VM-side script that downloads the newest green
+  artifact with `gh` (read-only fine-grained token) and installs it; that script lives outside the repo.
 
 **Not verified**
 - A measurement against Cloudflare inside Command Palette (VM had no internet), and the rest of the
