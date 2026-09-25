@@ -22,7 +22,8 @@
 1. Install the CI build (`docs/INSTALL.md`, Windows Sandbox first). Run **Reload** in Command Palette.
 2. Open "Internet Speed Test". The default view from settings opens and the test starts.
 3. Watch the meter progress through latency → download → upload; values are plausible for your connection.
-4. `Ctrl+L` switches view without restarting; `Ctrl+R` restarts; Esc leaves the page and the test stops.
+4. `Ctrl+L` switches view without restarting; `Ctrl+R` restarts. Esc leaves the page; the test keeps running in
+   the background (owner decision, session 2) and reopening the page shows it.
 5. Details: Enter on an item copies its value (toast appears).
 6. Disconnect the network and rerun: a clear error, no crash, no hang beyond the timeout.
 7. Change the default view in settings, reopen: the other view is the default.

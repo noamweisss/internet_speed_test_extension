@@ -7,7 +7,7 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ### Added
 - Install without Visual Studio: CI publishes an unsigned, self-contained MSIX with
-  `install/Install-SpeedTestExtension.ps1` as the `internet-speed-test-extension-x64` artifact, and proves on a
+  `install/Install-SpeedTestExtension.ps1` as the `internet-speed-test-extension-x64-<commit>` artifact, and proves on a
   clean Windows runner that the script installs and removes it (`docs/INSTALL.md`, ADR-0008).
 
 ### Fixed
@@ -19,6 +19,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   a Windows package, so no package could be built (ADR-0009).
 
 ### Changed
+- The meter view lists Latency first, then Download and Upload, the order the test measures them in, and marks
+  Latency as active while it is measured.
 - The extension project restores on Linux/macOS (`EnableWindowsTargeting`), so GitHub's automatic dependency
   submission and agents in containers can run `dotnet restore`; building still needs Windows.
 

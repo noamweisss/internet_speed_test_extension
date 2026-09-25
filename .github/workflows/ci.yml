@@ -80,9 +80,13 @@ jobs:
           if (-not (Get-AppxPackage -Name InternetSpeedTestExtension)) { throw 'package not registered' }
           ./install-package/Install-SpeedTestExtension.ps1 -Uninstall
           if (Get-AppxPackage -Name InternetSpeedTestExtension) { throw 'package still registered' }
+      # The artifact name carries the commit, so every download says which build it is.
+      - name: Name the artifact after the commit
+        shell: pwsh
+        run: '"ARTIFACT_NAME=internet-speed-test-extension-x64-$($env:GITHUB_SHA.Substring(0, 7))" >> $env:GITHUB_ENV'
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: internet-speed-test-extension-x64
+          name: ${{ env.ARTIFACT_NAME }}
           path: install-package/
           if-no-files-found: error
 
