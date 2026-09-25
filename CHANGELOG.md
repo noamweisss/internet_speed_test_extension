@@ -11,6 +11,10 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   clean Windows runner that the script installs and removes it (`docs/INSTALL.md`, ADR-0008).
 
 ### Fixed
+- Without a working network the test now fails within about 10 s instead of up to 35 s: connecting to the server
+  has its own 5 s limit.
+- Command Palette no longer lists a second, icon-less "Internet Speed Test" entry that did nothing: the package's
+  app is hidden from app lists (`AppListEntry="none"`); the extension itself is unaffected.
 - The MSIX package identity is now `InternetSpeedTestExtension`: the template name with underscores is invalid for
   a Windows package, so no package could be built (ADR-0009).
 

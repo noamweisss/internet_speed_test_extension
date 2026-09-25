@@ -22,8 +22,10 @@ internal sealed partial class SpeedTestSession : IDisposable
     /// <summary>
     /// Redirects are never followed, so a response can not send us to a host outside scripts/allowed-hosts.txt.
     /// Buffered responses (latency probes, /meta status) are capped; transfers stream and are bounded by time.
+    /// ConnectTimeout is short because a healthy connection opens in well under a second: without it, a network that
+    /// drops packets kept the view on "Measuring latency" for the full 30 s request timeout (first real run, session 2).
     /// </summary>
-    private readonly HttpClient _http = new(new SocketsHttpHandler { AllowAutoRedirect = false })
+    private readonly HttpClient _http = new(new SocketsHttpHandler { AllowAutoRedirect = false, ConnectTimeout = TimeSpan.FromSeconds(5) })
     {
         Timeout = TimeSpan.FromSeconds(30),
         MaxResponseContentBufferSize = 64 * 1024,
