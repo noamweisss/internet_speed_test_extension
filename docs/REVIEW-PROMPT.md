@@ -82,6 +82,9 @@ file, the secret, and uninstall the app.
 - Two different models answering the five questions the same way is the signal to look for. Their agreement
   means "no known problem", not "correct".
 - Hand Blockers and Majors to the building agent: "address the review by <reviewer> on PR <PR>". Nits are optional.
+- When to stop: a review round with no Blocker or Major in code ends the loop. The building agent fixes what
+  is cheap from that round, does not request another review, and reports the PR as ready; you merge. A
+  reviewer that reads prose will always find a sentence that lags a change; that is not a reason for a round.
 - How a reviewer confirms a fix: neither replies in threads. Request a fresh review after the fix
   (`@codex review`, or a push for Claude). The Claude workflow opens its re-review with Fixed / Not fixed per
   earlier finding (it gets its own earlier comments as a file); Codex simply does not repeat what is fixed.

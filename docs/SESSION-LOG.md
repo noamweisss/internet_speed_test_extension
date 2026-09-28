@@ -55,6 +55,8 @@ verified, blocked, next.
   not, those PRs are left to Codex (`docs/REVIEW-PROMPT.md`, step 5).
 
 **Lesson for the next building agent**
+- Stop rule (owner's call on PR #16, recorded in `docs/REVIEW-PROMPT.md`): a round with no Blocker or Major
+  in code ends the loop; fix what is cheap, do not request again, hand the PR to the owner.
 - PR #16 took many Codex rounds (the history below). The first seven were a chain where each fix opened the
   next hole; most of the rest were documentation that still described an earlier design. Before requesting a review round: grep every doc
   for the facts a design change touched, batch all fixes into one push, and expect the Claude workflow to run
