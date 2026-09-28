@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
 # Claude Code Stop hook: if this session changed the repo, the hand-off note in docs/SESSION-LOG.md
 # must have been updated too. Blocks (exit 2) until it is. Read-only sessions are not affected.
+# Uncommitted edits that already existed at session start (snapshot from session-start.sh) do not count.
 # Without a session marker (SessionStart did not run) only the working tree is inspected; history is
 # never scanned from time zero, because that would let an old SESSION-LOG commit satisfy the check.
 set -u
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || exit 0)"
 cd "$ROOT"
-MARK_FILE="$(git rev-parse --git-path claude-session-start 2>/dev/null)"
+SESSION=""
+# The hook input is JSON on stdin; the session id is read without jq so the hook also works where jq is missing.
+[ -t 0 ] || SESSION="$(head -c 65536 | sed -nE 's/.*"session_id"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' | head -n1 | tr -cd 'A-Za-z0-9-')"
+MARK_FILE="$(git rev-parse --git-path "claude-session${SESSION:+-$SESSION}-start" 2>/dev/null)"
+TREE_FILE="$(git rev-parse --git-path "claude-session${SESSION:+-$SESSION}-tree" 2>/dev/null)"
 MARK=""
 [ -f "$MARK_FILE" ] && MARK="$(cat "$MARK_FILE")"
 CHANGED=0
-[ -n "$(git status --porcelain)" ] && CHANGED=1
+if [ -f "$TREE_FILE" ]; then
+  [ "$(bash scripts/hooks/tree-state.sh)" != "$(cat "$TREE_FILE")" ] && CHANGED=1
+else
+  [ -n "$(git status --porcelain)" ] && CHANGED=1
+fi
 [ -n "$MARK" ] && [ -n "$(git log --since="@$MARK" --oneline 2>/dev/null)" ] && CHANGED=1
 [ "$CHANGED" = 0 ] && exit 0
 LOG_TOUCHED=0
