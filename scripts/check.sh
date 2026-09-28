@@ -39,7 +39,7 @@ while IFS= read -r -d '' f; do
   [ "$SIZE" -gt 1048576 ] && fail R3 "file over 1 MB: $f"
 
   case "$f" in
-    *.cs|*.csproj|*.props|*.json|*.yml|*.yaml|*.sh|*.md|*.txt|*.appxmanifest|*.sln)
+    *.cs|*.csproj|*.props|*.json|*.yml|*.yaml|*.sh|*.ps1|*.md|*.txt|*.appxmanifest|*.sln)
       CONTENT="$(show "$f")"
       # R4: secret patterns.
       if printf '%s' "$CONTENT" | grep -nE -- '-----BEGIN [A-Z ]*PRIVATE KEY-----|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{32,}' >/dev/null; then

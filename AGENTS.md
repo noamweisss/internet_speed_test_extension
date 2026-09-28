@@ -68,5 +68,6 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 | `tests/SpeedTest.Core.Tests/` | xUnit tests for Core. Run anywhere. |
 | `scripts/` | `check.sh` (rules), `setup.sh` (hooks install), `hooks/` (Claude Code hooks), `allowed-hosts.txt`. |
 | `.githooks/` | pre-commit, commit-msg, pre-push. Installed by `scripts/setup.sh`. |
-| `.github/workflows/` | CI: Windows build of the extension, Core tests, `check.sh all`. |
+| `install/` | `Install-SpeedTestExtension.ps1`: the owner's install script (Windows, ADR-0008). Safety-sensitive (R13). |
+| `.github/workflows/` | CI: Windows build, package, and install test of the extension; Core tests; `check.sh all`. |
 | `docs/` | Plan, architecture, conventions, security, testing, session log, ADRs. |

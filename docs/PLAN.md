@@ -23,10 +23,12 @@ Command Palette on a real PC yet. Treat the UI as unverified.
 | # | Item | Status |
 |---|------|--------|
 | 2.0 | Owner: enable Dependabot alerts and confirm secret scanning (repo Settings → Security); install CodeRabbit; review and merge PR #1 | done |
-| 2.1 | CI publishes the built extension as a downloadable artifact plus a PowerShell install script (Developer Mode + `Add-AppxPackage -Register`), so the owner never needs Visual Studio (`docs/INSTALL.md`, with the Windows Sandbox path from `docs/SAFETY-CONTRACT.md` §5 first) | todo |
-| 2.2 | Owner installs it and runs the manual checklist in `docs/TESTING.md` | todo |
-| 2.3 | Fix whatever the real host reveals (API mismatches, layout, shortcuts, timing) | todo |
-| 2.4 | Tag `v0.1.0`, GitHub release with the MSIX and install notes | todo |
+| 2.1 | CI publishes the built extension as a downloadable artifact plus a PowerShell install script (Developer Mode + `Add-AppxPackage -Register`), so the owner never needs Visual Studio (`docs/INSTALL.md`, with the Windows Sandbox path from `docs/SAFETY-CONTRACT.md` §5 first) | done |
+| 2.2 | Owner installs it and runs the manual checklist in `docs/TESTING.md` | done (shortcuts, settings, update-in-use still to check) |
+| 2.3 | Fix whatever the real host reveals (API mismatches, layout, shortcuts, timing) | done (PR #7) |
+| 2.5 | Fix the connection-info and jitter bugs from the second VM run: `/meta` Referer, `colo` object, percent-encoded header values, latency warm-up probe (`docs/SESSION-LOG.md`, session 2) | todo |
+| 2.6 | Merge Dependabot PRs #2, #3, #4, #6 (add their Safety impact notes) | todo |
+| 2.4 | Tag `v0.1.0`, GitHub release with the MSIX and install notes (after 2.5 and 2.6) | todo |
 
 Expected state at the end of session 2: a usable v0.1.0 you can install and run daily.
 

@@ -5,7 +5,7 @@
 set -u
 BASE="$1"; HEAD="$2"
 CHANGED="$(git diff --name-only "$BASE" "$HEAD")"
-SENSITIVE="$(printf '%s\n' "$CHANGED" | grep -E '^(scripts/allowed-hosts\.txt|internet_speed_test_extension/Package\.appxmanifest|Directory\.Packages\.props|.*\.csproj|\.githooks/|\.claude/|scripts/|\.github/workflows/|internet_speed_test_extension/Program\.cs|AGENTS\.md|CLAUDE\.md|docs/SECURITY\.md|docs/SAFETY-CONTRACT\.md)' || true)"
+SENSITIVE="$(printf '%s\n' "$CHANGED" | grep -E '^(scripts/allowed-hosts\.txt|internet_speed_test_extension/Package\.appxmanifest|Directory\.Packages\.props|.*\.csproj|\.githooks/|\.claude/|scripts/|\.github/workflows/|internet_speed_test_extension/Program\.cs|install/|AGENTS\.md|CLAUDE\.md|docs/SECURITY\.md|docs/SAFETY-CONTRACT\.md)' || true)"
 if [ -z "$SENSITIVE" ]; then
   echo "safety-impact: no sensitive files changed."; exit 0
 fi

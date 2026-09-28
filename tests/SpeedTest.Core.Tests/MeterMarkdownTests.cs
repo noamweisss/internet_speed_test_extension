@@ -29,6 +29,26 @@ public sealed class MeterMarkdownTests
     }
 
     [Fact]
+    public void Render_Any_ListsSectionsInMeasurementOrder()
+    {
+        var markdown = MeterMarkdown.Render(SpeedTestSnapshot.Idle);
+
+        var latency = markdown.IndexOf("## ⏱ Latency", StringComparison.Ordinal);
+        var download = markdown.IndexOf("## ⬇ Download", StringComparison.Ordinal);
+        var upload = markdown.IndexOf("## ⬆ Upload", StringComparison.Ordinal);
+        Assert.True(latency >= 0 && latency < download && download < upload, "expected Latency, Download, Upload");
+    }
+
+    [Fact]
+    public void Render_DuringLatency_MarksLatencyActive()
+    {
+        var markdown = MeterMarkdown.Render(new SpeedTestSnapshot { Phase = SpeedTestPhase.Latency });
+
+        Assert.Contains("## ⏱ Latency ●", markdown);
+        Assert.Contains("## ⬇ Download\n", markdown);
+    }
+
+    [Fact]
     public void Render_Complete_ShowsEveryValueAndConnection()
     {
         var snapshot = new SpeedTestSnapshot

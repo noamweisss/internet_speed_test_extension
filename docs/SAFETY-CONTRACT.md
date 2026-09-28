@@ -30,6 +30,7 @@ The **safety-impact** CI check turns red if a PR touches any of these files and 
 | `Directory.Packages.props`, any `*.csproj` | New third-party code (dependencies) |
 | `.githooks/`, `.claude/`, `scripts/`, `.github/workflows/` | The guards themselves |
 | `internet_speed_test_extension/Program.cs` | The process host |
+| `install/` | The script you run on your PC with your own rights |
 | `AGENTS.md`, `CLAUDE.md`, `docs/SECURITY.md`, this file | The rules agents follow |
 
 Also treat these phrases in a PR, commit, or chat as red flags until explained in plain words:
@@ -66,9 +67,9 @@ Best to worst, pick the first one you can:
 2. **A virtual machine** (Hyper-V on Pro, or VirtualBox on Home). Same idea, more setup, survives reboots.
 3. **Your real PC, reduced blast radius.** Use a standard (non-administrator) user account. Enable Developer
    Mode only for the duration of the test. Do not install any certificate into "Trusted Root"; the install
-   script in session 2 avoids certificates entirely. Take a restore point first.
+   script avoids certificates entirely (ADR-0008). Take a restore point first.
 
-`docs/INSTALL.md` (session 2) gives the exact commands for the path you choose.
+`docs/INSTALL.md` gives the exact steps for paths 1 and 3 (a VM follows the Sandbox steps).
 
 ## 6. Watching what it actually does
 

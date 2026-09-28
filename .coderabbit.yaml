@@ -18,7 +18,7 @@ reviews:
         5. Is any network input used without bounds on size, time, or format?
         Treat any "Yes" without a linked ADR in docs/decisions/ as a blocking finding.
         Then review for correctness. Style nits are welcome but label them as such.
-    - path: "{scripts,.githooks,.claude,.github}/**"
+    - path: "{scripts,.githooks,.claude,.github,install}/**"
       instructions: |
         These are the project's guards. Any change that makes a rule weaker, adds a bypass, or removes a check
         is a blocking finding unless the PR body's "Safety impact" section justifies it.

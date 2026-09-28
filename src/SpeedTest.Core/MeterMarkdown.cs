@@ -13,15 +13,18 @@ public static class MeterMarkdown
         var text = new StringBuilder();
         text.Append("# Internet Speed Test\n\n");
         text.Append(StatusLine(snapshot)).Append("\n\n");
-        AppendMeter(text, "⬇ Download", snapshot.DownloadMbps, active: snapshot.Phase == SpeedTestPhase.Download);
-        AppendMeter(text, "⬆ Upload", snapshot.UploadMbps, active: snapshot.Phase == SpeedTestPhase.Upload);
-        text.Append("## ⏱ Latency\n\n### ").Append(SpeedFormatter.Latency(snapshot.LatencyMs));
+        // Sections follow the order the test measures them in.
+        text.Append("## ⏱ Latency").Append(snapshot.Phase == SpeedTestPhase.Latency ? " ●" : string.Empty)
+            .Append("\n\n### ").Append(SpeedFormatter.Latency(snapshot.LatencyMs));
         if (snapshot.JitterMs is not null)
         {
             text.Append("  ·  jitter ").Append(SpeedFormatter.Latency(snapshot.JitterMs));
         }
 
-        text.Append("\n\n---\n\n");
+        text.Append("\n\n");
+        AppendMeter(text, "⬇ Download", snapshot.DownloadMbps, active: snapshot.Phase == SpeedTestPhase.Download);
+        AppendMeter(text, "⬆ Upload", snapshot.UploadMbps, active: snapshot.Phase == SpeedTestPhase.Upload);
+        text.Append("---\n\n");
         // Connection fields come from the server and are escaped before they touch the markdown.
         var c = snapshot.Connection;
         text.Append("**ISP** ").Append(Field(c.Isp))

@@ -5,7 +5,27 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
+### Added
+- Install without Visual Studio: CI publishes an unsigned, self-contained MSIX with
+  `install/Install-SpeedTestExtension.ps1` as the `internet-speed-test-extension-x64-<commit>` artifact, and proves on a
+  clean Windows runner that the script installs and removes it (`docs/INSTALL.md`, ADR-0008). Before it removes an
+  installed version, the script checks the new package's size and file count, unpacks it into a separate
+  folder, and checks its package name there, so a broken or foreign download leaves the current install untouched.
+
+### Fixed
+- The meter view now updates live during a test. Before, it froze on "Measuring latency" and showed results only
+  when reopened: redrawing asked Command Palette to reload the page, and the reload redrew again, in a loop that
+  also stalled the test.
+- Without a working network the test now fails within about 10 s instead of up to 35 s: connecting to the server
+  has its own 5 s limit.
+- Command Palette no longer lists a second, icon-less "Internet Speed Test" entry that did nothing: the package's
+  app is hidden from app lists (`AppListEntry="none"`); the extension itself is unaffected.
+- The MSIX package identity is now `InternetSpeedTestExtension`: the template name with underscores is invalid for
+  a Windows package, so no package could be built (ADR-0009).
+
 ### Changed
+- The meter view lists Latency first, then Download and Upload, the order the test measures them in, and marks
+  Latency as active while it is measured.
 - The extension project restores on Linux/macOS (`EnableWindowsTargeting`), so GitHub's automatic dependency
   submission and agents in containers can run `dotnet restore`; building still needs Windows.
 
