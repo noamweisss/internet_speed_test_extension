@@ -14,17 +14,17 @@ verified, blocked, next.
 - `.github/workflows/review-claude.yml`: `anthropics/claude-code-action` pinned to v1.0.235, on every PR from a
   repository branch, authenticating with the owner's Claude subscription (`CLAUDE_CODE_OAUTH_TOKEN`), tools
   limited to `gh pr view|diff|comment`, one comment as `claude[bot]`. Prompt is the `docs/REVIEW-PROMPT.md` block,
-  copied into the workflow. The job exits green with a log line while the secret is missing. ADR-0010.
+  copied into the workflow. The job exits green with a log line while the secret is missing. ADR-0012.
 - `AGENTS.md` "Code Review Rules" "Code review rules" (Codex reads it), reviewer table and owner setup steps in
   `docs/REVIEW-PROMPT.md`, scanner line in `docs/SECURITY.md`.
-- Commit identity (`docs/CONVENTIONS.md`, ADR-0010): agent commits carry author `Claude Code` via the `env` block
+- Commit identity (`docs/CONVENTIONS.md`, ADR-0012): agent commits carry author `Claude Code` via the `env` block
   in `.claude/settings.json`; the committer stays the owner. The owner's real e-mail was the git author on 21 of
   89 commits; global git config now uses the GitHub noreply address, the old commits stay (no history rewrite).
 
 - Codex review of PR #16, one P1 finding, valid: on a `pull_request` event a same-repository PR can edit the
   workflow and the edited copy runs with the secret. Fixed as the action's security guide prescribes: the event
   is now `pull_request_target` (workflow, prompt, and `.claude/` settings from `main`), the PR head is checked
-  out into `pr-head` as data (`--add-dir`), fork PRs are skipped, Dependabot PRs allowed. ADR-0010 updated.
+  out into `pr-head` as data (`--add-dir`), fork PRs are skipped, Dependabot PRs allowed. ADR-0012 updated.
 - Codex round 2, one P1, valid: `Bash(gh pr comment:*)` let a prompt-injected reviewer post any local file,
   including `/proc/self/environ` with the token. Fixed: the reviewer only writes `review.md` (tools: `Write`,
   `gh pr diff`, `gh pr view`; settings deny `Read(//proc/**)` and `Read(~/.claude/**)`), and a trusted step
@@ -41,17 +41,17 @@ verified, blocked, next.
   round 4 (its review body stayed the boilerplate; only new inline findings), so for Codex "not repeated"
   remains the only signal. "Require conversation resolution" stays on in the `main` ruleset.
 - Owner's call: CodeRabbit removed. `.coderabbit.yaml` deleted, every live reference rewritten (AGENTS.md,
-  CONVENTIONS, REVIEW-PROMPT, SAFETY-CONTRACT, SECURITY, ADR-0010). The owner uninstalls the GitHub app.
+  CONVENTIONS, REVIEW-PROMPT, SAFETY-CONTRACT, SECURITY, ADR-0012). The owner uninstalls the GitHub app.
 - Why Codex posts one finding per round and ignored the rules: per OpenAI's docs it posts P0 and P1 findings
   only, and it reads rules only under the exact heading `## Code Review Rules` with `###` groups. The section
   was `## 5. Code review rules`, so it was never read. Rewritten under the exact heading, moved last, with
   explicit severities; `## 6. Map` is `## 5. Map` again. Effect to be seen on the next Codex round.
 - Owner's request: reviewers guard maintainability too. "Design and maintainability" group added to the Code
   Review Rules (eight concrete habits from ARCHITECTURE, CONVENTIONS, TESTING, each P1); the Claude prompt and
-  REVIEW-PROMPT.md Part 2 now read that group and report those findings as Major (ADR-0010 item 8).
+  REVIEW-PROMPT.md Part 2 now read that group and report those findings as Major (ADR-0012 item 8).
 - Owner's request: reviewers flag docs and instruction problems too, separately from code findings.
   "Documentation and instructions" group added to the rules; the prompts get a separate Part 3 for it and the
-  verdict moves to Part 4 (ADR-0010 item 9).
+  verdict moves to Part 4 (ADR-0012 item 9).
 - Codex round 5, one P1, valid: a PR can commit a symlink in its tree pointing at `/proc/self/environ`; the
   reviewer's `Read` follows it under the `pr-head` path, which the deny rule does not match. Fixed: the trusted
   collect step runs `find pr-head -type l -delete` before the reviewer starts.
@@ -61,7 +61,7 @@ verified, blocked, next.
 - Codex round 7, three findings, all valid, and the first P2 docs finding since the docs rule landed:
   P0, the `Grep` tool's ripgrep subprocess inherits the token and searches `/proc/self/environ` past the Read
   deny (Grep removed and disallowed); P1, pagination downloaded every comment before the cut (now one GraphQL
-  request for the PR's last 30 comments); P2, ADR-0010 still said three reviewers after CodeRabbit's removal
+  request for the PR's last 30 comments); P2, ADR-0012 still said three reviewers after CodeRabbit's removal
   (fixed). Codex cites the Code Review Rules by line on every finding now.
 - Codex round 4, one new P1, valid: a blanket `Write` could reach the runner's per-step command files under
   `$RUNNER_TEMP/_runner_file_commands` and put `BASH_ENV=<file in pr-head>` into `GITHUB_ENV`, so the next
@@ -70,6 +70,9 @@ verified, blocked, next.
 - Owner's rule, recorded in `AGENTS.md` §2: agents never merge unless asked for that PR with a reason, and no
   reviewer blocks a merge. `.coderabbit.yaml` now has `request_changes_workflow: false`. The `main` ruleset
   still requires conversation resolution; switching that off is the owner's click.
+
+- The ADR was numbered 0010 until the owner mentioned PR #15 (`feat/session-4-polish`), which adds
+  ADR-0010 (median jitter) and ADR-0011 (SVG gauge). This PR is younger, so its ADR is ADR-0012.
 
 **Verified**
 - `scripts/check.sh all` green locally; workflow YAML parses (js-yaml). No actionlint on this machine.

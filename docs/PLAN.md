@@ -49,7 +49,7 @@ Expected state at the end of session 3: a usable v0.1.0 you can install and run 
 
 | # | Item | Status |
 |---|------|--------|
-| 4.0 | Independent reviewers on every PR without the hourly wait: Claude review workflow on the owner's subscription, Codex rules in `AGENTS.md`, commit identities (ADR-0010) | done (owner still adds the app and the secret) |
+| 4.0 | Independent reviewers on every PR without the hourly wait: Claude review workflow on the owner's subscription, Codex rules in `AGENTS.md`, commit identities (ADR-0012) | done (owner still adds the app and the secret) |
 | 4.1 | Meter view as an image gauge if the markdown renderer supports it (ADR-0006 revisit) | todo |
 | 4.2 | Copy full summary; optional "result as markdown" | todo |
 | 4.3 | Measurement tuning (parallel streams, durations) against real connections | todo |

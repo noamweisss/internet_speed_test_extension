@@ -46,7 +46,7 @@ reviewer.
 | Codex (owner's ChatGPT plan) | `chatgpt-codex-connector` | automatic on every PR; `@codex review` to repeat | `AGENTS.md` "Code Review Rules" |
 | Claude (owner's Claude plan) | `github-actions[bot]`, comment headed "Independent review (Claude)" | automatic on open, push, ready-for-review; re-run the workflow to repeat | `.github/workflows/review-claude.yml` (same questions, input as files) |
 
-Neither shares context with the agent that wrote the change or with the other (ADR-0010). Codex posts only
+Neither shares context with the agent that wrote the change or with the other (ADR-0012). Codex posts only
 P0 and P1 findings, as inline comments; ask for lower severities in `AGENTS.md` "Code Review Rules" if wanted. The Claude
 workflow and its settings always come from `main` (`pull_request_target`); the PR's files are checked out into a
 side directory as data, so a PR cannot change its own review or reach the token. The reviewer has no shell:

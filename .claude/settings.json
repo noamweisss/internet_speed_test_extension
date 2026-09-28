@@ -1,7 +1,7 @@
 {
   "$comment": "Project-level Claude Code hooks. They apply to the main agent and every subagent. Each script explains its rules. Git hooks in .githooks cover non-Claude agents and humans.",
   "env": {
-    "$comment": "Commits made by an agent carry this author; the committer stays the human whose credentials push (docs/CONVENTIONS.md, ADR-0010).",
+    "$comment": "Commits made by an agent carry this author; the committer stays the human whose credentials push (docs/CONVENTIONS.md, ADR-0012).",
     "GIT_AUTHOR_NAME": "Claude Code",
     "GIT_AUTHOR_EMAIL": "120514373+noamweisss@users.noreply.github.com"
   },

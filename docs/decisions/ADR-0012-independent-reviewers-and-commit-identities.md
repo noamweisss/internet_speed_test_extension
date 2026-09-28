@@ -1,4 +1,4 @@
-# ADR-0010: Independent review agents and commit identities
+# ADR-0012: Independent review agents and commit identities
 
 Status: accepted · Date: 2026-09-28
 

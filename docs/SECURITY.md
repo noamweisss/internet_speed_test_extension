@@ -67,7 +67,7 @@ review. They exist to make accidental or careless violations impossible and deli
 GitHub secret scanning (on by default for public repositories),
 `.github/workflows/review-claude.yml` (independent Claude review of every PR: workflow and settings from `main`,
 the PR's files as data in a side directory, no shell for the reviewer, trusted steps prepare its input and post
-its output, no push; ADR-0010). Codex reads the "Code Review Rules" section of `AGENTS.md` for the same rules.
+its output, no push; ADR-0012). Codex reads the "Code Review Rules" section of `AGENTS.md` for the same rules.
 The owner-facing summary of all of this is `docs/SAFETY-CONTRACT.md`.
 
 ## Reporting

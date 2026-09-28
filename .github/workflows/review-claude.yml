@@ -1,4 +1,4 @@
-# Independent review by Claude on every pull request (ADR-0010).
+# Independent review by Claude on every pull request (ADR-0012).
 # The reviewer runs on a fresh GitHub runner with the files below and the prompt, nothing else: no session,
 # no memory, no context from the agent that wrote the change. It can read files and write one file; steps of
 # this workflow that it does not control prepare its input and post its output. It cannot push. Actions are
