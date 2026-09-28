@@ -14,7 +14,8 @@
 # - The reviewer's process holds the token in its environment, so it gets no shell at all: any allowed command
 #   would let a prompt injection in the PR expand the variable into a public log line or a comment. A trusted step
 #   writes the diff, the PR metadata, and the reviewer's own earlier comments to files; the reviewer's tools are
-#   Read, Glob, Grep, and Write; its settings deny reading /proc and ~/.claude.
+#   Read, Glob, and Write (no Grep: its ripgrep subprocess inherits the token and could search /proc past the
+#   Read deny); its settings deny reading /proc and ~/.claude.
 # - The reviewer cannot post. Its Write permission is the one path `review.md` in a directory outside the
 #   checkout (a blanket Write could reach the runner's per-step command files, such as GITHUB_ENV, and so
 #   plant BASH_ENV for the next shell step), and the "Post the review" step posts that fixed file to the fixed
@@ -91,10 +92,12 @@ jobs:
           gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" > "$REVIEW_DIR/pr.diff"
           gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
             --json number,title,body,baseRefName,headRefName,commits > "$REVIEW_DIR/pr.json"
-          # Only the last two of the reviewer's own earlier comments, and at most 128 KB, so a long-lived PR
-          # cannot grow this input without bound.
-          gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate --slurp \
-            | jq -r '[.[][] | select(.user.login == "github-actions[bot]" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
+          # Only the last two of the reviewer's own earlier comments, at most 128 KB, and fetched from a bounded
+          # window (the PR's last 30 comments, one request), so a long-lived PR cannot grow this input or the
+          # download behind it.
+          gh api graphql -F owner="${GITHUB_REPOSITORY%/*}" -F name="${GITHUB_REPOSITORY#*/}" -F pr="$PR_NUMBER" \
+            -f query='query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){comments(last:30){nodes{author{login} body}}}}}' \
+            | jq -r '[.data.repository.pullRequest.comments.nodes[] | select(.author.login == "github-actions" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
             | head -c 131072 > "$REVIEW_DIR/earlier-reviews.md"
           wc -c "$REVIEW_DIR"/*
 
@@ -155,8 +158,8 @@ jobs:
             --add-dir pr-head
             --add-dir ${{ runner.temp }}/review
             --max-turns 40
-            --allowedTools "Read,Glob,Grep,Write(/${{ runner.temp }}/review/review.md)"
-            --disallowedTools "Bash,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch"
+            --allowedTools "Read,Glob,Write(/${{ runner.temp }}/review/review.md)"
+            --disallowedTools "Bash,Grep,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch"
 
       # Trusted step, not under the reviewer's control: posts the fixed file to the fixed pull request,
       # refusing a body that carries the token or is too large for a comment.

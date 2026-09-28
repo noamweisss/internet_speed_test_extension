@@ -14,13 +14,17 @@ building agent did on their behalf, and what a reviewing agent said.
 ## Decision
 1. `.github/workflows/review-claude.yml` runs `anthropics/claude-code-action` on every pull request. It
    authenticates with the owner's Claude subscription (`CLAUDE_CODE_OAUTH_TOKEN` repository secret, generated
-   by `claude setup-token`) and has no shell: its tools are Read, Glob, Grep, and Write for the single path
-   `review.md`, and its settings deny reading `/proc` and `~/.claude` and writing the runner's per-step
+   by `claude setup-token`) and has no shell: its tools are Read, Glob, and Write for the single path
+   `review.md` (no Grep: Codex's seventh review showed its ripgrep subprocess inherits the token and can search
+   `/proc/self/environ` past a Read deny), and its settings deny reading `/proc` and `~/.claude` and writing the
+   runner's per-step
    command files (Codex's fourth review: a blanket Write could put `BASH_ENV` into `GITHUB_ENV` and so run
    PR-controlled shell in the next trusted step). Symlinks are deleted from the PR checkout before the reviewer
    starts (Codex's fifth review: a committed link to `/proc/self/environ` would be read through a path the
-   deny rules do not match). The reviewer's earlier comments handed to it are the last two, capped at 128 KB
-   (Codex's sixth review: unbounded history could exhaust the model's context on a long-lived PR). A trusted step writes the diff, the PR metadata, and the reviewer's own
+   deny rules do not match). The reviewer's earlier comments handed to it are the last two, capped at 128 KB,
+   taken from a bounded window of the PR's last 30 comments in one GraphQL request (Codex's sixth and seventh
+   reviews: unbounded history could exhaust the model's context, and unbounded pagination the runner, on a
+   long-lived PR). A trusted step writes the diff, the PR metadata, and the reviewer's own
    earlier comments to files; the reviewer writes `review.md` outside the checkout; another trusted step posts
    that fixed file to the fixed pull request after checking it does not contain the token. Codex's second and
    third reviews of PR #16 showed why: with `gh pr comment` allowed, a prompt injection could make the
@@ -75,7 +79,7 @@ building agent did on their behalf, and what a reviewing agent said.
   address that is already indexed.
 
 ## Consequences
-- Reviews land within minutes of a push. Three reviewers answer the same five questions; agreement between
+- Reviews land within minutes of a push. Both reviewers answer the same five questions; agreement between
   two different models is the signal the owner looks for (`docs/REVIEW-PROMPT.md`).
 - The workflow, `.claude/settings.json`, and `AGENTS.md` are guard files: changes need the `Guard-Change`
   trailer and a "Safety impact" note (R9, R13).
