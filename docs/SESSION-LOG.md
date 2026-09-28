@@ -87,6 +87,9 @@ verified, blocked, next.
     commits 51 to 100 and "up to 500 files" was 100; now one GraphQL request with `commits(last:50)`,
     `files(first:100)`, and the total counts. And REVIEW-PROMPT.md claimed Codex posts only P0 and P1, which
     its own P2 findings on this PR contradict; reworded.
+13. Two P2s in `docs/SECURITY.md`: "every PR" qualified to eligible PRs (repository branches, not drafts, no
+    forks), and the threat-model row "Secrets: none exist" now separates the extension (none) from the
+    repository (one Actions secret for the review workflow).
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
   heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
   where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the
