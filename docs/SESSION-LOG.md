@@ -4,6 +4,60 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 4 — 2026-09-28 — branch `feat/session-4-polish`
+
+**Done** (three implementation subagents in parallel, one per plan item, with file ownership; the lead reviewed,
+fixed two things in 4.1, wrote the changelog and committed)
+- Harness branch renamed to `feat/session-4-polish` (AGENTS.md §4). Toolchain in the cloud container: .NET SDK
+  10.0.401 under `/root/.dotnet` (not on `PATH`), 79 tests green, `scripts/check.sh all` green at the start.
+- Plan item 4.3 (7d266d6), the jitter decision left open by session 3: `Statistics.Jitter` is the median, not the
+  mean, of the absolute consecutive differences, and `LatencySamples` is 20 (ADR-0010). Test-first: one 300 ms
+  probe among six leaves jitter under 50 ms (the mean gave about 120). Also from session 3's "found, not fixed":
+  `ServerTiming.DurationMs` sums every `dur=` across all header values. 8 tests added.
+- Plan item 4.1 (68d6fc1): Microsoft documents `data:` images in `MarkdownContent` since PowerToys 0.95 (Learn,
+  "Display markdown content in Command Palette extensions"; the PowerToys `SampleMarkdownImagesPage` embeds a
+  base64 SVG). `GaugeSvg` draws a semicircular arc (track plus progress, 318 bytes, no text, theme-neutral colours),
+  `MeterMarkdown` embeds it as `![<Unicode bar>](data:image/svg+xml;base64,...)` so the old bar is the alt text.
+  ADR-0011 supersedes ADR-0006. Lead's fixes: the subagent had used single quotes to slip the `xmlns` past rule R6
+  ("workaround", a SAFETY-CONTRACT §2 red flag); R6 now scans any quote style and names the SVG namespace as the one
+  allowed `http://` string (`Guard-Change:` trailer, safety impact in the PR). The track colour `#80808080` became
+  `stroke-opacity='0.5'`, since Direct2D's SVG renderer is SVG 1.1 and does not know 8-digit hex colours. 8 tests.
+- Plan item 4.2 (14af51e): `ResultSummary.PlainText` and `.Markdown` in Core (6 tests), `Ctrl+Shift+C` and
+  `Ctrl+Shift+M` in `ViewCommands` on both views. `ClipboardHelper.SetText` and `CommandResult.ShowToast` verified
+  against the toolkit DLL inside the `Microsoft.CommandPalette.Extensions` 0.9.260303001 package (metadata dump in
+  the scratchpad, nothing in the repo). The summary omits the IP address on purpose (documented in the class).
+  Subagent finding worth keeping: the Claude Code Write tool strips Segoe private-use glyphs (U+E7xx, U+E8xx); the
+  "Run again" icon was blanked and restored by code point (0xE72C). Check glyphs after any write to a page file.
+- Plan item 4.4 researched, deferred: the decision and the sources are in `docs/PLAN.md`. Short form: Microsoft's
+  WinGet route swaps the MSIX for an Inno Setup `.exe` (Program Files, admin rights, COM class in the registry),
+  which breaks SAFETY-CONTRACT §1 and ADR-0008; the Store route keeps the MSIX and Microsoft signs it, but needs the
+  owner's Partner Center account and identity values in `Package.appxmanifest`. Owner's call, ADR when taken.
+
+**Verified**
+- `dotnet test tests/SpeedTest.Core.Tests`: 101 passed (79 + 22). `scripts/check.sh all` green after the R6 change.
+- CI: see the PR (`feat/session-4-polish`); the Windows build is the first compile of `ViewCommands.cs`.
+
+**Not verified**
+- Nothing from this session has run in Command Palette. The owner's next run checks: the two gauges render (not a
+  broken-image icon, not the alt-text bar) on PowerToys 0.101, in light and dark theme; `Ctrl+Shift+C` and
+  `Ctrl+Shift+M` copy (a toast "Copied" appears); jitter on the laptop is now plausible (single digits at about
+  30 ms latency). `docs/TESTING.md` step 6 covers the copy commands.
+- The power-throttling suspicion from session 3 is still unproven: Task Manager → Details → "Power throttling"
+  column for `internet_speed_test_extension.exe` during a test, on battery and on mains. The median hides the
+  spikes either way; the check only tells whether the suspicion was right.
+- Session 2 leftovers: `Ctrl+L`, `Ctrl+R`, copy a row, default-view setting.
+
+**Found, not fixed**
+- The cloud container's `dotnet` is not on `PATH` (`/root/.dotnet/dotnet`); the SessionStart hook could export it.
+- Two leftover worktrees under `.claude/worktrees/` from earlier sessions (not touched, G6 blocks branch deletion).
+
+**Next**
+- Owner: run the checklist above; publish a `v0.2.0` release the same way as `v0.1.0` (session 3) once verified.
+- If the gauge does not render: revert the one line in `MeterMarkdown.AppendMeter` (ADR-0011 consequences) and
+  note the PowerToys version in a new ADR.
+- Session 5, if any: only what daily use asks for. Remaining candidates: 4.3 streams and durations (nothing asked
+  for it), 4.4 Store publishing (owner decision), the `dotnet` PATH line in the SessionStart hook.
+
 ## Session 3 — 2026-09-28 — branch `fix/connection-info-and-jitter`
 
 **Done**
