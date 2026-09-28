@@ -5,10 +5,15 @@
 # pinned to full commit SHAs (tag in the comment) so a retargeted tag cannot change what runs.
 #
 # Trust boundary (shaped by the Codex reviews of PR #16; docs/SESSION-LOG.md lists every round):
-# - The event is `pull_request_target`, so this file and the checkout at the workspace root always come from
-#   `main`, never from the pull request. A PR cannot edit its own review, replace the prompt, or add a step that
-#   reads the token. The PR's files are checked out into `pr-head` as data for the reviewer to read; nothing from
-#   there is executed. This is the pattern the action's own security guide prescribes for secret-bearing events.
+# - The token is not a repository secret. It lives in the `claude-review` environment, whose deployment-branch
+#   policy allows `main` only, so GitHub refuses it to any workflow running for another branch: a branch that
+#   carries its own workflow, or a pull request whose base is a side branch (on `pull_request_target` the
+#   workflow and the root checkout come from the base branch, which a same-repository author controls).
+# - The event is `pull_request_target` and the job runs only for pull requests whose base is the default
+#   branch, so this file and the checkout at the workspace root always come from `main`, never from the pull
+#   request. A PR cannot edit its own review, replace the prompt, or add a step that reads the token. The PR's
+#   files are checked out into `pr-head` as data for the reviewer to read; nothing from there is executed.
+#   This is the pattern the action's own security guide prescribes for secret-bearing events.
 # - The PR checkout is stripped of symlinks first: a committed link to /proc/self/environ would otherwise let the
 #   reviewer read the token through a path the deny rules do not match.
 # - The reviewer's process holds the token in its environment, so it gets no shell at all: any allowed command
@@ -23,7 +28,8 @@
 # Text in a PR can therefore at most make the review wrong. The questions below are the ones in
 # docs/REVIEW-PROMPT.md; keep the two in step.
 #
-# The job does nothing until the owner adds the CLAUDE_CODE_OAUTH_TOKEN secret (docs/REVIEW-PROMPT.md).
+# The job does nothing until the owner adds the CLAUDE_CODE_OAUTH_TOKEN secret to the claude-review
+# environment (docs/REVIEW-PROMPT.md).
 name: Review (Claude)
 
 on:
@@ -40,11 +46,15 @@ concurrency:
 jobs:
   review:
     name: Independent review by Claude
-    # Drafts wait until they are ready. Fork PRs are skipped: their authors have no write access here, so the
-    # action would refuse them anyway, and this keeps the check green instead of red on such a PR.
-    if: ${{ !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
+    # Only pull requests into the default branch: on pull_request_target the workflow and the root checkout come
+    # from the base branch, and only main is trusted. Drafts wait until they are ready. Fork PRs are skipped:
+    # their authors have no write access here, so the action would refuse them anyway, and this keeps the check
+    # green instead of red on such a PR.
+    if: ${{ github.event.pull_request.base.ref == github.event.repository.default_branch && !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # The token is an environment secret; the environment's deployment-branch policy allows main only.
+    environment: claude-review
     permissions:
       contents: read
       pull-requests: write
@@ -60,10 +70,11 @@ jobs:
         if: env.HAS_TOKEN != 'true'
         run: echo "CLAUDE_CODE_OAUTH_TOKEN is not set; nothing to review with (docs/REVIEW-PROMPT.md)."
 
-      # Trusted: the base branch (main) at the workspace root. No `ref`, on purpose.
+      # Trusted: the default branch (main) at the workspace root, named explicitly.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.HAS_TOKEN == 'true'
         with:
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
           fetch-depth: 1
 

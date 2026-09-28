@@ -46,7 +46,8 @@ reviewer.
 | Codex (owner's ChatGPT plan) | `chatgpt-codex-connector` | automatic on every PR; `@codex review` to repeat | `AGENTS.md` "Code Review Rules" |
 | Claude (owner's Claude plan) | `github-actions[bot]`, comment headed "Independent review (Claude)" | automatic on open, push, ready-for-review; re-run the workflow to repeat | `.github/workflows/review-claude.yml` (same questions, input as files) |
 
-Neither shares context with the agent that wrote the change or with the other (ADR-0012). Codex posts P0 and
+The Claude workflow reviews pull requests into `main` only (its token lives in an environment restricted to
+`main`). Neither reviewer shares context with the agent that wrote the change or with the other (ADR-0012). Codex posts P0 and
 P1 findings by default, as inline comments, plus the P2 findings the "Code Review Rules" in `AGENTS.md` ask for
 (documentation); anything else below P1 needs an explicit rule there. The Claude
 workflow and its settings always come from `main` (`pull_request_target`); the PR's files are checked out into a
@@ -62,16 +63,17 @@ line, store the same token as a Dependabot secret too (step 5 below).
 1. Install the Claude GitHub App on this repository: <https://github.com/apps/claude>. Choose "Only select
    repositories" and pick this one.
 2. On a machine with Claude Code logged in to the subscription, run `claude setup-token` and copy the token.
-3. Repository Settings → Secrets and variables → Actions → New repository secret. Name
-   `CLAUDE_CODE_OAUTH_TOKEN`, value the token. Never paste the token anywhere else.
-4. Push to any open PR, or re-run the "Review (Claude)" workflow. A comment headed "Independent review (Claude)"
-   appears on the PR within a few minutes, posted by `github-actions[bot]`.
+3. Repository Settings → Environments → New environment, name `claude-review`. Under "Deployment branches and
+   tags" choose "Selected branches and tags" and add `main`. Then, in that environment, "Add environment
+   secret": name `CLAUDE_CODE_OAUTH_TOKEN`, value the token. Never paste the token anywhere else, and do not
+   store it as a repository secret: a repository secret is readable by a workflow on any branch, an
+   environment secret restricted to `main` is not.
+4. Push to any open PR into `main`, or re-run the "Review (Claude)" workflow. A comment headed
+   "Independent review (Claude)" appears on the PR within a few minutes, posted by `github-actions[bot]`.
+5. Optional, for Dependabot PRs: if their runs log "CLAUDE_CODE_OAUTH_TOKEN is not set", GitHub is withholding
+   the environment from that run; leave those PRs to Codex.
 
-5. Optional, for Dependabot PRs: if their runs log "CLAUDE_CODE_OAUTH_TOKEN is not set", add the same secret
-   under Settings → Secrets and variables → Dependabot as well; GitHub keeps Actions and Dependabot secrets
-   separate.
-
-To pause it, delete the secret: the job then logs "not set" and exits green. To remove it, delete the workflow
+To pause it, delete the environment secret: the job then logs "not set" and exits green. To remove it, delete the workflow
 file, the secret, and uninstall the app.
 
 ## Reading the results (owner)

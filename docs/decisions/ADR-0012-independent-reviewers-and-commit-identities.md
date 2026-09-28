@@ -32,7 +32,11 @@ building agent did on their behalf, and what a reviewing agent said.
    `"${CLAUDE_CODE_OAUTH_TOKEN:0:12}"` inside it prints token fragments into the public workflow log, past
    both GitHub's secret masking and a verbatim grep. It never pushes. Until the secret exists the job does
    nothing.
-   The event is `pull_request_target`: the workflow file, the prompt, and the `.claude/` settings the reviewer
+   The token is an environment secret (`claude-review`, deployment-branch policy `main` only), never a
+   repository secret: GitHub gives repository secrets to a workflow on any branch, so a branch carrying its own
+   workflow, or a pull request whose base is a side branch, could otherwise read it (Codex's fifteenth review).
+   The event is `pull_request_target`, the job runs only for pull requests into the default branch, and the
+   root checkout names that branch: the workflow file, the prompt, and the `.claude/` settings the reviewer
    loads always come from `main`; the pull request's files are checked out into a side directory (`pr-head`) as
    data. Codex's review of PR #16 showed why a plain `pull_request` trigger is not enough: a PR from a repository
    branch could edit this workflow and the edited copy would run with the token, so the PR could skip its own

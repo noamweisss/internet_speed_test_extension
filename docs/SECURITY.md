@@ -16,7 +16,7 @@ and provable:
 | Privacy | Public IP and ISP are shown to the user, never logged or persisted. Only settings are persisted, by the host. |
 | Supply chain | NuGet packages: only those from the template plus xUnit for tests. Central version pinning in `Directory.Packages.props`. `NuGetAuditMode` on. New packages need an ADR. |
 | Capabilities | `internetClient` and `runFullTrust` only (`Package.appxmanifest`). |
-| Secrets | The extension has none: no keys, no certificates, no env files (the hooks refuse them, R2, R4). The repository holds one, outside the extension: `CLAUDE_CODE_OAUTH_TOKEN`, a GitHub Actions secret for the review workflow, reachable only by trusted steps of that workflow (ADR-0012). |
+| Secrets | The extension has none: no keys, no certificates, no env files (the hooks refuse them, R2, R4). The repository holds one, outside the extension: `CLAUDE_CODE_OAUTH_TOKEN`, an environment secret of the `claude-review` environment, whose deployment-branch policy allows `main` only, so no workflow on another branch can read it; inside the review workflow only trusted steps see it (ADR-0012). |
 
 ## Enforced rules (ids printed when a rule fires)
 
