@@ -130,8 +130,10 @@ public sealed class SpeedMeasurer
     /// </summary>
     private async Task<(double LatencyMs, double JitterMs, ConnectionInfo HeaderInfo)> MeasureLatencyAsync(CancellationToken cancellationToken)
     {
+        // Probes ask for zero bytes and use only the headers: ResponseHeadersRead means a body, should the server send
+        // one anyway, is dropped unread when the response is disposed rather than buffered.
         ConnectionInfo headerInfo;
-        using (var warmUp = await _http.GetAsync(CloudflareEndpoints.Download(0), cancellationToken).ConfigureAwait(false))
+        using (var warmUp = await _http.GetAsync(CloudflareEndpoints.Download(0), HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
         {
             warmUp.EnsureSuccessStatusCode();
             headerInfo = ConnectionInfo.FromHeaders(warmUp.Headers);
@@ -141,7 +143,7 @@ public sealed class SpeedMeasurer
         for (var i = 0; i < _options.LatencySamples; i++)
         {
             var stopwatch = Stopwatch.StartNew();
-            using var response = await _http.GetAsync(CloudflareEndpoints.Download(0), cancellationToken).ConfigureAwait(false);
+            using var response = await _http.GetAsync(CloudflareEndpoints.Download(0), HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             stopwatch.Stop();
             response.EnsureSuccessStatusCode();
             samples.Add(Math.Max(0, stopwatch.Elapsed.TotalMilliseconds - ServerTiming.DurationMs(response.Headers)));

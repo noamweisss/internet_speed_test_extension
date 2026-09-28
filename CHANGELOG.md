@@ -34,8 +34,9 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   a Windows package, so no package could be built (ADR-0009).
 
 ### Changed
-- Latency probes stop at the response headers and never read a body: a probe answer that carries one is dropped
-  unread instead of buffered, so the network cannot make the extension hold more than it asked for.
+- Latency probes stop at the response headers and never read a body, so latency is the time to the first
+  response byte. A probe answer that carries a body is dropped unread instead of buffered, so the network cannot
+  make the extension hold more than it asked for.
 - The meter view lists Latency first, then Download and Upload, the order the test measures them in, and marks
   Latency as active while it is measured.
 - The extension project restores on Linux/macOS (`EnableWindowsTargeting`), so GitHub's automatic dependency
