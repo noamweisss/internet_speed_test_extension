@@ -16,20 +16,35 @@ verified, blocked, next.
 - Plan item 3.2: `## Safety impact` sections added to Dependabot PRs #2, #3, #4, #6. Action SHAs re-checked against
   the `v6.0.0` and `v7.0.1` tags with the GitHub API; the two NuGet bumps are test-only (`tests/` project alone), and
   their CI runs executed the full suite (69 tests at the time). All four: safety check green, merge state clean.
-  Merging was refused for the agent by the Claude Code permission classifier ("merge without review"); the owner merges.
+  Merging was refused for the agent by the Claude Code permission classifier ("merge without review"); the owner
+  merged all four (`main` at 8f2ad7a).
 - [noamweisss/internet_speed_test_extension#11](https://github.com/noamweisss/internet_speed_test_extension/pull/11)
-  opened for 3.1.
+  opened for 3.1. Reviews: Codex, 1 finding (docs status stale; already fixed in f131887). CodeRabbit, 1 finding
+  (the warm-up probe buffered any body the server sent): fixed test-first in c39be09 and 390b851, every probe now
+  uses `ResponseHeadersRead` and reads nothing past the headers. 79 tests.
 
 **Verified**
-- CI on this branch: run 36414087633 red (9 of 78 failing, each for its intended reason), run 36414541300 green
-  (78 passed, Windows build green, `check.sh all` green). `scripts/check.sh all` also passes locally.
+- CI on this branch: run 36414087633 red (9 of 78 failing, each for its intended reason), run 36414541300 green;
+  after the review fix, run 36418010367 red (1 of 79) and run 36418352350 green (79 passed, Windows build green,
+  `check.sh all` green). `scripts/check.sh all` also passes locally.
+- VM run by the owner (2026-09-28, build f131887, Windows 11 Pro 25H2 26200.9457, PowerToys 0.101.2652.0): ISP shown
+  ("smile internet gold"), location "H̱olon, IL", latency 32.7 ms, jitter 3.5 ms, 85.7 / 28.2 Mbps. All four bugs
+  fixed on a real connection. Logs (`C:\Users\Noam\SpeedTestVM\Logs\2026-09-28_14-46-30`): no crash dump, no error
+  from the extension while a test ran.
+- Update in use, answered by the same logs: not 0x80073D02. `Remove-AppxPackage` over a running extension closes the
+  old process (Event 1002 "Application Hang: stopped interacting with Windows and was closed") and Command Palette
+  restarts the extension from the new files within 3 s (`WinRTExtensionService.TryStartExtensionAsync` in the
+  CmdPal log). An update at 14:38 also logged 0xC000047E on `System.Private.CoreLib.dll` plus an ntdll fault in the
+  old process: its files were swapped under it. Cosmetic, but a Reload before updating would avoid both.
 
 **Not verified**
-- Nothing ran in Command Palette this session. The owner re-tests in the VM: ISP shown, location "H̱olon, IL",
-  jitter below latency; plus the session 2 leftovers (`Ctrl+L`, `Ctrl+R`, copy a row, default view, update in use).
-- CodeRabbit not yet requested on PR #11 (`@coderabbitai review`, once, after any review fixes).
+- Build 390b851 (probes with `ResponseHeadersRead`) has not run in the VM; f131887 has. Same requests, headers only.
+- Session 2 leftovers: `Ctrl+L`, `Ctrl+R`, copy a row, default-view setting.
 
 **Found, not fixed**
+- The VM updater (`C:\SpeedTest\Update-SpeedTestExtension.cmd`, outside the repo) defaults to the session 2 branch
+  `feat/install-without-visual-studio`; the owner's first re-test installed a build without the fix. Pass
+  `-Branch <branch>` (after PR #11 merges, `-Branch main`). The default should move to `main`.
 - The laptop has .NET runtimes 8, 9 and 10 but no SDK, so `dotnet test` cannot run locally; this session used the CI
   test job as the test runner (about 3 minutes per cycle). `winget install Microsoft.DotNet.SDK.10` would fix it.
 - Dependabot's rebase (`@dependabot rebase`) regenerates the PR body and drops the Safety impact section. Editing a
@@ -40,8 +55,7 @@ verified, blocked, next.
 - Two leftover worktrees under `.claude/worktrees/` (`stop-hook-preexisting-changes`, `hyperv-vm-powertoys-testing-45869f`).
 
 **Next**
-- Owner: merge #2, #3, #4, #6 first, before anything else lands on `main` (a Dependabot rebase would drop the notes).
-- Owner: VM re-test with the CI artifact of PR #11, then review and merge it.
+- Owner: merge PR #11 (all review threads resolved, CI green). Optionally run the VM once more with `-Branch main`.
 - Then 3.3: tag `v0.1.0`, GitHub release with the MSIX and install notes.
 
 ## Local session — 2026-09-28 — branch `fix/stop-hook-preexisting-changes`
