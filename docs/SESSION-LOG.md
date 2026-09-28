@@ -38,6 +38,10 @@ fixed two things in 4.1, wrote the changelog and committed)
 - CI run 36429657652 on 10d970b (PR [#15](https://github.com/noamweisss/internet_speed_test_extension/pull/15)):
   all jobs green, including the Windows build, the first compile of the new `ViewCommands.cs`, the safety-impact
   check on the R6 change, and CodeQL.
+- Codex review of PR #15 (2 findings, both valid, fixed in 51b8203): the R6 exemption dropped whole lines, so a
+  suffixed namespace or a second URL on the same line passed (now only the exact quoted token is removed before the
+  scan; both bypasses were reproduced with a probe file and fail again); `/meta` text with a line break could add
+  lines to the plain summary (control characters become spaces, test added). 102 tests.
 
 **Not verified**
 - Nothing from this session has run in Command Palette. The owner's next run checks: the two gauges render (not a
