@@ -20,7 +20,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 - The location reads "H̱olon, IL" instead of "H%CC%B1olon, IL": percent-encoded header values are decoded
   (invalid escapes are kept as they are; values over 256 characters are ignored).
 - Jitter is no longer larger than latency on a cold connection: one unmeasured warm-up probe opens the connection
-  before the latency samples, so the DNS + TCP + TLS setup cost does not count as a sample.
+  before the latency samples, so the DNS + TCP + TLS setup cost does not count as a sample. Each test now sends
+  one more zero-byte request.
 - The meter view now updates live during a test. Before, it froze on "Measuring latency" and showed results only
   when reopened: redrawing asked Command Palette to reload the page, and the reload redrew again, in a loop that
   also stalled the test.

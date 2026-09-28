@@ -245,7 +245,8 @@ public sealed class SpeedMeasurerTests
 
         var result = await measurer.MeasureAsync(null, CancellationToken.None);
 
-        Assert.InRange(result.JitterMs, 0, 100);
+        Assert.NotNull(result.JitterMs);
+        Assert.InRange(result.JitterMs.Value, 0, 100);
     }
 
     [Fact]
