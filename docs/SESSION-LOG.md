@@ -25,6 +25,10 @@ verified, blocked, next.
   workflow and the edited copy runs with the secret. Fixed as the action's security guide prescribes: the event
   is now `pull_request_target` (workflow, prompt, and `.claude/` settings from `main`), the PR head is checked
   out into `pr-head` as data (`--add-dir`), fork PRs are skipped, Dependabot PRs allowed. ADR-0010 updated.
+- Codex round 2, one P1, valid: `Bash(gh pr comment:*)` let a prompt-injected reviewer post any local file,
+  including `/proc/self/environ` with the token. Fixed: the reviewer only writes `review.md` (tools: `Write`,
+  `gh pr diff`, `gh pr view`; settings deny `Read(//proc/**)` and `Read(~/.claude/**)`), and a trusted step
+  posts the file after a token check and a size check. The comment now comes from `github-actions[bot]`.
 - Owner's rule, recorded in `AGENTS.md` §2: agents never merge unless asked for that PR with a reason, and no
   reviewer blocks a merge. `.coderabbit.yaml` now has `request_changes_workflow: false`. The `main` ruleset
   still requires conversation resolution; switching that off is the owner's click.

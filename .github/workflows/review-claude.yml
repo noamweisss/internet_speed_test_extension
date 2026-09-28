@@ -1,15 +1,18 @@
 # Independent review by Claude on every pull request (ADR-0010).
 # The reviewer runs on a fresh GitHub runner with the checkouts and the prompt below, nothing else: no session,
-# no memory, no context from the agent that wrote the change. It can read code and post one comment as the
-# Claude GitHub App (`claude[bot]`); it cannot push. Actions are pinned to full commit SHAs (tag in the comment)
-# so a retargeted tag cannot change what runs.
+# no memory, no context from the agent that wrote the change. It can read code and write one file; a later step
+# of this workflow posts that file as a comment. It cannot push. Actions are pinned to full commit SHAs (tag in
+# the comment) so a retargeted tag cannot change what runs.
 #
-# Trust boundary (Codex review of PR #16): the event is `pull_request_target`, so this file and the checkout at
-# the workspace root always come from `main`, never from the pull request. A PR therefore cannot edit its own
-# review, replace the prompt, or add a step that reads the token. The PR's files are checked out into the
-# `pr-head` directory as data for the reviewer to read; nothing from there is executed. This is the pattern the
-# action's own security guide prescribes for secret-bearing events. The prompt below is a copy of the block in
-# docs/REVIEW-PROMPT.md; keep the two identical.
+# Trust boundary (Codex reviews of PR #16):
+# - The event is `pull_request_target`, so this file and the checkout at the workspace root always come from
+#   `main`, never from the pull request. A PR cannot edit its own review, replace the prompt, or add a step that
+#   reads the token. The PR's files are checked out into `pr-head` as data for the reviewer to read; nothing from
+#   there is executed. This is the pattern the action's own security guide prescribes for secret-bearing events.
+# - The reviewer cannot post anything itself. Its only shell commands are `gh pr diff` and `gh pr view`; it writes
+#   the review to `review.md`, and the "Post the review" step below, which the reviewer does not control, posts
+#   that fixed file after checking it does not contain the token. Text in a PR can at most make the review wrong.
+# The prompt below is a copy of the block in docs/REVIEW-PROMPT.md; keep the two identical.
 #
 # The job does nothing until the owner adds the CLAUDE_CODE_OAUTH_TOKEN secret (docs/REVIEW-PROMPT.md).
 name: Review (Claude)
@@ -66,6 +69,8 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: "dependabot[bot]"
+          # The reviewer's process holds the token in its environment; keep it from reading that back.
+          settings: '{"permissions":{"deny":["Read(//proc/**)","Read(~/.claude/**)"]}}'
           prompt: |
             You are reviewing pull request ${{ github.event.pull_request.number }} in the GitHub repository
             ${{ github.repository }}. The working directory is the base branch (main). The pull request's files
@@ -91,11 +96,30 @@ jobs:
 
             Part 3. One-line verdict: "No blocking findings" or "Blocking findings: <count>".
 
-            Write the three parts to a file and post it once with
-            `gh pr comment ${{ github.event.pull_request.number }} --body-file <file>`, starting the body with
-            the heading "## Independent review (Claude)". Do not approve or request changes on behalf of any other
-            reviewer.
+            Write the three parts, and nothing else, to the file `review.md` in the working directory. Do not
+            post anything: a later step of this workflow posts that file. Do not approve or request changes on
+            behalf of any other reviewer.
           claude_args: |
             --add-dir pr-head
             --max-turns 40
-            --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*)"
+            --allowedTools "Write,Bash(gh pr diff:*),Bash(gh pr view:*)"
+
+      # Trusted step, not under the reviewer's control: posts the fixed file to the fixed pull request,
+      # refusing a body that carries the token or is too large for a comment.
+      - name: Post the review
+        if: env.HAS_TOKEN == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLAUDE_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -eu
+          test -s review.md || { echo "review.md is missing or empty; nothing posted."; exit 1; }
+          if grep -qF -- "$CLAUDE_TOKEN" review.md; then
+            echo "review.md contains the token; not posted."; exit 1
+          fi
+          if [ "$(wc -c < review.md)" -gt 60000 ]; then
+            echo "review.md is larger than a comment allows; not posted."; exit 1
+          fi
+          { printf '## Independent review (Claude)\n\n'; cat review.md; } > comment.md
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file comment.md

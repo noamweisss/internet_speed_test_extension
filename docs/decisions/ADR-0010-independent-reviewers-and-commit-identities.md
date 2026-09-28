@@ -14,8 +14,12 @@ building agent did on their behalf, and what a reviewing agent said.
 ## Decision
 1. `.github/workflows/review-claude.yml` runs `anthropics/claude-code-action` on every pull request. It
    authenticates with the owner's Claude subscription (`CLAUDE_CODE_OAUTH_TOKEN` repository secret, generated
-   by `claude setup-token`) and may only run `gh pr view`, `gh pr diff`, and `gh pr comment`. It posts one
-   comment as the Claude GitHub App and never pushes. Until the secret exists the job does nothing.
+   by `claude setup-token`) and may only run `gh pr view` and `gh pr diff`, plus write files. It writes the
+   review to `review.md`; a trusted step of the workflow, outside the reviewer's control, posts that fixed
+   file to the fixed pull request after checking it does not contain the token (Codex's second review of
+   PR #16: with `gh pr comment` allowed, a prompt injection in the PR could have made the reviewer post
+   `/proc/self/environ`, which holds the token). The reviewer's settings also deny reading `/proc` and
+   `~/.claude`. It never pushes. Until the secret exists the job does nothing.
    The event is `pull_request_target`: the workflow file, the prompt, and the `.claude/` settings the reviewer
    loads always come from `main`; the pull request's files are checked out into a side directory (`pr-head`) as
    data. Codex's review of PR #16 showed why a plain `pull_request` trigger is not enough: a PR from a repository
@@ -47,8 +51,10 @@ building agent did on their behalf, and what a reviewing agent said.
   trailer and a "Safety impact" note (R9, R13).
 - Each Claude review spends the owner's subscription quota, not API credit. Drafts wait until ready and fork
   pull requests are skipped; Dependabot pull requests are reviewed.
-- Text in a pull request reaches the reviewer as data. A prompt injection there can at most make the reviewer
-  post a misleading comment: its tools are three `gh pr` subcommands and its token can write pull request
-  comments only.
+- Text in a pull request reaches the reviewer as data. A prompt injection there can at most make the review
+  wrong: the reviewer has two read-only `gh pr` subcommands and a file write, the posting step is fixed, and
+  the posted body is checked for the token first.
+- The comment is posted by `github-actions[bot]` under the heading "Independent review (Claude)", not by
+  `claude[bot]`: the reviewer no longer holds a posting tool.
 - The Claude GitHub App gets the permission set of the app, not only what the workflow uses; the workflow's own
   token is limited to `contents: read`, `pull-requests: write`, `issues: read`, `id-token: write`.
