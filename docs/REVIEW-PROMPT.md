@@ -63,6 +63,10 @@ file, the secret, and uninstall the app.
 - Two different models answering the five questions the same way is the signal to look for. Their agreement
   means "no known problem", not "correct".
 - Hand Blockers and Majors to the building agent: "address the review by <reviewer> on PR <PR>". Nits are optional.
+- How each reviewer confirms a fix: CodeRabbit reads the reply in its thread, checks the new commit, and
+  resolves the thread itself. Codex and the Claude workflow never reply in threads: request a fresh review
+  after the fix (`@codex review`, or a push for Claude); a review of the fixed commit that does not repeat the
+  finding is their agreement, and you resolve the thread.
 - Every reviewer posts comments, never "Request changes" (`request_changes_workflow: false` for CodeRabbit;
   the Claude prompt forbids it; Codex only comments). Nothing an agent posts blocks a merge: the merge is your
   decision, taken on a green CI and on the findings you chose to have fixed. If you also switch off "Require
