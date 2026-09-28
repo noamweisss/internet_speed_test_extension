@@ -12,12 +12,14 @@ measures download, upload, and latency from inside the palette, modelled on the
 
 ## Status
 
-Pre-release. See `docs/PLAN.md` for the roadmap and `CHANGELOG.md` for what exists.
+Usable, early. v0.1.0 measures latency, jitter, download and upload and shows the connection details. See
+`docs/PLAN.md` for the roadmap and `CHANGELOG.md` for what changed.
 
 ## Install
 
-Pre-release builds come from CI: download the `internet-speed-test-extension-x64-<commit>` artifact and follow
-`docs/INSTALL.md` (no Visual Studio, no certificate; Windows Sandbox recommended).
+Download the newest release's `.zip` from the repository's **Releases** page and follow `docs/INSTALL.md`
+(no Visual Studio, no certificate; Windows Sandbox recommended). Builds of unreleased commits are the
+`internet-speed-test-extension-x64-<commit>` artifacts of the CI workflow.
 
 ## Development
 

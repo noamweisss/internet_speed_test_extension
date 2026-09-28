@@ -21,7 +21,15 @@ verified, blocked, next.
 - [noamweisss/internet_speed_test_extension#11](https://github.com/noamweisss/internet_speed_test_extension/pull/11)
   opened for 3.1. Reviews: Codex, 1 finding (docs status stale; already fixed in f131887). CodeRabbit, 1 finding
   (the warm-up probe buffered any body the server sent): fixed test-first in c39be09 and 390b851, every probe now
-  uses `ResponseHeadersRead` and reads nothing past the headers. 79 tests.
+  uses `ResponseHeadersRead` and reads nothing past the headers. 79 tests. Merged by the owner (`main` at 85bbfe8).
+- Plan item 3.3, branch `chore/release-v0.1.0`: package version `0.1.0.0` in `Package.appxmanifest`, `CHANGELOG.md`
+  gets a `[0.1.0] - 2026-09-28` section (the two `Added` blocks merged, compare links at the bottom), `docs/INSTALL.md`
+  and `README.md` point at the Releases page first and at CI artifacts for unreleased commits. The release itself:
+  after the PR merges, CI's push run on the merge commit builds the artifact; the agent downloads it, re-zips the two
+  files as `internet-speed-test-extension-v0.1.0-x64.zip`, and creates a **draft** release `v0.1.0` on that commit
+  with the changelog section, install notes, the CI run id and SHA-256 of each file. The owner publishes the draft
+  (that creates the tag). No release workflow: one more guard file and a signing question for a single-owner
+  project; revisit with plan item 4.4.
 
 **Verified**
 - CI on this branch: run 36414087633 red (9 of 78 failing, each for its intended reason), run 36414541300 green;
@@ -45,8 +53,9 @@ verified, blocked, next.
 - The VM updater (`C:\SpeedTest\Update-SpeedTestExtension.cmd`, outside the repo) defaults to the session 2 branch
   `feat/install-without-visual-studio`; the owner's first re-test installed a build without the fix. Pass
   `-Branch <branch>` (after PR #11 merges, `-Branch main`). The default should move to `main`.
-- The laptop has .NET runtimes 8, 9 and 10 but no SDK, so `dotnet test` cannot run locally; this session used the CI
-  test job as the test runner (about 3 minutes per cycle). `winget install Microsoft.DotNet.SDK.10` would fix it.
+- The laptop had .NET runtimes 8, 9 and 10 but no SDK, so `dotnet test` could not run locally; the 3.1 work used the
+  CI test job as the test runner (about 3 minutes per cycle). The owner installed SDK 10.0.401 later the same day;
+  `dotnet test tests/SpeedTest.Core.Tests` now passes locally (79 tests, 5 s).
 - Dependabot's rebase (`@dependabot rebase`) regenerates the PR body and drops the Safety impact section. Editing a
   body does not re-run the check (the workflow has no `edited` trigger); closing and reopening the PR does. If
   Dependabot rebases any of the four again before they are merged, re-add the section and close/reopen.
@@ -55,8 +64,9 @@ verified, blocked, next.
 - Two leftover worktrees under `.claude/worktrees/` (`stop-hook-preexisting-changes`, `hyperv-vm-powertoys-testing-45869f`).
 
 **Next**
-- Owner: merge PR #11 (all review threads resolved, CI green). Optionally run the VM once more with `-Branch main`.
-- Then 3.3: tag `v0.1.0`, GitHub release with the MSIX and install notes.
+- Owner: merge the release PR. Agent: draft release `v0.1.0` from the CI build of the merge commit (steps above).
+  Owner: publish the draft, then install from the Releases page once to prove the documented path.
+- Session 4 (`docs/PLAN.md`): only what daily use asks for.
 
 ## Local session — 2026-09-28 — branch `fix/stop-hook-preexisting-changes`
 
