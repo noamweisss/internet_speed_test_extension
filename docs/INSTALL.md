@@ -9,12 +9,19 @@ You need Windows 10 or 11, x64. Windows 11 Pro can use Windows Sandbox (path A, 
 
 Only use a build that CI made from a commit you can see on GitHub.
 
+**A release** (the normal way): open the repository on GitHub → **Releases** → the newest version (for example
+`v0.1.0`) → under **Assets**, download `internet-speed-test-extension-<version>-x64.zip`. The release notes name the
+CI run that built it and the SHA-256 of each file, so you can check what you downloaded.
+
+**A pre-release build** (to test a change before it is released):
+
 1. Open the repository on GitHub → **Actions** → workflow **CI**.
 2. Pick a run with a green tick whose branch is **main** (or a branch of this repository you are testing).
    Never a run from a pull request opened from someone else's fork.
 3. At the bottom of the run page, under **Artifacts**, click `internet-speed-test-extension-x64-<commit>`
    (the last part is the first 7 characters of the commit, shown on the run page).
-   A `.zip` downloads. It holds two files: the package (`.msix`) and `Install-SpeedTestExtension.ps1`.
+
+Either way a `.zip` downloads. It holds two files: the package (`.msix`) and `Install-SpeedTestExtension.ps1`.
 
 ## 2A. Test in Windows Sandbox (recommended)
 
