@@ -13,6 +13,14 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   folder, and checks its package name there, so a broken or foreign download leaves the current install untouched.
 
 ### Fixed
+- The ISP is shown again. Cloudflare's `/meta` endpoint answers `403 {}` unless the request names
+  `https://speed.cloudflare.com/` as its Referer; the request now does. Same host, no user data in the header.
+- Connection details read `/meta` correctly: the serving data centre arrives as an object (`"colo": {"iata": ...}`),
+  not a string, so every `/meta` answer used to be discarded and the details fell back to the probe headers.
+- The location reads "H̱olon, IL" instead of "H%CC%B1olon, IL": percent-encoded header values are decoded
+  (invalid escapes are kept as they are; values over 256 characters are ignored).
+- Jitter is no longer larger than latency on a cold connection: one unmeasured warm-up probe opens the connection
+  before the latency samples, so the DNS + TCP + TLS setup cost does not count as a sample.
 - The meter view now updates live during a test. Before, it froze on "Measuring latency" and showed results only
   when reopened: redrawing asked Command Palette to reload the page, and the reload redrew again, in a loop that
   also stalled the test.

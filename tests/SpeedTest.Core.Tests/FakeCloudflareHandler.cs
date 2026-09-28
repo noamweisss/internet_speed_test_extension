@@ -16,9 +16,30 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
 {
     public List<Uri> Requests { get; } = new();
 
-    public string MetaJson { get; set; } = """{"clientIp":"203.0.113.7","asOrganization":"Example ISP","city":"Tel Aviv","country":"IL","colo":"TLV"}""";
+    /// <summary>
+    /// The real /meta shape as observed on 2026-09-28 (values replaced with documentation addresses and names):
+    /// <c>colo</c> is an object, not a string.
+    /// </summary>
+    public string MetaJson { get; set; } = """{"hostname":"speed.cloudflare.com","clientIp":"203.0.113.7","httpProtocol":"HTTP/1.1","asn":64496,"asOrganization":"Example ISP","country":"IL","city":"Tel Aviv","region":"Tel Aviv","latitude":"32.0","longitude":"34.7","colo":{"iata":"TLV","lat":32.011398,"lon":34.8867,"cca2":"IL","region":"Middle East","city":"Tel Aviv"}}""";
 
     public HttpStatusCode MetaStatus { get; set; } = HttpStatusCode.OK;
+
+    /// <summary>
+    /// The real /meta answers <c>403 {}</c> unless the request carries <c>Referer: https://speed.cloudflare.com/</c>
+    /// (observed 2026-09-28). On by default so tests exercise the real behaviour; off to test a plain failure.
+    /// </summary>
+    public bool RequireMetaReferer { get; set; } = true;
+
+    /// <summary>The Referer the measurer sent on its last /meta request, or null when it sent none.</summary>
+    public Uri? MetaReferer { get; private set; }
+
+    /// <summary>
+    /// Delay before the first latency probe answers, standing in for the DNS + TCP + TLS setup that the first request
+    /// on a cold connection pays. Later probes answer at once.
+    /// </summary>
+    public TimeSpan FirstProbeDelay { get; set; }
+
+    private bool _firstProbeSeen;
 
     public HttpStatusCode DownloadStatus { get; set; } = HttpStatusCode.OK;
 
@@ -56,6 +77,12 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         var path = request.RequestUri!.AbsolutePath;
         if (path == "/meta")
         {
+            MetaReferer = request.Headers.Referrer;
+            if (RequireMetaReferer && request.Headers.Referrer != CloudflareEndpoints.Base)
+            {
+                return new HttpResponseMessage(HttpStatusCode.Forbidden) { Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json") };
+            }
+
             HttpContent metaBody = StallMetaBody
                 ? new StreamContent(new StallingStream())
                 : new StringContent(MetaJson, System.Text.Encoding.UTF8, "application/json");
@@ -70,6 +97,15 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         }
 
         var bytes = long.Parse(request.RequestUri.Query.Replace("?bytes=", string.Empty), System.Globalization.CultureInfo.InvariantCulture);
+        if (bytes == 0 && !_firstProbeSeen)
+        {
+            _firstProbeSeen = true;
+            if (FirstProbeDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(FirstProbeDelay, cancellationToken);
+            }
+        }
+
         var payload = new byte[bytes + (bytes > 0 ? Math.Max(0, DownloadExtraBytes) : 0)];
         HttpContent body = ResetDuringDownload && bytes > 0
             ? new StreamContent(new ResettingStream())
@@ -77,10 +113,12 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
                 ? new StreamContent(new NonSeekableStream(payload, this))
                 : new ByteArrayContent(payload);
         var response = new HttpResponseMessage(DownloadStatus) { Content = body };
+        // The real probe responses carry cf-meta-ip plus bare city/country/colo, with city percent-encoded UTF-8
+        // ("H%CC%B1olon" is "H̱olon", observed 2026-09-28).
         response.Headers.Add("cf-meta-ip", "198.51.100.9");
-        response.Headers.Add("cf-meta-city", "Haifa");
-        response.Headers.Add("cf-meta-country", "IL");
-        response.Headers.Add("cf-meta-colo", "HFA");
+        response.Headers.Add("city", "H%CC%B1olon");
+        response.Headers.Add("country", "IL");
+        response.Headers.Add("colo", "HFA");
         if (ServerDurationMs > 0)
         {
             response.Headers.Add("Server-Timing", "cfRequestDuration;dur=" + ServerDurationMs.ToString(System.Globalization.CultureInfo.InvariantCulture));
