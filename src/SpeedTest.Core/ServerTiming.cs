@@ -45,14 +45,26 @@ public static class ServerTiming
         return Math.Min(total, MaxDurationMs);
     }
 
-    /// <summary>The header value without its quoted strings, which may hold anything, separators included.</summary>
+    /// <summary>
+    /// The header value without its quoted strings, which may hold anything, separators included. Inside quotes a
+    /// backslash escapes the next character (an HTTP quoted-pair), so an escaped quote does not end the string.
+    /// </summary>
     private static string Unquoted(string value)
     {
         var text = new StringBuilder(value.Length);
         var inQuotes = false;
+        var escaped = false;
         foreach (var ch in value)
         {
-            if (ch == '"')
+            if (escaped)
+            {
+                escaped = false;
+            }
+            else if (inQuotes && ch == '\\')
+            {
+                escaped = true;
+            }
+            else if (ch == '"')
             {
                 inQuotes = !inQuotes;
             }

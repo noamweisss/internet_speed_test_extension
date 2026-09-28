@@ -56,6 +56,8 @@ public sealed class ServerTimingTests
     [Theory]
     [InlineData("cfL4;desc=\"dur=500\", cfSpeedEdge;dur=4", 4)]
     [InlineData("cfL4;desc=\"a, b;dur=500\";dur=2, cfSpeedEdge;dur=4", 6)]
+    [InlineData("a;desc=\"x\\\";dur=500\";dur=4, b;dur=2", 6)]
+    [InlineData("a;desc=\"ends with backslash\\\\\";dur=4, b;dur=2", 6)]
     public void DurationMs_DurInsideQuotedDescription_IsIgnored(string header, double expected)
     {
         using var response = new HttpResponseMessage();
