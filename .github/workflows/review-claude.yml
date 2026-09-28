@@ -13,8 +13,10 @@
 #   would let a prompt injection in the PR expand the variable into a public log line or a comment. A trusted step
 #   writes the diff, the PR metadata, and the reviewer's own earlier comments to files; the reviewer's tools are
 #   Read, Glob, Grep, and Write; its settings deny reading /proc and ~/.claude.
-# - The reviewer cannot post. It writes `review.md` in a directory outside the checkout, and the "Post the review"
-#   step posts that fixed file to the fixed pull request after checking it does not contain the token.
+# - The reviewer cannot post. Its Write permission is the one path `review.md` in a directory outside the
+#   checkout (a blanket Write could reach the runner's per-step command files, such as GITHUB_ENV, and so
+#   plant BASH_ENV for the next shell step), and the "Post the review" step posts that fixed file to the fixed
+#   pull request after checking it does not contain the token.
 # Text in a PR can therefore at most make the review wrong. The questions below are the ones in
 # docs/REVIEW-PROMPT.md; keep the two in step.
 #
@@ -93,7 +95,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: "dependabot[bot]"
-          settings: '{"permissions":{"deny":["Read(//proc/**)","Read(~/.claude/**)"]}}'
+          settings: '{"permissions":{"deny":["Read(//proc/**)","Read(~/.claude/**)","Write(/${{ runner.temp }}/_runner_file_commands/**)","Write(//home/**/_runner_file_commands/**)"]}}'
           prompt: |
             You are reviewing pull request ${{ github.event.pull_request.number }} in the GitHub repository
             ${{ github.repository }}. You have no shell and no network; everything you need is on disk.
@@ -133,7 +135,7 @@ jobs:
             --add-dir pr-head
             --add-dir ${{ runner.temp }}/review
             --max-turns 40
-            --allowedTools "Read,Glob,Grep,Write"
+            --allowedTools "Read,Glob,Grep,Write(/${{ runner.temp }}/review/review.md)"
             --disallowedTools "Bash,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch"
 
       # Trusted step, not under the reviewer's control: posts the fixed file to the fixed pull request,

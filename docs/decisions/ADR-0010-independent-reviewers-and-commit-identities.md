@@ -14,8 +14,10 @@ building agent did on their behalf, and what a reviewing agent said.
 ## Decision
 1. `.github/workflows/review-claude.yml` runs `anthropics/claude-code-action` on every pull request. It
    authenticates with the owner's Claude subscription (`CLAUDE_CODE_OAUTH_TOKEN` repository secret, generated
-   by `claude setup-token`) and has no shell: its tools are Read, Glob, Grep, and Write, and its settings deny
-   reading `/proc` and `~/.claude`. A trusted step writes the diff, the PR metadata, and the reviewer's own
+   by `claude setup-token`) and has no shell: its tools are Read, Glob, Grep, and Write for the single path
+   `review.md`, and its settings deny reading `/proc` and `~/.claude` and writing the runner's per-step
+   command files (Codex's fourth review: a blanket Write could put `BASH_ENV` into `GITHUB_ENV` and so run
+   PR-controlled shell in the next trusted step). A trusted step writes the diff, the PR metadata, and the reviewer's own
    earlier comments to files; the reviewer writes `review.md` outside the checkout; another trusted step posts
    that fixed file to the fixed pull request after checking it does not contain the token. Codex's second and
    third reviews of PR #16 showed why: with `gh pr comment` allowed, a prompt injection could make the

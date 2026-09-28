@@ -37,8 +37,13 @@ verified, blocked, next.
 - Owner's rule on threads (`AGENTS.md` §2, §5): a thread closes when the reviewer that opened it is satisfied.
   CodeRabbit resolves its own; Codex and Claude never reply in threads, so the building agent resolves only
   after that reviewer re-reviewed the fixed commit without repeating the finding, naming that review. Reviewers
-  are asked to open re-reviews with Fixed / Not fixed per earlier finding; whether Codex honours that from
-  `AGENTS.md` is not yet seen. "Require conversation resolution" stays on in the `main` ruleset.
+  are asked to open re-reviews with Fixed / Not fixed per earlier finding. Codex did not honour that on
+  round 4 (its review body stayed the boilerplate; only new inline findings), so for Codex "not repeated"
+  remains the only signal. "Require conversation resolution" stays on in the `main` ruleset.
+- Codex round 4, one new P1, valid: a blanket `Write` could reach the runner's per-step command files under
+  `$RUNNER_TEMP/_runner_file_commands` and put `BASH_ENV=<file in pr-head>` into `GITHUB_ENV`, so the next
+  trusted shell step would source PR-controlled code with both tokens in its environment. Fixed: `Write` is
+  allowed for the one path `$RUNNER_TEMP/review/review.md`; the command-file directory is denied as well.
 - Owner's rule, recorded in `AGENTS.md` §2: agents never merge unless asked for that PR with a reason, and no
   reviewer blocks a merge. `.coderabbit.yaml` now has `request_changes_workflow: false`. The `main` ruleset
   still requires conversation resolution; switching that off is the owner's click.
