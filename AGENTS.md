@@ -30,8 +30,10 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 - A PR that touches a safety-sensitive file (`docs/SAFETY-CONTRACT.md` §2) must explain, in plain language, what
   the extension can now do that it could not before, under "Safety impact" in the PR body (R13).
 - Merging a pull request is the owner's decision. An agent merges only when the owner asks for that specific PR
-  in the current session and says why; the request is quoted in `docs/SESSION-LOG.md`. No reviewer, human or
-  agent, blocks a merge: reviews are comments, and only the owner resolves or dismisses them.
+  in the current session and says why; the request is quoted in `docs/SESSION-LOG.md`. Reviews are comments,
+  never verdicts. A review thread is resolved by the reviewer that opened it (CodeRabbit does this itself), or
+  by the building agent only after that same reviewer has reviewed the fixed commit and not repeated the
+  finding; the resolving reply names that review. The owner may resolve or dismiss anything.
 
 ## 3. Non-negotiables (judgement, reviewed by humans and audit agents)
 
@@ -67,7 +69,9 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 Every reviewing agent (Codex, CodeRabbit, the Claude review workflow) and every human reviewer follows
 `docs/REVIEW-PROMPT.md`: answer its five safety questions with a file:line for every Yes, list findings with a
 severity, end with a one-line verdict. Review the code, not other reviewers' threads or the author's replies.
-A reviewer never changes code and never speaks for another reviewer's verdict.
+A reviewer never changes code and never speaks for another reviewer's verdict. On a re-review of a pull
+request, start with your own earlier findings on it: for each, say Fixed or Not fixed, with a file:line in the
+current head. A finding you do not repeat counts as fixed.
 
 ## 6. Map
 

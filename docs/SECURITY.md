@@ -66,7 +66,8 @@ review. They exist to make accidental or careless violations impossible and deli
 `.github/dependabot.yml` (dependency alerts and update PRs), `.github/workflows/codeql.yml` (CodeQL for C#),
 GitHub secret scanning (on by default for public repositories), `.coderabbit.yaml` (review bot instructions),
 `.github/workflows/review-claude.yml` (independent Claude review of every PR: workflow and settings from `main`,
-the PR's files as data in a side directory, the reviewer writes a file and a trusted step posts it, no push; ADR-0010). Codex reads `AGENTS.md` §5 for the same rules.
+the PR's files as data in a side directory, no shell for the reviewer, trusted steps prepare its input and post
+its output, no push; ADR-0010). Codex reads `AGENTS.md` §5 for the same rules.
 The owner-facing summary of all of this is `docs/SAFETY-CONTRACT.md`.
 
 ## Reporting

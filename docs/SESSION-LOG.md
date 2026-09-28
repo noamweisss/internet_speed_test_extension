@@ -29,6 +29,16 @@ verified, blocked, next.
   including `/proc/self/environ` with the token. Fixed: the reviewer only writes `review.md` (tools: `Write`,
   `gh pr diff`, `gh pr view`; settings deny `Read(//proc/**)` and `Read(~/.claude/**)`), and a trusted step
   posts the file after a token check and a size check. The comment now comes from `github-actions[bot]`.
+- Codex round 3, one P1, valid: any allowed `gh` command lets shell expansion (`"${CLAUDE_CODE_OAUTH_TOKEN:0:12}"`)
+  print token fragments into the public log. Fixed: the reviewer has no shell (`Read,Glob,Grep,Write` only,
+  `Bash` and the web tools disallowed); a trusted "Collect the pull request" step writes `pr.diff`, `pr.json`,
+  and the reviewer's own earlier comments into `$RUNNER_TEMP/review`, outside the checkout so the project's
+  Stop hook (S1) does not fire on the reviewer's output.
+- Owner's rule on threads (`AGENTS.md` §2, §5): a thread closes when the reviewer that opened it is satisfied.
+  CodeRabbit resolves its own; Codex and Claude never reply in threads, so the building agent resolves only
+  after that reviewer re-reviewed the fixed commit without repeating the finding, naming that review. Reviewers
+  are asked to open re-reviews with Fixed / Not fixed per earlier finding; whether Codex honours that from
+  `AGENTS.md` is not yet seen. "Require conversation resolution" stays on in the `main` ruleset.
 - Owner's rule, recorded in `AGENTS.md` §2: agents never merge unless asked for that PR with a reason, and no
   reviewer blocks a merge. `.coderabbit.yaml` now has `request_changes_workflow: false`. The `main` ruleset
   still requires conversation resolution; switching that off is the owner's click.
