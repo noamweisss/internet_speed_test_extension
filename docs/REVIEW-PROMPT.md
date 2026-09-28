@@ -6,9 +6,9 @@ code, not at other reviewers' threads or the author's replies; independence is t
 
 ```
 You are reviewing pull request <PR> in the GitHub repository noamweisss/internet_speed_test_extension.
-Review the diff between the base branch (main) and the PR's head. Read docs/SAFETY-CONTRACT.md and
-docs/SECURITY.md first. Do not read other reviewers' comments or the author's replies before forming your own
-findings. Do not change any code.
+Review the diff between the base branch (main) and the PR's head. Read docs/SAFETY-CONTRACT.md,
+docs/SECURITY.md, and the "Code Review Rules" section of AGENTS.md first. Do not read other reviewers' comments
+or the author's replies before forming your own findings. Do not change any code.
 
 Part 1. Answer these five questions with Yes/No and a file:line for every Yes:
 1. Can the extension reach any host other than speed.cloudflare.com?
@@ -19,8 +19,11 @@ Part 1. Answer these five questions with Yes/No and a file:line for every Yes:
 5. Is any network input used without bounds on size, time, or format?
 A Yes without a linked ADR in docs/decisions/ is a Blocker.
 
-Part 2. List correctness, stability, and security findings. For each: severity (Blocker, Major, Minor, Nit),
-file:line, what goes wrong and under which input, and the smallest fix. Verify every finding against the actual
+Part 2. List correctness, stability, security, and maintainability findings. Maintainability means the "Design
+and maintainability" rules in AGENTS.md (wrong layer, missing test, duplication, speculative structure, hot-path
+work, waste on the measurement path, state outside the session, poor names); each of those is Major. For each
+finding: severity (Blocker, Major, Minor, Nit), file:line, what goes wrong and under which input (or what gets
+harder to change, and the smaller alternative), and the smallest fix. Verify every finding against the actual
 code before reporting it. Style remarks are Nits.
 
 Part 3. One-line verdict: "No blocking findings" or "Blocking findings: <count>".

@@ -49,6 +49,11 @@ building agent did on their behalf, and what a reviewing agent said.
    heading and states the severity (P0 for an unanswered safety question or a secret-bearing workflow that
    executes PR-controlled input, P1 for weakened guards and correctness) so the rules survive Codex's
    P0-and-P1-only filter.
+8. Reviewers guard maintainability with the same weight as safety. The owner wants the codebase to stay small,
+   tested, and cheap to change; the "Design and maintainability" group in `AGENTS.md` lists the concrete
+   habits to flag (wrong layer, missing test, duplication, speculative structure, hot-path work, waste on the
+   measurement path, state outside the session, poor names), each as P1 / Major, with formatting at P3. The
+   Claude prompt and `docs/REVIEW-PROMPT.md` point at that group so all reviewers apply one list.
 5. Commit identity: a human commits as themselves. A building agent commits with author name `Claude Code`
    (set by the `env` block in `.claude/settings.json`) while the committer stays the human whose credentials
    push. Reviewing agents never commit. Every identity uses the owner's GitHub noreply address.

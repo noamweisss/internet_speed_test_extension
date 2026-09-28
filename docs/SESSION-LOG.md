@@ -46,6 +46,9 @@ verified, blocked, next.
   only, and it reads rules only under the exact heading `## Code Review Rules` with `###` groups. The section
   was `## 5. Code review rules`, so it was never read. Rewritten under the exact heading, moved last, with
   explicit severities; `## 6. Map` is `## 5. Map` again. Effect to be seen on the next Codex round.
+- Owner's request: reviewers guard maintainability too. "Design and maintainability" group added to the Code
+  Review Rules (eight concrete habits from ARCHITECTURE, CONVENTIONS, TESTING, each P1); the Claude prompt and
+  REVIEW-PROMPT.md Part 2 now read that group and report those findings as Major (ADR-0010 item 8).
 - Codex round 4, one new P1, valid: a blanket `Write` could reach the runner's per-step command files under
   `$RUNNER_TEMP/_runner_file_commands` and put `BASH_ENV=<file in pr-head>` into `GITHUB_ENV`, so the next
   trusted shell step would source PR-controlled code with both tokens in its environment. Fixed: `Write` is

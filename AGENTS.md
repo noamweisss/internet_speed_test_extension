@@ -79,8 +79,10 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 
 ## Code Review Rules
 
-For every reviewing agent (Codex reads this section; the Claude workflow carries the same rules in its prompt)
-and every human reviewer. The full prompt is `docs/REVIEW-PROMPT.md`.
+For every reviewing agent (Codex reads this section; the Claude workflow is told to read it) and every human
+reviewer. The full prompt is `docs/REVIEW-PROMPT.md`; its severities map P0 = Blocker, P1 = Major, P2 = Minor,
+P3 = Nit. The owner wants two things guarded with equal weight: the safety promises, and a codebase that stays
+small, tested, and cheap to change.
 
 ### Safety questions
 
@@ -102,6 +104,30 @@ is P0.
 A finding that crashes, hangs, or mis-measures on a real input is P1: say what goes wrong, under which input,
 and the smallest fix, and verify it against the code before posting. Treat a network read without a byte
 bound or a timeout as P1. Style is never above P3.
+
+### Design and maintainability
+
+The project is deliberately small (`docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`). Each of these is P1, with
+the file:line and the smaller alternative:
+
+- Logic in the wrong layer: measurement, parsing, formatting, or maths added under `internet_speed_test_extension/`
+  instead of `src/SpeedTest.Core` (ADR-0003). The extension is a thin adapter over Core.
+- Testable logic without a unit test in `tests/SpeedTest.Core.Tests`, or a bug fix without the test that would
+  have caught it (`docs/TESTING.md`).
+- A second copy of a calculation, a parser, or a constant instead of a call to the existing one. A constant
+  that belongs in `SpeedTestOptions` or `CloudflareEndpoints` hard-coded elsewhere.
+- Speculative structure: an interface, base class, option, setting, or parameter with one implementation or
+  no caller. Less code is better; delete over add.
+- Hot paths: work started inside `GetItems()` or `GetContent()`, `RaiseItemsChanged()` called from them or
+  from code they call, or a network call, file read, or large allocation per render.
+- Waste on the measurement path: an `HttpClient` created per call, a task never awaited, a stream or response
+  never disposed, a loop that spins or polls without delay, per-sample allocations inside the sampling loop.
+- State outside `SpeedTestSession`: new statics, singletons, or shared mutable fields; Core stays stateless per
+  run.
+- A name that needs a comment to be understood, a placeholder or generated name, a file holding more than one
+  type (`docs/CONVENTIONS.md`).
+
+Formatting, comment wording, and ordering are P3 at most.
 
 ### Conduct
 
