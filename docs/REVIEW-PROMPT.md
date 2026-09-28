@@ -26,7 +26,13 @@ finding: severity (Blocker, Major, Minor, Nit), file:line, what goes wrong and u
 harder to change, and the smaller alternative), and the smallest fix. Verify every finding against the actual
 code before reporting it. Style remarks are Nits.
 
-Part 3. One-line verdict: "No blocking findings" or "Blocking findings: <count>".
+Part 3. Documentation and instructions, as a separate list, never mixed with Part 2: apply the "Documentation
+and instructions" rules in AGENTS.md (a document that contradicts the code, another document, or an ADR; an
+instruction an agent or human could read two ways or that names something that does not exist; a behaviour or
+guard change without its docs, changelog, or ADR; a hand-off note or plan status that does not match the change).
+Severity Major when it could send an agent or a human the wrong way, Minor otherwise, with file:line and the fix.
+
+Part 4. One-line verdict: "No blocking findings" or "Blocking findings: <count>".
 
 Post the result as a review on the pull request (with the gh CLI: gh pr review <PR> --comment --body-file
 <file>), or return it as text for a human to post. Do not approve or request changes on behalf of any other

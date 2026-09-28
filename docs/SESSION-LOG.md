@@ -49,6 +49,12 @@ verified, blocked, next.
 - Owner's request: reviewers guard maintainability too. "Design and maintainability" group added to the Code
   Review Rules (eight concrete habits from ARCHITECTURE, CONVENTIONS, TESTING, each P1); the Claude prompt and
   REVIEW-PROMPT.md Part 2 now read that group and report those findings as Major (ADR-0010 item 8).
+- Owner's request: reviewers flag docs and instruction problems too, separately from code findings.
+  "Documentation and instructions" group added to the rules; the prompts get a separate Part 3 for it and the
+  verdict moves to Part 4 (ADR-0010 item 9).
+- Codex round 5, one P1, valid: a PR can commit a symlink in its tree pointing at `/proc/self/environ`; the
+  reviewer's `Read` follows it under the `pr-head` path, which the deny rule does not match. Fixed: the trusted
+  collect step runs `find pr-head -type l -delete` before the reviewer starts.
 - Codex round 4, one new P1, valid: a blanket `Write` could reach the runner's per-step command files under
   `$RUNNER_TEMP/_runner_file_commands` and put `BASH_ENV=<file in pr-head>` into `GITHUB_ENV`, so the next
   trusted shell step would source PR-controlled code with both tokens in its environment. Fixed: `Write` is

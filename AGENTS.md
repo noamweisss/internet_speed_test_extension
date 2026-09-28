@@ -129,6 +129,19 @@ the file:line and the smaller alternative:
 
 Formatting, comment wording, and ordering are P3 at most.
 
+### Documentation and instructions
+
+Report these in a separate list from code findings, never mixed with them. Each is P1 when it could send an
+agent or a human the wrong way, P2 otherwise:
+
+- A document that contradicts the code, another document, or an ADR (a status, a file name, a rule, a number).
+- An instruction in `AGENTS.md`, `docs/`, a hook message, or a PR template that can be read two ways, names a
+  file or rule that does not exist, or asks for something the guards prevent.
+- A change in behaviour, guard, or interface without the matching change in `docs/`, `CHANGELOG.md`, or an ADR.
+- A hand-off note (`docs/SESSION-LOG.md`) or plan status that does not match what the pull request did.
+
+Wording and tone are P3.
+
 ### Conduct
 
 Review the code, not other reviewers' threads or the author's replies. Never change code, never approve or
