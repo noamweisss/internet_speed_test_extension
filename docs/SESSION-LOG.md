@@ -78,9 +78,10 @@ verified, blocked, next.
   the network nor `SpeedTest.Core` adds the jitter; the extension's process environment does. First suspect:
   Windows power throttling (EcoQoS) of the packaged COM server, which has no foreground window, on a laptop.
   Check: Task Manager → Details → "Power throttling" column for `internet_speed_test_extension.exe` during a test,
-  and a run on mains with power mode "Best performance". Opting a process out needs `SetProcessInformation`
-  (native interop, forbidden by AGENTS.md §2 without an ADR); the alternative is a jitter statistic that resists
-  scheduling spikes (more samples, median absolute deviation). Decide in session 4, item 4.3.
+  and a run on mains with power mode "Best performance". Opting a process out of throttling would need
+  `SetProcessInformation`, which is native interop: prohibited by AGENTS.md §2 and rule R5, and no ADR changes that.
+  The options that remain are a jitter statistic that resists scheduling spikes (more samples, median absolute
+  deviation) or accepting the figure as it is. Decide in session 4, item 4.3.
 - Session 4 (`docs/PLAN.md`): only what daily use asks for.
 
 ## Local session — 2026-09-28 — branch `fix/stop-hook-preexisting-changes`
