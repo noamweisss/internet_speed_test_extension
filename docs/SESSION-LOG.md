@@ -74,20 +74,46 @@ verified, blocked, next.
 - Real package size (CI log): 73 files, 32.5 MB unpacked; the script's limits are 5000 files and 500 MB.
 - Artifacts are uploaded only by push runs: pull_request runs build a merge commit that exists on no branch.
 
+**Second online run (owner, VM, 2026-09-28, build from this branch)**
+- Works end to end: the meter updates live and finishes ("Complete at 12:02"), the details view lists every value.
+  Two runs: 160.2 / 34.5 Mbps, latency 28.5 ms, jitter 78.9 ms; 162.7 / 38.4 Mbps, latency 71.6 ms, jitter 35.8 ms.
+- Logs (`C:\Users\Noam\SpeedTestVM\Logs\2026-09-28_12-04-16`, read in this session): package
+  `InternetSpeedTestExtension` 0.0.1.0, Status Ok, development mode. No crash dumps, no WER reports, no extension
+  errors. Event log noise only (activation, DNS, time sync, one DCOM timeout); one harmless AppxPackaging warning
+  (the build namespace `http://schemas.microsoft.com/developer/appx/2015/build` in the generated manifest is ignored).
+- Four bugs found, all in `SpeedTest.Core`, all older than PR #7, none fixed yet (confirmed with curl from the cloud
+  session on 2026-09-28):
+  1. ISP always "—": `GET /meta` answers `403 {}` unless the request carries `Referer: https://speed.cloudflare.com/`
+     (with it: 200 and full JSON). The code falls back to response headers silently, and headers carry no ISP.
+  2. Even with the Referer, parsing would fail: real `/meta` has `"colo": {"iata": "IAD", "lat": ..., "city": ...}`
+     (an object), not a string. `CloudflareMeta.Colo` is `string?`, so deserialization throws and the result is
+     empty. `FakeCloudflareHandler.MetaJson` has `"colo":"TLV"`: the fake encoded the wrong belief (as in session 1).
+  3. Location "H%CC%B1olon, IL": the fallback `city` header is percent-encoded UTF-8 ("H̱olon"). Header values
+     need `Uri.UnescapeDataString` (bounded, invalid escapes kept as-is).
+  4. Jitter larger than latency: with `/meta` failing, the first latency probe also opens the connection
+     (DNS + TCP + TLS), one slow sample that inflates jitter (median latency resists it). Fix: one unmeasured
+     warm-up probe before the samples, so the result does not depend on `/meta` warming the connection.
+
 **Not verified**
-- A full measurement shown live in Command Palette: the first online run froze (ItemsChanged loop); the fix
-  5fbf29a is not yet re-tested. The rest of the `docs/TESTING.md` checklist.
+- `Ctrl+L`, `Ctrl+R`, copying a row, the default-view setting, and an update over a running extension
+  (0x80073D02 or not): not reported in the second run.
 - Whether a folder-registered package keeps loading after Developer Mode is switched off (INSTALL.md says it may not).
 - Whether PowerToys Command Palette runs inside Windows Sandbox on a retail Windows build (untested; the
   owner's host is an Insider build, where Sandbox crashes).
 
-**Next** (state at 8274d25: CI green on 8447721, all review threads resolved. CodeRabbit's latest review of
-8447721 only commented; its older "changes requested" from 0971b9a stays until the owner dismisses it, as in
-session 1. Its last minor point, the artifact name in README, is fixed in 8274d25.)
-- Owner re-tests in the VM with artifact `internet-speed-test-extension-x64-<head sha>`: live meter (latency →
-  download → upload), duplicate entry gone, an update over the installed version while Command Palette is open
-  (0x80073D02 or not), then the rest of `docs/TESTING.md` (item 2.2). Record the result here and in PR #7.
-- Fix whatever that run shows (2.3). Then the owner approves and merges PR #7; then 2.4 (tag `v0.1.0`, release).
+**Next** (PR #7: CI green, all threads resolved, CodeRabbit approved on 8447721; the owner merges it)
+Next session, on a new branch from `main` (plan items 2.5, 2.6, then 2.4):
+- 2.5: fix the four bugs above in `SpeedTest.Core`, test-first with the real `/meta` shape (copy the JSON above
+  into `FakeCloudflareHandler`, add a test that `/meta` without the Referer gets 403 and still yields header data,
+  a test for percent-encoded header values, and one for the warm-up probe). The Referer is a constant string on the
+  same host: no new host, no user data (SAFETY-CONTRACT §3 answers stay "No").
+- 2.6: merge the Dependabot PRs #2 (setup-dotnet 6.0.0), #3 (checkout 7.0.1), #4 (Test.Sdk 18), #6 (xunit runner
+  4). Their only red check is safety-impact (no "Safety impact" section). SHAs of #2 and #3 were verified against
+  the release tags on 2026-09-25. Rebase order: #2 and #3 first (they remove the Node 20 deprecation warning).
+- The owner re-tests in the VM: the ISP shows, the location reads normally, jitter is plausible; plus the checks
+  under "Not verified" above. Then 2.4 (tag `v0.1.0`, release).
+- CodeRabbit reviews only on an `@coderabbitai review` comment here (fewer than 10 stars), one per hour on the
+  free plan: request it once per finished PR, not for docs-only pushes.
 
 ## Session 1 — 2026-09-24 — branch `feat/speedtest-core-and-ui`
 
