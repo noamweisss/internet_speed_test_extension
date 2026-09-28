@@ -9,6 +9,8 @@
 #   `main`, never from the pull request. A PR cannot edit its own review, replace the prompt, or add a step that
 #   reads the token. The PR's files are checked out into `pr-head` as data for the reviewer to read; nothing from
 #   there is executed. This is the pattern the action's own security guide prescribes for secret-bearing events.
+# - The PR checkout is stripped of symlinks first: a committed link to /proc/self/environ would otherwise let the
+#   reviewer read the token through a path the deny rules do not match.
 # - The reviewer's process holds the token in its environment, so it gets no shell at all: any allowed command
 #   would let a prompt injection in the PR expand the variable into a public log line or a comment. A trusted step
 #   writes the diff, the PR metadata, and the reviewer's own earlier comments to files; the reviewer's tools are
@@ -81,6 +83,10 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -eu
+          # A PR could commit a symlink pointing outside its tree (for example at /proc/self/environ) and have
+          # the reviewer read the token through an innocent-looking path. Symlinks are data the reviewer does
+          # not need; drop them all.
+          find pr-head -type l -print -delete | sed 's/^/removed symlink: /'
           mkdir -p "$REVIEW_DIR"
           gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" > "$REVIEW_DIR/pr.diff"
           gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
@@ -131,7 +137,14 @@ jobs:
             smallest fix. Verify every finding against the actual code before reporting it. Style remarks are
             Nits.
 
-            Part 3. One-line verdict: "No blocking findings" or "Blocking findings: <count>".
+            Part 3. Documentation and instructions, as a separate list, never mixed with Part 2: apply the
+            "Documentation and instructions" rules in AGENTS.md (a document that contradicts the code, another
+            document, or an ADR; an instruction an agent or human could read two ways or that names something
+            that does not exist; a behaviour or guard change without its docs, changelog, or ADR; a hand-off
+            note or plan status that does not match the change). Severity Major when it could send an agent or
+            a human the wrong way, Minor otherwise, with file:line and the fix.
+
+            Part 4. One-line verdict: "No blocking findings" or "Blocking findings: <count>".
 
             Write the parts, and nothing else, to `${{ runner.temp }}/review/review.md`. Do not post anything:
             a later step of this workflow posts that file. Do not approve or request changes on behalf of any

@@ -17,7 +17,9 @@ building agent did on their behalf, and what a reviewing agent said.
    by `claude setup-token`) and has no shell: its tools are Read, Glob, Grep, and Write for the single path
    `review.md`, and its settings deny reading `/proc` and `~/.claude` and writing the runner's per-step
    command files (Codex's fourth review: a blanket Write could put `BASH_ENV` into `GITHUB_ENV` and so run
-   PR-controlled shell in the next trusted step). A trusted step writes the diff, the PR metadata, and the reviewer's own
+   PR-controlled shell in the next trusted step). Symlinks are deleted from the PR checkout before the reviewer
+   starts (Codex's fifth review: a committed link to `/proc/self/environ` would be read through a path the
+   deny rules do not match). A trusted step writes the diff, the PR metadata, and the reviewer's own
    earlier comments to files; the reviewer writes `review.md` outside the checkout; another trusted step posts
    that fixed file to the fixed pull request after checking it does not contain the token. Codex's second and
    third reviews of PR #16 showed why: with `gh pr comment` allowed, a prompt injection could make the
@@ -54,6 +56,10 @@ building agent did on their behalf, and what a reviewing agent said.
    habits to flag (wrong layer, missing test, duplication, speculative structure, hot-path work, waste on the
    measurement path, state outside the session, poor names), each as P1 / Major, with formatting at P3. The
    Claude prompt and `docs/REVIEW-PROMPT.md` point at that group so all reviewers apply one list.
+9. Reviewers also flag documentation and instruction problems (contradictions with the code or between
+   documents, instructions readable two ways or naming things that do not exist, changes without their docs
+   or ADR, hand-off notes that do not match), always as a list separate from code findings, P1 when they could
+   misdirect an agent or a human and P2 otherwise. The prompts carry this as their own part.
 5. Commit identity: a human commits as themselves. A building agent commits with author name `Claude Code`
    (set by the `env` block in `.claude/settings.json`) while the committer stays the human whose credentials
    push. Reviewing agents never commit. Every identity uses the owner's GitHub noreply address.
