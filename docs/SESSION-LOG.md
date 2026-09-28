@@ -49,6 +49,12 @@ verified, blocked, next.
 - Whether Dependabot-triggered `pull_request_target` runs see the repository secret or need a Dependabot secret
   (`docs/REVIEW-PROMPT.md` covers both).
 
+**Lesson for the next building agent**
+- PR #16 took 13 Codex rounds. Rounds 1 to 7 were a chain where each fix opened the next hole; rounds 8 to 13
+  were documentation that still described an earlier design. Before requesting a review round: grep every doc
+  for the facts a design change touched, batch all fixes into one push, and expect the Claude workflow to run
+  in parallel so two reviewers see the same commit. The rules now ask reviewers for completeness in one pass.
+
 **Next**
 - Owner: uninstall CodeRabbit after PR #15; on GitHub Settings → Emails tick "Keep my email addresses private"
   and "Block command line pushes that expose my email".

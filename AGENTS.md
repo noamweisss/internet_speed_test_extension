@@ -142,6 +142,12 @@ agent or a human the wrong way, P2 otherwise:
 
 Wording and tone are P3.
 
+### Completeness
+
+Report in one review everything you can verify, across every group above; never keep a finding for the next
+round. A pull request should need one fix round, not a dozen. If a fix would open a new hole, say so in the
+same finding.
+
 ### Conduct
 
 Review the code, not other reviewers' threads or the author's replies. Never change code, never approve or
