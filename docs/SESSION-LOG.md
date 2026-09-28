@@ -4,6 +4,36 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 4 — 2026-09-28 — branch `chore/independent-reviewers`
+
+**Done**
+- Owner's request: faster independent reviews than CodeRabbit's hourly, manual, free-plan runs, using the
+  subscriptions the owner already pays for. Findings first: Codex (ChatGPT plan) already reviews every PR here
+  automatically as `chatgpt-codex-connector` (PRs #11, #13, #14) and reads `AGENTS.md`; Claude's managed Code
+  Review is Team/Enterprise only; Gemini's GitHub app is offered to Google Cloud customers, not consumer plans.
+- `.github/workflows/review-claude.yml`: `anthropics/claude-code-action` pinned to v1.0.235, on every PR from a
+  repository branch, authenticating with the owner's Claude subscription (`CLAUDE_CODE_OAUTH_TOKEN`), tools
+  limited to `gh pr view|diff|comment`, one comment as `claude[bot]`. Prompt is the `docs/REVIEW-PROMPT.md` block,
+  copied into the workflow. The job exits green with a log line while the secret is missing. ADR-0010.
+- `AGENTS.md` §5 "Code review rules" (Codex reads it), reviewer table and owner setup steps in
+  `docs/REVIEW-PROMPT.md`, scanner line in `docs/SECURITY.md`.
+- Commit identity (`docs/CONVENTIONS.md`, ADR-0010): agent commits carry author `Claude Code` via the `env` block
+  in `.claude/settings.json`; the committer stays the owner. The owner's real e-mail was the git author on 21 of
+  89 commits; global git config now uses the GitHub noreply address, the old commits stay (no history rewrite).
+
+**Verified**
+- `scripts/check.sh all` green locally; workflow YAML parses (js-yaml). No actionlint on this machine.
+
+**Not verified**
+- A real run of the Claude workflow: needs the app install and the secret, which only the owner can add. The
+  first PR from this branch shows the skip path; the first push after the secret exists shows a real review.
+- Whether the `env` block sets the author on the next agent session (this session set it inline per commit).
+
+**Next**
+- Owner: install the Claude GitHub App, add the secret (steps in `docs/REVIEW-PROMPT.md`), and on GitHub
+  Settings → Emails tick "Keep my email addresses private" and "Block command line pushes that expose my email".
+- Then plan session 4 (polish) as listed in `docs/PLAN.md`.
+
 ## Session 3 — 2026-09-28 — branch `fix/connection-info-and-jitter`
 
 **Done**
