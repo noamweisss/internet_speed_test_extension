@@ -1,4 +1,5 @@
-# Independent review by Claude on every pull request (ADR-0012).
+# Independent review by Claude on every eligible pull request: into the default branch, from a branch of this
+# repository, not a draft (ADR-0012).
 # The reviewer runs on a fresh GitHub runner with the files below and the prompt, nothing else: no session,
 # no memory, no context from the agent that wrote the change. It can read files and write one file; steps of
 # this workflow that it does not control prepare its input and post its output. It cannot push. Actions are
@@ -130,6 +131,15 @@ jobs:
             > pr.graphql.json
           jq '.data.repository.pullRequest | {number,title,body,baseRefName,headRefName,commitCount:.commits.totalCount,commits:[.commits.nodes[].commit],fileCount:.files.totalCount,files:.files.nodes}' \
             pr.graphql.json > pr.json
+          # The compare API returns at most 300 changed files; beyond that the diff is silently incomplete, so
+          # such a PR is not reviewed either.
+          FILES="$(jq -r '.fileCount' pr.json)"
+          if [ "$FILES" -gt 300 ]; then
+            printf 'Not reviewed: the pull request changes %s files, above the 300 the automated review can diff completely. Split the pull request or review it by hand.\n' "$FILES" > review.md
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "too many changed files; posting a notice instead of a review."
+            exit 0
+          fi
           # Fingerprint of the reviewed body, so the posting step can tell if it was edited meanwhile.
           jq -r '.body // ""' pr.json | sha256sum | cut -d' ' -f1 > body.sha256
           jq -r '[.data.repository.pullRequest.comments.nodes[] | select(.author.login == "github-actions" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \

@@ -7,7 +7,8 @@ verified, blocked, next.
 ## Session 4 — 2026-09-28 — branch `chore/independent-reviewers`
 
 **Final state (read this, the history below is how it got here)**
-- Two independent reviewers on every pull request, both on plans the owner already pays for (ADR-0012):
+- Two independent reviewers, both on plans the owner already pays for (ADR-0012); Codex on every pull
+  request, Claude on every eligible one (into `main`, from a repository branch, not a draft):
   Codex (`chatgpt-codex-connector`, automatic, reads the `## Code Review Rules` section of `AGENTS.md`) and
   the Claude workflow `.github/workflows/review-claude.yml` (comment by `github-actions[bot]` headed
   "Independent review (Claude)"). CodeRabbit is removed from the repository; the owner uninstalls the app after
@@ -117,6 +118,11 @@ verified, blocked, next.
     the reviewed body with the current one. P1: the setup guide gave two contradictory Dependabot fallbacks;
     one now (left to Codex). P1: the ADR still called the token a repository secret in one place. Two P2s:
     a stale severity sentence in the ADR and a stale round count here.
+17. P1: the compare API diffs at most 300 changed files, so a PR with more (under 2 MiB) got a silently
+    incomplete diff; now such a PR is not reviewed and a notice is posted, like the size cap. P1: the ADR's
+    Dependabot consequence still pointed at the removed extra-secret fallback. Two P2s: "every pull request"
+    qualified to eligible ones in the workflow header, the ADR, and this entry; plan item 4.0 now separates
+    implementation (done) from the owner's environment setup (pending).
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
   heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
   where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the
