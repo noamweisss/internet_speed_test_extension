@@ -87,8 +87,10 @@ building agent did on their behalf, and what a reviewing agent said.
   pull requests are skipped; Dependabot pull requests are reviewed: GitHub withholds Actions secrets from
   Dependabot-triggered `pull_request` runs but documents `pull_request_target` as exempt, and
   `docs/REVIEW-PROMPT.md` says what to add if a run still logs the skip line (Codex's eighth review).
-- Every input the reviewer gets is bounded: the diff at 2 MiB with a marker line it must report, the commit
-  list at 50, its earlier comments at two and 128 KB (Codex's eighth review). Every fetch fails closed: the
+- Every input the reviewer gets is bounded: a diff over 2 MiB is not reviewed at all and the job posts a
+  notice instead, because a truncated diff would leave later files unexamined behind a clean-looking review
+  (Codex's eighth and eleventh reviews); the commit list is capped at 50, the changed-file list at 500, the
+  reviewer's earlier comments at two and 128 KB. Every fetch fails closed: the
   collect step runs with `pipefail`, writes each full file before capping it, and stops the job on an empty
   diff, so a failed API call never turns into a clean review of nothing (Codex's ninth review).
 - Text in a pull request reaches the reviewer as data. A prompt injection there can at most make the review

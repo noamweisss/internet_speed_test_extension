@@ -78,6 +78,7 @@ jobs:
 
       # Trusted step: everything the reviewer needs from GitHub, as files. The reviewer itself has no shell.
       - name: Collect the pull request
+        id: collect
         if: env.HAS_TOKEN == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -92,17 +93,20 @@ jobs:
           cd "$REVIEW_DIR"
           # Every fetch writes a full file first, so a failed gh call stops the job (fail closed) instead of
           # leaving a partial input behind a cap; the cap is applied to the complete file afterwards.
-          # The diff is capped at 2 MiB and the commit list at the last 50, so a huge PR cannot overrun the
-          # reviewer's context; a capped diff ends with a marker line the reviewer is told to report.
-          gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" > pr.diff.full
-          test -s pr.diff.full || { echo "gh pr diff returned nothing; not reviewing blind."; exit 1; }
-          head -c 2097152 pr.diff.full > pr.diff
-          if [ "$(wc -c < pr.diff.full)" -gt 2097152 ]; then
-            printf '\n[diff truncated at 2 MiB; the rest is only in pr-head/]\n' >> pr.diff
+          # A diff over 2 MiB is not reviewed at all: a truncated diff would let later files go unexamined
+          # behind a clean-looking review. The job posts a notice instead and skips the reviewer.
+          gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" > pr.diff
+          test -s pr.diff || { echo "gh pr diff returned nothing; not reviewing blind."; exit 1; }
+          if [ "$(wc -c < pr.diff)" -gt 2097152 ]; then
+            printf 'Not reviewed: the diff is %s bytes, above the 2 MiB limit of the automated review. Split the pull request or review it by hand.\n' "$(wc -c < pr.diff)" > review.md
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "diff too large; posting a notice instead of a review."
+            exit 0
           fi
+          # Commit list capped at the last 50, changed-file list at 500 entries (paths and line counts only).
           gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --json number,title,body,baseRefName,headRefName,commits > pr.json.full
-          jq '.commits |= .[-50:]' pr.json.full > pr.json
+            --json number,title,body,baseRefName,headRefName,commits,files > pr.json.full
+          jq '.commits |= .[-50:] | .files |= .[:500]' pr.json.full > pr.json
           # Only the last two of the reviewer's own earlier comments, at most 128 KB, and fetched from a bounded
           # window (the PR's last 30 comments, one request), so a long-lived PR cannot grow this input or the
           # download behind it.
@@ -112,11 +116,11 @@ jobs:
           jq -r '[.data.repository.pullRequest.comments.nodes[] | select(.author.login == "github-actions" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
             comments.json > earlier-reviews.full
           head -c 131072 earlier-reviews.full > earlier-reviews.md
-          rm -f pr.diff.full pr.json.full comments.json earlier-reviews.full
+          rm -f pr.json.full comments.json earlier-reviews.full
           wc -c ./*
 
       - uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790 # v1.0.235
-        if: env.HAS_TOKEN == 'true'
+        if: env.HAS_TOKEN == 'true' && steps.collect.outputs.skip != 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: "dependabot[bot]"
@@ -126,9 +130,9 @@ jobs:
             ${{ github.repository }}. You have no shell and no network; everything you need is on disk.
             - The working directory is the base branch (main).
             - `pr-head/` holds the pull request's files: read the changed code there.
-            - `${{ runner.temp }}/review/pr.diff` is the diff between main and the pull request's head. If it
-              ends with a "[diff truncated" line, say so in Part 4 and review the rest by file in `pr-head/`.
-            - `${{ runner.temp }}/review/pr.json` is the pull request's title, body, and last 50 commits.
+            - `${{ runner.temp }}/review/pr.diff` is the complete diff between main and the pull request's head.
+            - `${{ runner.temp }}/review/pr.json` is the pull request's title, body, last 50 commits, and the
+              list of changed files.
             - `${{ runner.temp }}/review/earlier-reviews.md` holds your own last two reviews of this pull
               request, if any (empty otherwise).
             Read docs/SAFETY-CONTRACT.md, docs/SECURITY.md, and the "Code Review Rules" section of AGENTS.md
@@ -177,7 +181,8 @@ jobs:
             --disallowedTools "Bash,Grep,Edit,MultiEdit,NotebookEdit,WebFetch,WebSearch"
 
       # Trusted step, not under the reviewer's control: posts the fixed file to the fixed pull request,
-      # refusing a body that carries the token or is too large for a comment.
+      # refusing a body that carries the token or is too large for a comment. When the collect step skipped
+      # the reviewer, the file is its notice.
       - name: Post the review
         if: env.HAS_TOKEN == 'true'
         env:

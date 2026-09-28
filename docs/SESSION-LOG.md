@@ -12,13 +12,14 @@ verified, blocked, next.
   the Claude workflow `.github/workflows/review-claude.yml` (comment by `github-actions[bot]` headed
   "Independent review (Claude)"). CodeRabbit is removed from the repository; the owner uninstalls the app after
   PR #15, which still uses it.
-- The Claude workflow's trust boundary, shaped by eight Codex review rounds on PR #16: event
+- The Claude workflow's trust boundary, shaped by the Codex review rounds on PR #16 (listed at the end): event
   `pull_request_target` (workflow, prompt, `.claude/` settings from `main`); the PR head checked out into
   `pr-head` as data, symlinks deleted; the reviewer has no shell and no Grep, only `Read`, `Glob`, and `Write`
   of the single path `$RUNNER_TEMP/review/review.md`, with `/proc`, `~/.claude`, and the runner's command files
-  denied; a trusted step collects `pr.diff` (capped), `pr.json` (last 50 commits), and the reviewer's last two
-  earlier comments (one GraphQL request, 128 KB cap); a trusted step posts `review.md` after a token check and
-  a size check. Drafts wait, fork PRs are skipped, Dependabot PRs are reviewed when the token is available to
+  denied; a trusted step collects `pr.diff` (a diff over 2 MiB is not reviewed, a notice is posted instead),
+  `pr.json` (last 50 commits, up to 500 changed files), and the reviewer's last two earlier comments (one
+  GraphQL request, 128 KB cap), failing closed on any failed fetch; a trusted step posts `review.md` after a
+  token check and a size check. Drafts wait, fork PRs are skipped, Dependabot PRs are reviewed when the token is available to
   them (`docs/REVIEW-PROMPT.md`).
 - Rules (`AGENTS.md` §2 and "Code Review Rules"): agents never merge unless the owner asks for that PR with a
   reason; reviews are comments, never verdicts; a thread is resolved by the building agent only after the
@@ -55,7 +56,7 @@ verified, blocked, next.
   the token as a Dependabot secret.
 - Then plan session 4 (polish) as listed in `docs/PLAN.md`; PR #15 is already under way on another branch.
 
-**History of PR #16 (eight Codex rounds, every finding valid and fixed; the vendor's own review of our reviewer)**
+**History of PR #16 (the Codex rounds, one entry each; the vendor's own review of our reviewer)**
 1. `pull_request` let a same-repository PR edit the workflow and run the edited copy with the secret. Now
    `pull_request_target` with the PR head in `pr-head` (the action's security guide pattern).
 2. `Bash(gh pr comment:*)` let a prompt-injected reviewer post `/proc/self/environ`. Now a trusted step posts
@@ -76,6 +77,12 @@ verified, blocked, next.
 9. P1: without `pipefail` a failed `gh pr diff` behind `head` still succeeded and the reviewer could review an
    empty diff. Now `set -euo pipefail`, every fetch writes a full file before the cap, an empty diff stops the
    job. P2: the workflow header still said "three Codex reviews".
+10. Not reproduced: a missing `Guard-Change` trailer on commit `cd475ab`, which does not exist in this
+    repository (a merge commit built in the review sandbox); all 17 guard commits on the branch carry the
+    trailer, hook-enforced, and the `main` ruleset allows merge commits only. Answered with the list.
+11. P1: a diff truncated at 2 MiB left later files unexamined behind a clean-looking review. Now a diff over
+    2 MiB is not reviewed; the job posts a notice and skips the reviewer; `pr.json` carries the changed-file
+    list. P2: this hand-off still counted eight rounds; counts removed.
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
   heading `## Code Review Rules` with `###` groups is required, and Codex posts only P0 and P1 findings, which
   is why each round showed one. The owner's requests for maintainability and documentation rules, the
