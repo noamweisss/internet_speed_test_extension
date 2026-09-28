@@ -35,7 +35,9 @@ fixed two things in 4.1, wrote the changelog and committed)
 
 **Verified**
 - `dotnet test tests/SpeedTest.Core.Tests`: 101 passed (79 + 22). `scripts/check.sh all` green after the R6 change.
-- CI: see the PR (`feat/session-4-polish`); the Windows build is the first compile of `ViewCommands.cs`.
+- CI run 36429657652 on 10d970b (PR [#15](https://github.com/noamweisss/internet_speed_test_extension/pull/15)):
+  all jobs green, including the Windows build, the first compile of the new `ViewCommands.cs`, the safety-impact
+  check on the R6 change, and CodeQL.
 
 **Not verified**
 - Nothing from this session has run in Command Palette. The owner's next run checks: the two gauges render (not a
