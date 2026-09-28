@@ -64,7 +64,9 @@ review. They exist to make accidental or careless violations impossible and deli
 ## Scanners
 
 `.github/dependabot.yml` (dependency alerts and update PRs), `.github/workflows/codeql.yml` (CodeQL for C#),
-GitHub secret scanning (on by default for public repositories), `.coderabbit.yaml` (review bot instructions).
+GitHub secret scanning (on by default for public repositories), `.coderabbit.yaml` (review bot instructions),
+`.github/workflows/review-claude.yml` (independent Claude review of every PR: read-only checkout, one comment
+posted through the Claude GitHub App, no push; ADR-0010). Codex reads `AGENTS.md` §5 for the same rules.
 The owner-facing summary of all of this is `docs/SAFETY-CONTRACT.md`.
 
 ## Reporting

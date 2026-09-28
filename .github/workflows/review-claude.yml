@@ -1,0 +1,80 @@
+# Independent review by Claude on every pull request from a branch in this repository (ADR-0010).
+# The reviewer runs on a fresh GitHub runner with the checkout and the prompt below, nothing else: no session,
+# no memory, no context from the agent that wrote the change. It can read code and post one comment as the
+# Claude GitHub App (`claude[bot]`); it cannot push. Actions are pinned to full commit SHAs (tag in the comment)
+# so a retargeted tag cannot change what runs.
+# The job does nothing until the owner adds the CLAUDE_CODE_OAUTH_TOKEN secret (docs/REVIEW-PROMPT.md).
+# GitHub withholds secrets from fork and Dependabot pull requests, so those are skipped the same way.
+# The prompt is a copy of the block in docs/REVIEW-PROMPT.md. It lives here, in a guard file, so a pull request
+# cannot weaken its own review by editing the docs; keep the two identical.
+name: Review (Claude)
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: review-claude-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Independent review by Claude
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    env:
+      HAS_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+    steps:
+      - name: Skip without a token
+        if: env.HAS_TOKEN != 'true'
+        run: echo "CLAUDE_CODE_OAUTH_TOKEN is not set; nothing to review with (docs/REVIEW-PROMPT.md)."
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: env.HAS_TOKEN == 'true'
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790 # v1.0.235
+        if: env.HAS_TOKEN == 'true'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are reviewing pull request ${{ github.event.pull_request.number }} in the GitHub repository
+            ${{ github.repository }}. The checkout is the pull request's head.
+            Review the diff between the base branch (main) and the PR's head (`gh pr diff`). Read
+            docs/SAFETY-CONTRACT.md and docs/SECURITY.md first. Do not read other reviewers' comments or the
+            author's replies before forming your own findings. Do not change any code.
+
+            Part 1. Answer these five questions with Yes/No and a file:line for every Yes:
+            1. Can the extension reach any host other than speed.cloudflare.com?
+            2. Does it read, write, or delete files, registry keys, or processes?
+            3. Does it store, log, or send anything about the user (IP, ISP, location, results)? (ADR-0007 accepts
+               the metadata every HTTPS request carries; anything beyond that is a Yes.)
+            4. Does it add a dependency, a Windows capability, or weaken a guard (.githooks, .claude, scripts,
+               workflows)?
+            5. Is any network input used without bounds on size, time, or format?
+            A Yes without a linked ADR in docs/decisions/ is a Blocker.
+
+            Part 2. List correctness, stability, and security findings. For each: severity (Blocker, Major, Minor,
+            Nit), file:line, what goes wrong and under which input, and the smallest fix. Verify every finding
+            against the actual code before reporting it. Style remarks are Nits.
+
+            Part 3. One-line verdict: "No blocking findings" or "Blocking findings: <count>".
+
+            Write the three parts to a file and post it once with
+            `gh pr comment ${{ github.event.pull_request.number }} --body-file <file>`, starting the body with
+            the heading "## Independent review (Claude)". Do not approve or request changes on behalf of any other
+            reviewer.
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*)"

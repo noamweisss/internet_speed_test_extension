@@ -59,7 +59,14 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 5. End: update `docs/SESSION-LOG.md` (done / verified / not verified / next), `docs/PLAN.md` status, `CHANGELOG.md`.
    Open or update the pull request using `.github/pull_request_template.md`.
 
-## 5. Map
+## 5. Code review rules
+
+Every reviewing agent (Codex, CodeRabbit, the Claude review workflow) and every human reviewer follows
+`docs/REVIEW-PROMPT.md`: answer its five safety questions with a file:line for every Yes, list findings with a
+severity, end with a one-line verdict. Review the code, not other reviewers' threads or the author's replies.
+A reviewer never changes code and never speaks for another reviewer's verdict.
+
+## 6. Map
 
 | Path | What |
 |------|------|
