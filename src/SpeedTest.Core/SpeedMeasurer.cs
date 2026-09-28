@@ -87,7 +87,11 @@ public sealed class SpeedMeasurer
         deadline.CancelAfter(_options.MetaTimeout);
         try
         {
-            using var response = await _http.GetAsync(CloudflareEndpoints.Meta, HttpCompletionOption.ResponseHeadersRead, deadline.Token).ConfigureAwait(false);
+            // /meta answers 403 {} unless the request names the speed-test site itself as its Referer (observed
+            // 2026-09-28). Same host, constant value, nothing about the user (docs/SAFETY-CONTRACT.md §3 unchanged).
+            using var request = new HttpRequestMessage(HttpMethod.Get, CloudflareEndpoints.Meta);
+            request.Headers.Referrer = CloudflareEndpoints.Base;
+            using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, deadline.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 return ConnectionInfo.Empty;
@@ -120,10 +124,20 @@ public sealed class SpeedMeasurer
         }
     }
 
+    /// <summary>
+    /// One unmeasured warm-up probe first: the first request on a cold connection also pays for DNS, TCP and TLS,
+    /// and that single slow sample used to double the jitter whenever /meta had not opened the connection.
+    /// </summary>
     private async Task<(double LatencyMs, double JitterMs, ConnectionInfo HeaderInfo)> MeasureLatencyAsync(CancellationToken cancellationToken)
     {
+        ConnectionInfo headerInfo;
+        using (var warmUp = await _http.GetAsync(CloudflareEndpoints.Download(0), cancellationToken).ConfigureAwait(false))
+        {
+            warmUp.EnsureSuccessStatusCode();
+            headerInfo = ConnectionInfo.FromHeaders(warmUp.Headers);
+        }
+
         var samples = new List<double>(_options.LatencySamples);
-        var headerInfo = ConnectionInfo.Empty;
         for (var i = 0; i < _options.LatencySamples; i++)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -131,10 +145,6 @@ public sealed class SpeedMeasurer
             stopwatch.Stop();
             response.EnsureSuccessStatusCode();
             samples.Add(Math.Max(0, stopwatch.Elapsed.TotalMilliseconds - ServerTiming.DurationMs(response.Headers)));
-            if (i == 0)
-            {
-                headerInfo = ConnectionInfo.FromHeaders(response.Headers);
-            }
         }
 
         return (Statistics.Median(samples), Statistics.Jitter(samples), headerInfo);

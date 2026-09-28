@@ -14,6 +14,8 @@ namespace SpeedTest.Core.Tests;
 /// </summary>
 internal sealed class FakeCloudflareHandler : HttpMessageHandler
 {
+    private bool _firstProbeSeen;
+
     public List<Uri> Requests { get; } = new();
 
     /// <summary>
@@ -39,7 +41,6 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
     /// </summary>
     public TimeSpan FirstProbeDelay { get; set; }
 
-    private bool _firstProbeSeen;
 
     public HttpStatusCode DownloadStatus { get; set; } = HttpStatusCode.OK;
 

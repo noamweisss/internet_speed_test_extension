@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net.Http.Headers;
 
@@ -13,15 +14,23 @@ namespace SpeedTest.Core;
 /// <param name="Server">Cloudflare data-centre code (IATA airport code) that served the test.</param>
 public sealed record ConnectionInfo(string? Isp, string? Ip, string? City, string? Country, string? Server)
 {
+    /// <summary>Longest header value that is used; a place name never comes close, so longer values are treated as absent.</summary>
+    private const int MaxHeaderValueLength = 256;
+
     public static ConnectionInfo Empty { get; } = new(null, null, null, null, null);
 
     /// <summary>
     /// Every response from speed.cloudflare.com carries these headers; used when /meta is unavailable.
     /// Cloudflare documents the <c>cf-meta-*</c> names and has also been observed sending bare names, so both are read.
+    /// Values arrive percent-encoded (the city header for H̱olon is "H%CC%B1olon"); an escape that is not valid
+    /// UTF-8 is kept as it is, which is what <see cref="Uri.UnescapeDataString(string)"/> does.
     /// </summary>
     public static ConnectionInfo FromHeaders(HttpResponseHeaders headers)
     {
-        string? Get(string name) => headers.TryGetValues(name, out var values) ? values.FirstOrDefault() : null;
+        string? Get(string name) =>
+            headers.TryGetValues(name, out var values) && values.FirstOrDefault() is { Length: <= MaxHeaderValueLength } raw
+                ? Uri.UnescapeDataString(raw)
+                : null;
         string? First(string preferred, string fallback) => Get(preferred) is { Length: > 0 } value ? value : Get(fallback);
         return new(
             Isp: null,

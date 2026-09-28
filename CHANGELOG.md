@@ -16,7 +16,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 - The ISP is shown again. Cloudflare's `/meta` endpoint answers `403 {}` unless the request names
   `https://speed.cloudflare.com/` as its Referer; the request now does. Same host, no user data in the header.
 - Connection details read `/meta` correctly: the serving data centre arrives as an object (`"colo": {"iata": ...}`),
-  not a string, so every `/meta` answer used to be discarded and the details fell back to the probe headers.
+  not a string, so every `/meta` answer used to be discarded and the details fell back to the probe headers,
+  which carry no ISP.
 - The location reads "H̱olon, IL" instead of "H%CC%B1olon, IL": percent-encoded header values are decoded
   (invalid escapes are kept as they are; values over 256 characters are ignored).
 - Jitter is no longer larger than latency on a cold connection: one unmeasured warm-up probe opens the connection
