@@ -38,8 +38,10 @@ reviewer.
 | Claude (owner's Claude plan) | `claude[bot]` | automatic on open, push, ready-for-review; re-run the workflow to repeat | `.github/workflows/review-claude.yml` (copy of the block above) |
 | CodeRabbit (free plan) | `coderabbitai` | `@coderabbitai review` comment, about once per hour | `.coderabbit.yaml` |
 
-None of them shares context with the agent that wrote the change or with each other (ADR-0010). Drafts,
-fork PRs, and Dependabot PRs get no Claude review; request one from Codex or CodeRabbit by comment instead.
+None of them shares context with the agent that wrote the change or with each other (ADR-0010). The Claude
+workflow and its settings always come from `main` (`pull_request_target`); the PR's files are checked out into a
+side directory as data, so a PR cannot change its own review or reach the token. Drafts wait until ready; fork
+PRs get no Claude review (their authors have no write access here); Dependabot PRs are reviewed.
 
 ### Setting up the Claude review workflow (owner, once)
 
@@ -59,6 +61,7 @@ file, the secret, and uninstall the app.
 - Two different models answering the five questions the same way is the signal to look for. Their agreement
   means "no known problem", not "correct".
 - Hand Blockers and Majors to the building agent: "address the review by <reviewer> on PR <PR>". Nits are optional.
-- A review's verdict (Comment, Approve, Request changes) belongs to the reviewer who posted it. Another agent
-  cannot clear CodeRabbit's "changes requested"; only CodeRabbit (on re-review) or you (Dismiss review on the PR
-  page) can. Resolved threads and a green CI are what tell you the work is done.
+- Every reviewer posts comments, never "Request changes" (`request_changes_workflow: false` for CodeRabbit;
+  the Claude prompt forbids it; Codex only comments). Nothing an agent posts blocks a merge: the merge is your
+  decision, taken on a green CI and on the findings you chose to have fixed. If you also switch off "Require
+  conversation resolution before merging" in the `main` ruleset, open threads stop blocking too.

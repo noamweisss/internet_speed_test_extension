@@ -21,8 +21,19 @@ verified, blocked, next.
   in `.claude/settings.json`; the committer stays the owner. The owner's real e-mail was the git author on 21 of
   89 commits; global git config now uses the GitHub noreply address, the old commits stay (no history rewrite).
 
+- Codex review of PR #16, one P1 finding, valid: on a `pull_request` event a same-repository PR can edit the
+  workflow and the edited copy runs with the secret. Fixed as the action's security guide prescribes: the event
+  is now `pull_request_target` (workflow, prompt, and `.claude/` settings from `main`), the PR head is checked
+  out into `pr-head` as data (`--add-dir`), fork PRs are skipped, Dependabot PRs allowed. ADR-0010 updated.
+- Owner's rule, recorded in `AGENTS.md` §2: agents never merge unless asked for that PR with a reason, and no
+  reviewer blocks a merge. `.coderabbit.yaml` now has `request_changes_workflow: false`. The `main` ruleset
+  still requires conversation resolution; switching that off is the owner's click.
+
 **Verified**
 - `scripts/check.sh all` green locally; workflow YAML parses (js-yaml). No actionlint on this machine.
+- The first run of the workflow on PR #16 (before the secret) took the skip path; the re-run after the owner
+  added the secret and installed the app reached the action, which refused to review because the workflow file
+  did not yet exist on `main` (its own check). Expected on the PR that introduces the file.
 
 **Not verified**
 - A real run of the Claude workflow: needs the app install and the secret, which only the owner can add. The
