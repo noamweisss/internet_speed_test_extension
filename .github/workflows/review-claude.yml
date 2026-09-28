@@ -103,20 +103,19 @@ jobs:
             echo "diff too large; posting a notice instead of a review."
             exit 0
           fi
-          # Commit list capped at the last 50, changed-file list at 500 entries (paths and line counts only).
-          gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --json number,title,body,baseRefName,headRefName,commits,files > pr.json.full
-          jq '.commits |= .[-50:] | .files |= .[:500]' pr.json.full > pr.json
-          # Only the last two of the reviewer's own earlier comments, at most 128 KB, and fetched from a bounded
-          # window (the PR's last 30 comments, one request), so a long-lived PR cannot grow this input or the
-          # download behind it.
+          # One GraphQL request with explicit bounds: the last 50 commits, the first 100 changed files (paths
+          # and line counts; totalCount tells the reviewer when there are more), and the last 30 comments,
+          # from which only the reviewer's own last two reviews are kept, capped at 128 KB. A long-lived or
+          # huge PR cannot grow these inputs or the download behind them.
           gh api graphql -F owner="${GITHUB_REPOSITORY%/*}" -F name="${GITHUB_REPOSITORY#*/}" -F pr="$PR_NUMBER" \
-            -f query='query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){comments(last:30){nodes{author{login} body}}}}}' \
-            > comments.json
+            -f query='query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){number title body baseRefName headRefName commits(last:50){totalCount nodes{commit{abbreviatedOid messageHeadline}}} files(first:100){totalCount nodes{path additions deletions}} comments(last:30){nodes{author{login} body}}}}}' \
+            > pr.graphql.json
+          jq '.data.repository.pullRequest | {number,title,body,baseRefName,headRefName,commitCount:.commits.totalCount,commits:[.commits.nodes[].commit],fileCount:.files.totalCount,files:.files.nodes}' \
+            pr.graphql.json > pr.json
           jq -r '[.data.repository.pullRequest.comments.nodes[] | select(.author.login == "github-actions" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
-            comments.json > earlier-reviews.full
+            pr.graphql.json > earlier-reviews.full
           head -c 131072 earlier-reviews.full > earlier-reviews.md
-          rm -f pr.json.full comments.json earlier-reviews.full
+          rm -f pr.graphql.json earlier-reviews.full
           wc -c ./*
 
       - uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790 # v1.0.235
@@ -132,7 +131,7 @@ jobs:
             - `pr-head/` holds the pull request's files: read the changed code there.
             - `${{ runner.temp }}/review/pr.diff` is the complete diff between main and the pull request's head.
             - `${{ runner.temp }}/review/pr.json` is the pull request's title, body, last 50 commits, and the
-              list of changed files.
+              first 100 changed files; `commitCount` and `fileCount` say how many there are in total.
             - `${{ runner.temp }}/review/earlier-reviews.md` holds your own last two reviews of this pull
               request, if any (empty otherwise).
             Read docs/SAFETY-CONTRACT.md, docs/SECURITY.md, and the "Code Review Rules" section of AGENTS.md

@@ -17,9 +17,9 @@ verified, blocked, next.
   `pr-head` as data, symlinks deleted; the reviewer has no shell and no Grep, only `Read`, `Glob`, and `Write`
   of the single path `$RUNNER_TEMP/review/review.md`, with `/proc`, `~/.claude`, and the runner's command files
   denied; a trusted step collects `pr.diff` (a diff over 2 MiB is not reviewed, a notice is posted instead),
-  `pr.json` (last 50 commits, up to 500 changed files), and the reviewer's last two earlier comments (one
-  GraphQL request, 128 KB cap), failing closed on any failed fetch; a trusted step posts `review.md` after a
-  token check and a size check. Drafts wait, fork PRs are skipped, Dependabot PRs are reviewed when the token is available to
+  `pr.json` (last 50 commits, first 100 changed files, total counts), and the reviewer's last two earlier
+  comments (128 KB cap), all from one GraphQL request with explicit bounds, failing closed on any failed
+  fetch; a trusted step posts `review.md` after a token check and a size check. Drafts wait, fork PRs are skipped, Dependabot PRs are reviewed when the token is available to
   them (`docs/REVIEW-PROMPT.md`).
 - Rules (`AGENTS.md` §2 and "Code Review Rules"): agents never merge unless the owner asks for that PR with a
   reason; reviews are comments, never verdicts; a thread is resolved by the building agent only after the
@@ -83,9 +83,13 @@ verified, blocked, next.
 11. P1: a diff truncated at 2 MiB left later files unexamined behind a clean-looking review. Now a diff over
     2 MiB is not reviewed; the job posts a notice and skips the reviewer; `pr.json` carries the changed-file
     list. P2: this hand-off still counted eight rounds; counts removed.
+12. Two P2s: `gh pr view --json commits,files` fetches only the first 100 of each, so "last 50 commits" was
+    commits 51 to 100 and "up to 500 files" was 100; now one GraphQL request with `commits(last:50)`,
+    `files(first:100)`, and the total counts. And REVIEW-PROMPT.md claimed Codex posts only P0 and P1, which
+    its own P2 findings on this PR contradict; reworded.
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
-  heading `## Code Review Rules` with `###` groups is required, and Codex posts only P0 and P1 findings, which
-  is why each round showed one. The owner's requests for maintainability and documentation rules, the
+  heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
+  where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the
   no-merge and thread-resolution rules, and CodeRabbit's removal were folded in along the way.
 
 ## Session 3 — 2026-09-28 — branch `fix/connection-info-and-jitter`

@@ -54,8 +54,8 @@ building agent did on their behalf, and what a reviewing agent said.
 7. Codex reads its rules only under the exact heading `## Code Review Rules` in `AGENTS.md`, grouped by `###`
    headings. The section was first written as a numbered heading and was ignored; it now uses the exact
    heading and states the severity (P0 for an unanswered safety question or a secret-bearing workflow that
-   executes PR-controlled input, P1 for weakened guards and correctness) so the rules survive Codex's
-   P0-and-P1-only filter.
+   executes PR-controlled input, P1 for weakened guards and correctness, P2 for documentation) because Codex
+   posts P0 and P1 by default and lower severities only where a rule asks for them.
 8. Reviewers guard maintainability with the same weight as safety. The owner wants the codebase to stay small,
    tested, and cheap to change; the "Design and maintainability" group in `AGENTS.md` lists the concrete
    habits to flag (wrong layer, missing test, duplication, speculative structure, hot-path work, waste on the
@@ -89,8 +89,10 @@ building agent did on their behalf, and what a reviewing agent said.
   `docs/REVIEW-PROMPT.md` says what to add if a run still logs the skip line (Codex's eighth review).
 - Every input the reviewer gets is bounded: a diff over 2 MiB is not reviewed at all and the job posts a
   notice instead, because a truncated diff would leave later files unexamined behind a clean-looking review
-  (Codex's eighth and eleventh reviews); the commit list is capped at 50, the changed-file list at 500, the
-  reviewer's earlier comments at two and 128 KB. Every fetch fails closed: the
+  (Codex's eighth and eleventh reviews); one GraphQL request fetches the last 50 commits, the first 100
+  changed files with the total counts, and the last 30 comments, of which the reviewer's own last two are kept
+  under a 128 KB cap (Codex's twelfth review: `gh pr view --json` silently fetches only the first 100 of
+  each). Every fetch fails closed: the
   collect step runs with `pipefail`, writes each full file before capping it, and stops the job on an empty
   diff, so a failed API call never turns into a clean review of nothing (Codex's ninth review).
 - Text in a pull request reaches the reviewer as data. A prompt injection there can at most make the review
