@@ -14,4 +14,6 @@ BundleArtifacts/
 *.cer
 # Local tooling
 .dotnet/
+# Private files
+docs/.SCRAP.md
 # Kept on purpose (the template needs them for deployment): Properties/launchSettings.json, *.pubxml
