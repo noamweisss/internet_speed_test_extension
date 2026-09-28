@@ -29,7 +29,11 @@ verified, blocked, next.
   files as `internet-speed-test-extension-v0.1.0-x64.zip`, and creates a **draft** release `v0.1.0` on that commit
   with the changelog section, install notes, the CI run id and SHA-256 of each file. The owner publishes the draft
   (that creates the tag). No release workflow: one more guard file and a signing question for a single-owner
-  project; revisit with plan item 4.4.
+  project; revisit with plan item 4.4. Done: PR #12 merged (`main` at 42bda4b); the CI push run 36422707394 failed
+  once in the Windows job (the .NET trimmer crashed with 0xC0000005 inside its native PDB writer, an infrastructure
+  fault, same code had passed on the PR) and was green on re-run; draft release `v0.1.0` created on 42bda4b with
+  `internet-speed-test-extension-v0.1.0-x64.zip` (the artifact's two files, byte-identical apart from CRLF in
+  the script) and `SHA256SUMS.txt`; notes carry the install steps, the run id and the hashes.
 
 **Verified**
 - CI on this branch: run 36414087633 red (9 of 78 failing, each for its intended reason), run 36414541300 green;
@@ -64,8 +68,8 @@ verified, blocked, next.
 - Two leftover worktrees under `.claude/worktrees/` (`stop-hook-preexisting-changes`, `hyperv-vm-powertoys-testing-45869f`).
 
 **Next**
-- Owner: merge the release PR. Agent: draft release `v0.1.0` from the CI build of the merge commit (steps above).
-  Owner: publish the draft, then install from the Releases page once to prove the documented path.
+- Owner: publish the draft release `v0.1.0` (this creates the tag), then install from the Releases page once to
+  prove the documented path, and mark plan item 3.3 verified.
 - Session 4 (`docs/PLAN.md`): only what daily use asks for.
 
 ## Local session — 2026-09-28 — branch `fix/stop-hook-preexisting-changes`
