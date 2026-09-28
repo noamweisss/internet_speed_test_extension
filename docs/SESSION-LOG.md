@@ -19,8 +19,10 @@ verified, blocked, next.
   denied; a trusted step collects `pr.diff` (a diff over 2 MiB is not reviewed, a notice is posted instead),
   `pr.json` (last 50 commits, first 100 changed files, total counts), and the reviewer's last two earlier
   comments (128 KB cap), all from one GraphQL request with explicit bounds, failing closed on any failed
-  fetch; a trusted step posts `review.md` after a token check and a size check. Drafts wait, fork PRs are skipped, Dependabot PRs are reviewed when the token is available to
-  them (`docs/REVIEW-PROMPT.md`).
+  fetch; a trusted step posts `review.md` after a token check and a size check. The token is an environment
+  secret (`claude-review`, deployment-branch policy `main` only), never a repository secret, and the job runs
+  only for pull requests into the default branch. Drafts wait, fork PRs are skipped, Dependabot PRs are
+  reviewed when GitHub grants the environment to their run (`docs/REVIEW-PROMPT.md`).
 - Rules (`AGENTS.md` §2 and "Code Review Rules"): agents never merge unless the owner asks for that PR with a
   reason; reviews are comments, never verdicts; a thread is resolved by the building agent only after the
   reviewer that opened it reviewed the fixed commit without repeating the finding, naming that review;
@@ -36,7 +38,9 @@ verified, blocked, next.
 **Verified**
 - `scripts/check.sh all` green locally on every commit; workflow YAML parses (js-yaml); every collect-step
   command dry-run against this repository's own API data. No actionlint on this machine.
-- The owner installed the Claude GitHub App and added `CLAUDE_CODE_OAUTH_TOKEN` during the session. The first
+- The owner installed the Claude GitHub App and added `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret during
+  the session; after round 15 it has to move into the `claude-review` environment (`docs/REVIEW-PROMPT.md`,
+  step 3) and the repository-level copy has to be deleted. The first
   run of the workflow on PR #16 (before the secret) took the skip path; a re-run with the secret reached the
   action, which refused to review because the file did not yet exist on `main` (its own check). With
   `pull_request_target` no run appears on PR #16 at all; the first real review lands on the next PR.
@@ -56,7 +60,9 @@ verified, blocked, next.
   in parallel so two reviewers see the same commit. The rules now ask reviewers for completeness in one pass.
 
 **Next**
-- Owner: uninstall CodeRabbit after PR #15; on GitHub Settings → Emails tick "Keep my email addresses private"
+- Owner: create the `claude-review` environment (deployment branches: `main` only), add the token there, delete
+  the repository-level secret (`docs/REVIEW-PROMPT.md`, step 3); uninstall CodeRabbit after PR #15; on GitHub
+  Settings → Emails tick "Keep my email addresses private"
   and "Block command line pushes that expose my email".
 - After merge: watch the first real Claude review on the next PR; if a Dependabot PR shows the skip line, add
   the token as a Dependabot secret.
@@ -100,6 +106,12 @@ verified, blocked, next.
     so a push during the run could mix two revisions. Now the diff comes from the compare API between the
     event's exact base and head SHAs, the comment names the reviewed commit, and the posting step re-reads
     the PR head and skips a stale result.
+15. P0: on `pull_request_target` the workflow and the root checkout come from the base branch, which for a PR
+    into a side branch is author-controlled, so its `.claude/` hooks would run with the token. Wider than
+    Codex said: GitHub gives repository secrets to a workflow on any branch, so any branch with its own
+    workflow could read the token. Fix: the token moves into the `claude-review` environment with a
+    deployment-branch policy of `main` only, the job runs only for PRs into the default branch, and the root
+    checkout names that branch. Owner step: create the environment, move the secret.
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
   heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
   where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the
