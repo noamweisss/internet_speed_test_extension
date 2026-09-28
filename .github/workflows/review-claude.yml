@@ -94,7 +94,7 @@ jobs:
           # Only the last two of the reviewer's own earlier comments, and at most 128 KB, so a long-lived PR
           # cannot grow this input without bound.
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate --slurp \
-            --jq '[.[][] | select(.user.login == "github-actions[bot]" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
+            | jq -r '[.[][] | select(.user.login == "github-actions[bot]" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
             | head -c 131072 > "$REVIEW_DIR/earlier-reviews.md"
           wc -c "$REVIEW_DIR"/*
 
