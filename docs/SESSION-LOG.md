@@ -96,6 +96,10 @@ verified, blocked, next.
 13. Two P2s in `docs/SECURITY.md`: "every PR" qualified to eligible PRs (repository branches, not drafts, no
     forks), and the threat-model row "Secrets: none exist" now separates the extension (none) from the
     repository (one Actions secret for the review workflow).
+14. P1: `gh pr diff` and the metadata query read the PR's current state while `pr-head` is the event's head,
+    so a push during the run could mix two revisions. Now the diff comes from the compare API between the
+    event's exact base and head SHAs, the comment names the reviewed commit, and the posting step re-reads
+    the PR head and skips a stale result.
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
   heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
   where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the

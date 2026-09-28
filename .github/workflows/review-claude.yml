@@ -83,6 +83,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           # A PR could commit a symlink pointing outside its tree (for example at /proc/self/environ) and have
@@ -93,9 +95,13 @@ jobs:
           cd "$REVIEW_DIR"
           # Every fetch writes a full file first, so a failed gh call stops the job (fail closed) instead of
           # leaving a partial input behind a cap; the cap is applied to the complete file afterwards.
+          # The diff is taken between the event's exact base and head SHAs, the same head that is checked out
+          # in pr-head, so a push that lands during this run cannot mix two revisions into one review (the
+          # posting step checks the head again before it posts).
           # A diff over 2 MiB is not reviewed at all: a truncated diff would let later files go unexamined
           # behind a clean-looking review. The job posts a notice instead and skips the reviewer.
-          gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" > pr.diff
+          gh api -H "Accept: application/vnd.github.diff" \
+            "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$HEAD_SHA" > pr.diff
           test -s pr.diff || { echo "gh pr diff returned nothing; not reviewing blind."; exit 1; }
           if [ "$(wc -c < pr.diff)" -gt 2097152 ]; then
             printf 'Not reviewed: the diff is %s bytes, above the 2 MiB limit of the automated review. Split the pull request or review it by hand.\n' "$(wc -c < pr.diff)" > review.md
@@ -126,7 +132,8 @@ jobs:
           settings: '{"permissions":{"deny":["Read(//proc/**)","Read(~/.claude/**)","Write(/${{ runner.temp }}/_runner_file_commands/**)","Write(//home/**/_runner_file_commands/**)"]}}'
           prompt: |
             You are reviewing pull request ${{ github.event.pull_request.number }} in the GitHub repository
-            ${{ github.repository }}. You have no shell and no network; everything you need is on disk.
+            ${{ github.repository }}, at commit ${{ github.event.pull_request.head.sha }}. You have no shell
+            and no network; everything you need is on disk.
             - The working directory is the base branch (main).
             - `pr-head/` holds the pull request's files: read the changed code there.
             - `${{ runner.temp }}/review/pr.diff` is the complete diff between main and the pull request's head.
@@ -188,15 +195,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           CLAUDE_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           cd "$REVIEW_DIR"
           test -s review.md || { echo "review.md is missing or empty; nothing posted."; exit 1; }
+          # The review describes the event's head. If the PR moved on meanwhile, this run's result is stale:
+          # the run for the new head (which cancelled this one's concurrency slot, or follows it) posts instead.
+          CURRENT="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq .headRefOid)"
+          if [ "$CURRENT" != "$HEAD_SHA" ]; then
+            echo "PR head moved from $HEAD_SHA to $CURRENT during the review; not posting a stale review."; exit 0
+          fi
           if grep -qF -- "$CLAUDE_TOKEN" review.md; then
             echo "review.md contains the token; not posted."; exit 1
           fi
           if [ "$(wc -c < review.md)" -gt 60000 ]; then
             echo "review.md is larger than a comment allows; not posted."; exit 1
           fi
-          { printf '## Independent review (Claude)\n\n'; cat review.md; } > comment.md
+          { printf '## Independent review (Claude)\n\nReviewed commit %s.\n\n' "$HEAD_SHA"; cat review.md; } > comment.md
           gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file comment.md

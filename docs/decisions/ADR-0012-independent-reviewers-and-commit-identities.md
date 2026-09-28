@@ -94,7 +94,10 @@ building agent did on their behalf, and what a reviewing agent said.
   under a 128 KB cap (Codex's twelfth review: `gh pr view --json` silently fetches only the first 100 of
   each). Every fetch fails closed: the
   collect step runs with `pipefail`, writes each full file before capping it, and stops the job on an empty
-  diff, so a failed API call never turns into a clean review of nothing (Codex's ninth review).
+  diff, so a failed API call never turns into a clean review of nothing (Codex's ninth review). The diff is
+  taken between the event's exact base and head SHAs, the posted comment names that head, and the posting
+  step re-reads the PR head first and drops a stale result (Codex's fourteenth review: a push during the run
+  could otherwise mix two revisions into one review).
 - Text in a pull request reaches the reviewer as data. A prompt injection there can at most make the review
   wrong: the reviewer has no shell and no network, only file reads and one file write, the posting step is
   fixed, and the posted body is checked for the token first.
