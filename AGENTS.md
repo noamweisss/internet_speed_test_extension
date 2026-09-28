@@ -31,9 +31,9 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
   the extension can now do that it could not before, under "Safety impact" in the PR body (R13).
 - Merging a pull request is the owner's decision. An agent merges only when the owner asks for that specific PR
   in the current session and says why; the request is quoted in `docs/SESSION-LOG.md`. Reviews are comments,
-  never verdicts. A review thread is resolved by the reviewer that opened it (CodeRabbit does this itself), or
-  by the building agent only after that same reviewer has reviewed the fixed commit and not repeated the
-  finding; the resolving reply names that review. The owner may resolve or dismiss anything.
+  never verdicts. A review thread is resolved by the building agent only after the reviewer that opened it has
+  reviewed the fixed commit and not repeated the finding; the resolving reply names that review. The owner may
+  resolve or dismiss anything.
 
 ## 3. Non-negotiables (judgement, reviewed by humans and audit agents)
 
@@ -64,16 +64,7 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 5. End: update `docs/SESSION-LOG.md` (done / verified / not verified / next), `docs/PLAN.md` status, `CHANGELOG.md`.
    Open or update the pull request using `.github/pull_request_template.md`.
 
-## 5. Code review rules
-
-Every reviewing agent (Codex, CodeRabbit, the Claude review workflow) and every human reviewer follows
-`docs/REVIEW-PROMPT.md`: answer its five safety questions with a file:line for every Yes, list findings with a
-severity, end with a one-line verdict. Review the code, not other reviewers' threads or the author's replies.
-A reviewer never changes code and never speaks for another reviewer's verdict. On a re-review of a pull
-request, start with your own earlier findings on it: for each, say Fixed or Not fixed, with a file:line in the
-current head. A finding you do not repeat counts as fixed.
-
-## 6. Map
+## 5. Map
 
 | Path | What |
 |------|------|
@@ -85,3 +76,35 @@ current head. A finding you do not repeat counts as fixed.
 | `install/` | `Install-SpeedTestExtension.ps1`: the owner's install script (Windows, ADR-0008). Safety-sensitive (R13). |
 | `.github/workflows/` | CI: Windows build, package, and install test of the extension; Core tests; `check.sh all`. |
 | `docs/` | Plan, architecture, conventions, security, testing, session log, ADRs. |
+
+## Code Review Rules
+
+For every reviewing agent (Codex reads this section; the Claude workflow carries the same rules in its prompt)
+and every human reviewer. The full prompt is `docs/REVIEW-PROMPT.md`.
+
+### Safety questions
+
+Answer the five questions of `docs/SAFETY-CONTRACT.md` §3 on every pull request, each with Yes or No and a
+file:line for every Yes. A Yes without a linked ADR in `docs/decisions/` is P0: the extension reaching a host
+other than speed.cloudflare.com; reading, writing, or deleting files, registry keys, or processes; storing,
+logging, or sending anything about the user (IP, ISP, location, results); a new dependency, Windows capability,
+or weakened guard; network input used without bounds on size, time, or format.
+
+### Guards
+
+A change under `.githooks/`, `.claude/`, `scripts/`, `.github/workflows/`, `AGENTS.md`, or `CLAUDE.md` that
+makes a rule weaker, adds a bypass, or removes a check is P1 unless the pull request's "Safety impact" section
+justifies it and names an ADR. A workflow that holds a secret and executes anything a pull request controls
+is P0.
+
+### Correctness
+
+A finding that crashes, hangs, or mis-measures on a real input is P1: say what goes wrong, under which input,
+and the smallest fix, and verify it against the code before posting. Treat a network read without a byte
+bound or a timeout as P1. Style is never above P3.
+
+### Conduct
+
+Review the code, not other reviewers' threads or the author's replies. Never change code, never approve or
+request changes, never speak for another reviewer. On a re-review, do not repeat a finding the current head
+has fixed; a finding not repeated counts as fixed.

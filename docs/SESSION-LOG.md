@@ -15,7 +15,7 @@ verified, blocked, next.
   repository branch, authenticating with the owner's Claude subscription (`CLAUDE_CODE_OAUTH_TOKEN`), tools
   limited to `gh pr view|diff|comment`, one comment as `claude[bot]`. Prompt is the `docs/REVIEW-PROMPT.md` block,
   copied into the workflow. The job exits green with a log line while the secret is missing. ADR-0010.
-- `AGENTS.md` §5 "Code review rules" (Codex reads it), reviewer table and owner setup steps in
+- `AGENTS.md` "Code Review Rules" "Code review rules" (Codex reads it), reviewer table and owner setup steps in
   `docs/REVIEW-PROMPT.md`, scanner line in `docs/SECURITY.md`.
 - Commit identity (`docs/CONVENTIONS.md`, ADR-0010): agent commits carry author `Claude Code` via the `env` block
   in `.claude/settings.json`; the committer stays the owner. The owner's real e-mail was the git author on 21 of
@@ -40,6 +40,12 @@ verified, blocked, next.
   are asked to open re-reviews with Fixed / Not fixed per earlier finding. Codex did not honour that on
   round 4 (its review body stayed the boilerplate; only new inline findings), so for Codex "not repeated"
   remains the only signal. "Require conversation resolution" stays on in the `main` ruleset.
+- Owner's call: CodeRabbit removed. `.coderabbit.yaml` deleted, every live reference rewritten (AGENTS.md,
+  CONVENTIONS, REVIEW-PROMPT, SAFETY-CONTRACT, SECURITY, ADR-0010). The owner uninstalls the GitHub app.
+- Why Codex posts one finding per round and ignored the rules: per OpenAI's docs it posts P0 and P1 findings
+  only, and it reads rules only under the exact heading `## Code Review Rules` with `###` groups. The section
+  was `## 5. Code review rules`, so it was never read. Rewritten under the exact heading, moved last, with
+  explicit severities; `## 6. Map` is `## 5. Map` again. Effect to be seen on the next Codex round.
 - Codex round 4, one new P1, valid: a blanket `Write` could reach the runner's per-step command files under
   `$RUNNER_TEMP/_runner_file_commands` and put `BASH_ENV=<file in pr-head>` into `GITHUB_ENV`, so the next
   trusted shell step would source PR-controlled code with both tokens in its environment. Fixed: `Write` is

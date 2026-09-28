@@ -30,17 +30,25 @@ building agent did on their behalf, and what a reviewing agent said.
    data. Codex's review of PR #16 showed why a plain `pull_request` trigger is not enough: a PR from a repository
    branch could edit this workflow and the edited copy would run with the token, so the PR could skip its own
    review or read the credential. With `pull_request_target` a PR controls only text the reviewer reads.
-2. Codex is told the same rules through `AGENTS.md` §5, which it reads on every review.
+2. Codex is told the same rules through `AGENTS.md` "Code Review Rules", which it reads on every review.
 3. Each reviewer is independent by construction: a fresh runner or a vendor-hosted session with the diff and
    the prompt, no memory of the building agent's session, no reading of the other reviewers' threads.
-4. Reviews are comments, never verdicts. CodeRabbit posts comments instead of "Request changes"
-   (`request_changes_workflow: false`), the Claude prompt forbids verdicts, Codex only comments. Merging is the
+4. Reviews are comments, never verdicts: the Claude prompt forbids them, Codex only comments. Merging is the
    owner's decision, and an agent merges only on an explicit, reasoned request for that PR (`AGENTS.md` §2).
-   A thread closes when the reviewer that opened it is satisfied: CodeRabbit resolves its own; for Codex and
-   Claude, which never reply in threads, the building agent resolves only after that reviewer reviewed the
-   fixed commit and did not repeat the finding, and names that review. Both are asked to open a re-review with
-   Fixed / Not fixed per earlier finding (`AGENTS.md` §5); the Claude workflow is handed its own earlier
-   comments for that. The `main` ruleset keeps "require conversation resolution" on, so this is the merge gate.
+   A thread closes when the reviewer that opened it is satisfied. Neither reviewer replies in threads, so the
+   building agent resolves only after that reviewer reviewed the fixed commit and did not repeat the finding,
+   and names that review. The Claude workflow opens its re-review with Fixed / Not fixed per earlier finding
+   (it is handed its own earlier comments); Codex, which posts only P0 and P1 inline findings and ignored a
+   request for such a list, signals agreement by not repeating. The `main` ruleset keeps "require
+   conversation resolution" on, so this is the merge gate.
+6. CodeRabbit is removed (`.coderabbit.yaml` deleted; the owner uninstalls the app). Two reviewers on plans
+   the owner already pays for cover the five questions; a third, hourly, manually triggered one added a set of
+   threads and a status check without adding a signal.
+7. Codex reads its rules only under the exact heading `## Code Review Rules` in `AGENTS.md`, grouped by `###`
+   headings. The section was first written as a numbered heading and was ignored; it now uses the exact
+   heading and states the severity (P0 for an unanswered safety question or a secret-bearing workflow that
+   executes PR-controlled input, P1 for weakened guards and correctness) so the rules survive Codex's
+   P0-and-P1-only filter.
 5. Commit identity: a human commits as themselves. A building agent commits with author name `Claude Code`
    (set by the `env` block in `.claude/settings.json`) while the committer stays the human whose credentials
    push. Reviewing agents never commit. Every identity uses the owner's GitHub noreply address.

@@ -34,11 +34,11 @@ reviewer.
 
 | Reviewer | Identity on GitHub | Trigger | Where its rules live |
 |----------|-------------------|---------|----------------------|
-| Codex (owner's ChatGPT plan) | `chatgpt-codex-connector` | automatic on every PR; `@codex review` to repeat | `AGENTS.md` §5 |
+| Codex (owner's ChatGPT plan) | `chatgpt-codex-connector` | automatic on every PR; `@codex review` to repeat | `AGENTS.md` "Code Review Rules" |
 | Claude (owner's Claude plan) | `github-actions[bot]`, comment headed "Independent review (Claude)" | automatic on open, push, ready-for-review; re-run the workflow to repeat | `.github/workflows/review-claude.yml` (same questions, input as files) |
-| CodeRabbit (free plan) | `coderabbitai` | `@coderabbitai review` comment, about once per hour | `.coderabbit.yaml` |
 
-None of them shares context with the agent that wrote the change or with each other (ADR-0010). The Claude
+Neither shares context with the agent that wrote the change or with the other (ADR-0010). Codex posts only
+P0 and P1 findings, as inline comments; ask for lower severities in `AGENTS.md` "Code Review Rules" if wanted. The Claude
 workflow and its settings always come from `main` (`pull_request_target`); the PR's files are checked out into a
 side directory as data, so a PR cannot change its own review or reach the token. The reviewer has no shell:
 a trusted step writes the diff, the PR metadata, and the reviewer's own earlier comments to files, the reviewer
@@ -64,14 +64,13 @@ file, the secret, and uninstall the app.
 - Two different models answering the five questions the same way is the signal to look for. Their agreement
   means "no known problem", not "correct".
 - Hand Blockers and Majors to the building agent: "address the review by <reviewer> on PR <PR>". Nits are optional.
-- How each reviewer confirms a fix: CodeRabbit reads the reply in its thread, checks the new commit, and
-  resolves the thread itself. Codex and the Claude workflow never reply in threads: request a fresh review
-  after the fix (`@codex review`, or a push for Claude). Both are asked (`AGENTS.md` §5) to open a re-review
-  with Fixed / Not fixed per earlier finding; the Claude workflow gets its own earlier comments as a file for
-  that. A review of the fixed commit that does not repeat the finding is agreement, and then the building
-  agent resolves the thread, naming that review (`AGENTS.md` §2).
-- Every reviewer posts comments, never "Request changes" (`request_changes_workflow: false` for CodeRabbit;
-  the Claude prompt forbids it; Codex only comments). Nothing an agent posts blocks a merge: the merge is your
+- How a reviewer confirms a fix: neither replies in threads. Request a fresh review after the fix
+  (`@codex review`, or a push for Claude). The Claude workflow opens its re-review with Fixed / Not fixed per
+  earlier finding (it gets its own earlier comments as a file); Codex simply does not repeat what is fixed.
+  A review of the fixed commit that does not repeat the finding is agreement, and then the building agent
+  resolves the thread, naming that review (`AGENTS.md` §2).
+- Every reviewer posts comments, never "Request changes" (the Claude prompt forbids it; Codex only
+  comments). Nothing an agent posts blocks a merge: the merge is your
   decision, taken on a green CI and on the findings you chose to have fixed. Keep "Require conversation
   resolution before merging" on in the `main` ruleset: with the resolution rule above, an open thread means
   "the reviewer that found this has not yet seen it fixed", which is the one gate worth keeping.
