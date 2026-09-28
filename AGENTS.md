@@ -29,6 +29,9 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 - Before a session ends, `docs/SESSION-LOG.md` gets a hand-off entry if anything changed.
 - A PR that touches a safety-sensitive file (`docs/SAFETY-CONTRACT.md` §2) must explain, in plain language, what
   the extension can now do that it could not before, under "Safety impact" in the PR body (R13).
+- Merging a pull request is the owner's decision. An agent merges only when the owner asks for that specific PR
+  in the current session and says why; the request is quoted in `docs/SESSION-LOG.md`. No reviewer, human or
+  agent, blocks a merge: reviews are comments, and only the owner resolves or dismisses them.
 
 ## 3. Non-negotiables (judgement, reviewed by humans and audit agents)
 
