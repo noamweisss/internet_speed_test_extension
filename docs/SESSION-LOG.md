@@ -68,8 +68,20 @@ verified, blocked, next.
 - Two leftover worktrees under `.claude/worktrees/` (`stop-hook-preexisting-changes`, `hyperv-vm-powertoys-testing-45869f`).
 
 **Next**
-- Owner: publish the draft release `v0.1.0` (this creates the tag), then install from the Releases page once to
-  prove the documented path, and mark plan item 3.3 verified.
+- Done by the owner on 2026-09-28: release `v0.1.0` published, installed from the Releases page on the laptop
+  (Windows 11 Insider 26300), runs. Plan item 3.3 verified. Session 3 is complete.
+- Open question for session 4 (item 4.3): on the laptop, jitter comes out above latency on every run (for example
+  53.6 ms jitter, 34.1 ms latency) while speed.cloudflare.com in a browser on the same laptop shows low jitter. The
+  VM on the same network showed 3.5 ms with the same code. Not the cold-connection bug (fixed, PR #11).
+  Bisected on 2026-09-28: `SpeedMeasurer` from `main`, run three times from a plain console process on the same
+  laptop with the extension's `HttpClient` settings, gave jitter 6.1, 2.8 and 4.1 ms at 29 ms latency. So neither
+  the network nor `SpeedTest.Core` adds the jitter; the extension's process environment does. First suspect:
+  Windows power throttling (EcoQoS) of the packaged COM server, which has no foreground window, on a laptop.
+  Check: Task Manager → Details → "Power throttling" column for `internet_speed_test_extension.exe` during a test,
+  and a run on mains with power mode "Best performance". Opting a process out of throttling would need
+  `SetProcessInformation`, which is native interop: prohibited by AGENTS.md §2 and rule R5, and no ADR changes that.
+  The options that remain are a jitter statistic that resists scheduling spikes (more samples, median absolute
+  deviation) or accepting the figure as it is. Decide in session 4, item 4.3.
 - Session 4 (`docs/PLAN.md`): only what daily use asks for.
 
 ## Local session — 2026-09-28 — branch `fix/stop-hook-preexisting-changes`
