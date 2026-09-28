@@ -34,7 +34,8 @@ name: Review (Claude)
 
 on:
   pull_request_target:
-    types: [opened, synchronize, ready_for_review, reopened]
+    # `edited` covers a changed PR body: the "Safety impact" section lives there and the review reads it.
+    types: [opened, synchronize, ready_for_review, reopened, edited]
 
 permissions:
   contents: read
@@ -129,6 +130,8 @@ jobs:
             > pr.graphql.json
           jq '.data.repository.pullRequest | {number,title,body,baseRefName,headRefName,commitCount:.commits.totalCount,commits:[.commits.nodes[].commit],fileCount:.files.totalCount,files:.files.nodes}' \
             pr.graphql.json > pr.json
+          # Fingerprint of the reviewed body, so the posting step can tell if it was edited meanwhile.
+          jq -r '.body // ""' pr.json | sha256sum | cut -d' ' -f1 > body.sha256
           jq -r '[.data.repository.pullRequest.comments.nodes[] | select(.author.login == "github-actions" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
             pr.graphql.json > earlier-reviews.full
           head -c 131072 earlier-reviews.full > earlier-reviews.md
@@ -216,6 +219,14 @@ jobs:
           CURRENT="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq .headRefOid)"
           if [ "$CURRENT" != "$HEAD_SHA" ]; then
             echo "PR head moved from $HEAD_SHA to $CURRENT during the review; not posting a stale review."; exit 0
+          fi
+          # The PR body (with its Safety impact section) is part of what was reviewed; an edit meanwhile
+          # makes this result stale too, and the `edited` trigger starts a fresh run.
+          if [ -f body.sha256 ]; then
+            NOW="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json body --jq '.body // ""' | sha256sum | cut -d' ' -f1)"
+            if [ "$NOW" != "$(cat body.sha256)" ]; then
+              echo "PR body changed during the review; not posting a stale review."; exit 0
+            fi
           fi
           if grep -qF -- "$CLAUDE_TOKEN" review.md; then
             echo "review.md contains the token; not posted."; exit 1

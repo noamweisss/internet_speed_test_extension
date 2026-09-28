@@ -55,8 +55,9 @@ side directory as data, so a PR cannot change its own review or reach the token.
 a trusted step writes the diff, the PR metadata, and the reviewer's own earlier comments to files, the reviewer
 reads and writes files only, and another trusted step posts `review.md` after checking it does not contain the
 token. Drafts wait until ready; fork PRs get no Claude review (their authors have no write access here).
-A Dependabot PR is reviewed when the token is available to its run: if such a PR shows the job's "not set"
-line, store the same token as a Dependabot secret too (step 5 below).
+A Dependabot PR is reviewed when GitHub grants the `claude-review` environment to its run; if such a PR shows
+the job's "not set" line, it did not, and that PR is left to Codex (step 5 below). A review is also re-run
+when the PR body is edited, since the "Safety impact" section lives there.
 
 ### Setting up the Claude review workflow (owner, once)
 

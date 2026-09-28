@@ -50,12 +50,12 @@ verified, blocked, next.
 **Not verified**
 - A complete real run of the Claude workflow (collect, review, post) on a PR after this one merges.
 - Whether the `env` block sets the author on the next agent session (this session set it inline per commit).
-- Whether Dependabot-triggered `pull_request_target` runs see the repository secret or need a Dependabot secret
-  (`docs/REVIEW-PROMPT.md` covers both).
+- Whether GitHub grants the `claude-review` environment to Dependabot-triggered `pull_request_target` runs; if
+  not, those PRs are left to Codex (`docs/REVIEW-PROMPT.md`, step 5).
 
 **Lesson for the next building agent**
-- PR #16 took 13 Codex rounds. Rounds 1 to 7 were a chain where each fix opened the next hole; rounds 8 to 13
-  were documentation that still described an earlier design. Before requesting a review round: grep every doc
+- PR #16 took many Codex rounds (the history below). The first seven were a chain where each fix opened the
+  next hole; most of the rest were documentation that still described an earlier design. Before requesting a review round: grep every doc
   for the facts a design change touched, batch all fixes into one push, and expect the Claude workflow to run
   in parallel so two reviewers see the same commit. The rules now ask reviewers for completeness in one pass.
 
@@ -64,8 +64,8 @@ verified, blocked, next.
   the repository-level secret (`docs/REVIEW-PROMPT.md`, step 3); uninstall CodeRabbit after PR #15; on GitHub
   Settings → Emails tick "Keep my email addresses private"
   and "Block command line pushes that expose my email".
-- After merge: watch the first real Claude review on the next PR; if a Dependabot PR shows the skip line, add
-  the token as a Dependabot secret.
+- After merge: watch the first real Claude review on the next PR; a Dependabot PR that shows the skip line is
+  left to Codex.
 - Then plan session 4 (polish) as listed in `docs/PLAN.md`; PR #15 is already under way on another branch.
 
 **History of PR #16 (the Codex rounds, one entry each; the vendor's own review of our reviewer)**
@@ -112,6 +112,11 @@ verified, blocked, next.
     workflow could read the token. Fix: the token moves into the `claude-review` environment with a
     deployment-branch policy of `main` only, the job runs only for PRs into the default branch, and the root
     checkout names that branch. Owner step: create the environment, move the secret.
+16. Five findings in one round, the completeness rule at work. P1: a PR body edited after collection left the
+    reviewed "Safety impact" text stale; now `edited` triggers a run and the posting step compares a hash of
+    the reviewed body with the current one. P1: the setup guide gave two contradictory Dependabot fallbacks;
+    one now (left to Codex). P1: the ADR still called the token a repository secret in one place. Two P2s:
+    a stale severity sentence in the ADR and a stale round count here.
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
   heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
   where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the
