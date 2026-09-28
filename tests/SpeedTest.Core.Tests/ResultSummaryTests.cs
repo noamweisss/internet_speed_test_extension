@@ -81,6 +81,22 @@ public sealed class ResultSummaryTests
     }
 
     [Fact]
+    public void PlainText_ControlCharactersInServerText_CannotAddLines()
+    {
+        var snapshot = new SpeedTestSnapshot
+        {
+            Phase = SpeedTestPhase.Complete,
+            Connection = new ConnectionInfo("Evil\r\nDownload: 9999 Mbps", null, "Tel\tAviv", "IL", "TLV"),
+        };
+
+        var text = ResultSummary.PlainText(snapshot);
+
+        Assert.Equal(7, text.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length);
+        Assert.Contains("ISP: Evil  Download: 9999 Mbps\n", text, StringComparison.Ordinal);
+        Assert.Contains("Location: Tel Aviv, IL\n", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Markdown_EscapesServerSuppliedConnectionFields()
     {
         var snapshot = new SpeedTestSnapshot

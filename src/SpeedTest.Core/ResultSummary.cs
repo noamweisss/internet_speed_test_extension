@@ -57,5 +57,23 @@ public static class ResultSummary
         yield return ("Server", Field(c.Server));
     }
 
-    private static string Field(string? value) => string.IsNullOrEmpty(value) ? SpeedFormatter.Unknown : value;
+    /// <summary>
+    /// Server-supplied text with every control character replaced by a space, so a line break inside an ISP name
+    /// from /meta cannot add lines to the summary the user pastes (the markdown form escapes it again on top).
+    /// </summary>
+    private static string Field(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return SpeedFormatter.Unknown;
+        }
+
+        var text = new StringBuilder(value.Length);
+        foreach (var ch in value)
+        {
+            text.Append(char.IsControl(ch) ? ' ' : ch);
+        }
+
+        return text.ToString();
+    }
 }
