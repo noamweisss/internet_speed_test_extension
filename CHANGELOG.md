@@ -5,7 +5,13 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+- Jitter is the median, not the mean, of the differences between consecutive latency samples, and the test takes
+  20 samples instead of 10 (ADR-0010). On the owner's laptop the extension process gets a few isolated slow
+  samples that a plain console process does not; they made the mean jitter larger than the latency. The median
+  ignores an isolated spike. Each test sends ten more zero-byte requests.
+- Server processing time is now subtracted from every latency sample in full: all `Server-Timing` durations are
+  summed, not only the first (real probe answers carry `cfSpeedEdge` and `cfSpeedWorker` on one header).
 
 ## [0.1.0] - 2026-09-28
 
