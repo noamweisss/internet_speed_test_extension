@@ -4,6 +4,33 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Local session — 2026-09-28 — branch `fix/stop-hook-preexisting-changes`
+
+**Done**
+- Owner merged PR #9 (`docs/plan-session-3`): the unfinished session 2 items moved to a new session 3 in `docs/PLAN.md`.
+- PR #8: the S1 stop hook no longer counts uncommitted edits that existed when the session started.
+  `session-start.sh` saves a snapshot from the new `scripts/hooks/tree-state.sh` (status and working-tree hash per
+  changed file, index mode and blob per staged path). The marker and snapshot are named after the Claude session
+  id, so two sessions in one worktree keep separate baselines and a resume or compaction keeps the original one.
+  `stop-check.sh` compares against the snapshot and falls back to the old dirty-tree check without one. The session
+  id is read from the hook input without jq. `docs/SECURITY.md` S1 row updated.
+- Codex review of PR #8: two findings fixed (overlapping sessions, staged-only changes), one wrong (the
+  `Guard-Change:` trailer is present), one accepted (this entry).
+
+**Verified**
+- `scripts/check.sh all` passes locally. Hook behaviour tested by hand in eight cases, listed in the PR body.
+
+**Not verified**
+- CI on the final commit of PR #8 (green on cf9de9d, before the Codex fixes).
+
+**Found, not fixed**
+- `jq` is not installed on the owner's laptop. `guard-bash.sh` and `guard-write.sh` read the tool call with jq,
+  so on that machine G1–G8, W1 and W2 let everything through. Either install jq (`winget install jqlang.jq`) or
+  make the two guards jq-free like the S1 scripts. Owner decides.
+
+**Next**
+- Merge PR #8. Then session 3 items 3.1–3.3.
+
 ## Session 2 — 2026-09-24 — branch `feat/install-without-visual-studio`
 
 **Done**

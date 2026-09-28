@@ -7,13 +7,16 @@
 set -u
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || exit 0)"
 cd "$ROOT"
-MARK_FILE="$(git rev-parse --git-path claude-session-start 2>/dev/null)"
+SESSION=""
+# The hook input is JSON on stdin; the session id is read without jq so the hook also works where jq is missing.
+[ -t 0 ] || SESSION="$(head -c 65536 | sed -nE 's/.*"session_id"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' | head -n1 | tr -cd 'A-Za-z0-9-')"
+MARK_FILE="$(git rev-parse --git-path "claude-session${SESSION:+-$SESSION}-start" 2>/dev/null)"
+TREE_FILE="$(git rev-parse --git-path "claude-session${SESSION:+-$SESSION}-tree" 2>/dev/null)"
 MARK=""
 [ -f "$MARK_FILE" ] && MARK="$(cat "$MARK_FILE")"
 CHANGED=0
-SNAPSHOT_FILE="$(git rev-parse --git-path claude-session-tree 2>/dev/null)"
-if [ -f "$SNAPSHOT_FILE" ]; then
-  [ "$(bash scripts/hooks/tree-state.sh)" != "$(cat "$SNAPSHOT_FILE")" ] && CHANGED=1
+if [ -f "$TREE_FILE" ]; then
+  [ "$(bash scripts/hooks/tree-state.sh)" != "$(cat "$TREE_FILE")" ] && CHANGED=1
 else
   [ -n "$(git status --porcelain)" ] && CHANGED=1
 fi
