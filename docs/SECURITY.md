@@ -56,7 +56,7 @@ Claude Code hooks, `.claude/settings.json` (main agent and subagents):
 | G8 | No commit amending. |
 | W1 | No edits to `Program.cs`. |
 | W2 | No edits to `scripts/allowed-hosts.txt` without a human decision and ADR. |
-| S1 | A session that changed the repo must update `docs/SESSION-LOG.md` before it ends. |
+| S1 | A session that changed the repo must update `docs/SESSION-LOG.md` before it ends. Uncommitted edits that existed when the session started do not count. |
 
 What the hooks cannot do: they do not stop a determined human with shell access, and they are not a substitute for
 review. They exist to make accidental or careless violations impossible and deliberate ones visible.

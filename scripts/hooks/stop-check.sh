@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Claude Code Stop hook: if this session changed the repo, the hand-off note in docs/SESSION-LOG.md
 # must have been updated too. Blocks (exit 2) until it is. Read-only sessions are not affected.
+# Uncommitted edits that already existed at session start (snapshot from session-start.sh) do not count.
 # Without a session marker (SessionStart did not run) only the working tree is inspected; history is
 # never scanned from time zero, because that would let an old SESSION-LOG commit satisfy the check.
 set -u
@@ -10,7 +11,12 @@ MARK_FILE="$(git rev-parse --git-path claude-session-start 2>/dev/null)"
 MARK=""
 [ -f "$MARK_FILE" ] && MARK="$(cat "$MARK_FILE")"
 CHANGED=0
-[ -n "$(git status --porcelain)" ] && CHANGED=1
+SNAPSHOT_FILE="$(git rev-parse --git-path claude-session-tree 2>/dev/null)"
+if [ -f "$SNAPSHOT_FILE" ]; then
+  [ "$(bash scripts/hooks/tree-state.sh)" != "$(cat "$SNAPSHOT_FILE")" ] && CHANGED=1
+else
+  [ -n "$(git status --porcelain)" ] && CHANGED=1
+fi
 [ -n "$MARK" ] && [ -n "$(git log --since="@$MARK" --oneline 2>/dev/null)" ] && CHANGED=1
 [ "$CHANGED" = 0 ] && exit 0
 LOG_TOUCHED=0
