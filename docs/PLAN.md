@@ -39,8 +39,8 @@ Expected state at the end of session 2: a usable v0.1.0 you can install and run 
 
 | # | Item | Status |
 |---|------|--------|
-| 3.1 | Fix the connection-info and jitter bugs from the second VM run: `/meta` Referer, `colo` object, percent-encoded header values, latency warm-up probe (`docs/SESSION-LOG.md`, session 2) | todo |
-| 3.2 | Merge Dependabot PRs #2, #3, #4, #6 (add their Safety impact notes) | todo |
+| 3.1 | Fix the connection-info and jitter bugs from the second VM run: `/meta` Referer, `colo` object, percent-encoded header values, latency warm-up probe (`docs/SESSION-LOG.md`, session 2) | done (PR #11 pending review; owner re-tests in the VM) |
+| 3.2 | Merge Dependabot PRs #2, #3, #4, #6 (add their Safety impact notes) | doing (Safety impact notes added, checks green, merge state clean; owner merges) |
 | 3.3 | Tag `v0.1.0`, GitHub release with the MSIX and install notes  | todo |
 
 Expected state at the end of session 3: a usable v0.1.0 you can install and run daily.

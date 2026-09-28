@@ -4,6 +4,46 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 3 — 2026-09-28 — branch `fix/connection-info-and-jitter`
+
+**Done**
+- Plan item 3.1, test-first: `FakeCloudflareHandler` now behaves like the real service as confirmed with curl on
+  2026-09-28 (`/meta` answers `403 {}` without `Referer: https://speed.cloudflare.com/`, `colo` is an object, the
+  probe `city` header is percent-encoded), plus a `FirstProbeDelay` for a cold connection. Nine tests added or
+  changed (057fda1, 36531f3), all red in CI for the expected reasons; the fix (a3d6953) makes them green.
+  Core changes: Referer on the `/meta` request, `CloudflareColo.Iata`, `Uri.UnescapeDataString` with a 256-character
+  bound in `ConnectionInfo.FromHeaders`, one unmeasured warm-up probe before the latency samples. 78 tests.
+- Plan item 3.2: `## Safety impact` sections added to Dependabot PRs #2, #3, #4, #6. Action SHAs re-checked against
+  the `v6.0.0` and `v7.0.1` tags with the GitHub API; the two NuGet bumps are test-only (`tests/` project alone), and
+  their CI runs executed the full suite (69 tests at the time). All four: safety check green, merge state clean.
+  Merging was refused for the agent by the Claude Code permission classifier ("merge without review"); the owner merges.
+- [noamweisss/internet_speed_test_extension#11](https://github.com/noamweisss/internet_speed_test_extension/pull/11)
+  opened for 3.1.
+
+**Verified**
+- CI on this branch: run 36414087633 red (9 of 78 failing, each for its intended reason), run 36414541300 green
+  (78 passed, Windows build green, `check.sh all` green). `scripts/check.sh all` also passes locally.
+
+**Not verified**
+- Nothing ran in Command Palette this session. The owner re-tests in the VM: ISP shown, location "H̱olon, IL",
+  jitter below latency; plus the session 2 leftovers (`Ctrl+L`, `Ctrl+R`, copy a row, default view, update in use).
+- CodeRabbit not yet requested on PR #11 (`@coderabbitai review`, once, after any review fixes).
+
+**Found, not fixed**
+- The laptop has .NET runtimes 8, 9 and 10 but no SDK, so `dotnet test` cannot run locally; this session used the CI
+  test job as the test runner (about 3 minutes per cycle). `winget install Microsoft.DotNet.SDK.10` would fix it.
+- Dependabot's rebase (`@dependabot rebase`) regenerates the PR body and drops the Safety impact section. Editing a
+  body does not re-run the check (the workflow has no `edited` trigger); closing and reopening the PR does. If
+  Dependabot rebases any of the four again before they are merged, re-add the section and close/reopen.
+- `ServerTiming.DurationMs` reads only the first `dur=`; real probe responses carry `cfSpeedEdge;dur=4, cfSpeedWorker;dur=18`
+  on one header and a `cfL4` line on another, so the worker time is not subtracted. Small, pre-existing.
+- Two leftover worktrees under `.claude/worktrees/` (`stop-hook-preexisting-changes`, `hyperv-vm-powertoys-testing-45869f`).
+
+**Next**
+- Owner: merge #2, #3, #4, #6 first, before anything else lands on `main` (a Dependabot rebase would drop the notes).
+- Owner: VM re-test with the CI artifact of PR #11, then review and merge it.
+- Then 3.3: tag `v0.1.0`, GitHub release with the MSIX and install notes.
+
 ## Local session — 2026-09-28 — branch `fix/stop-hook-preexisting-changes`
 
 **Done**
