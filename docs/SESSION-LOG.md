@@ -55,6 +55,8 @@ verified, blocked, next.
 - Codex round 5, one P1, valid: a PR can commit a symlink in its tree pointing at `/proc/self/environ`; the
   reviewer's `Read` follows it under the `pr-head` path, which the deny rule does not match. Fixed: the trusted
   collect step runs `find pr-head -type l -delete` before the reviewer starts.
+- Codex round 6, one P1, valid, and it cited the new Code Review Rules section (so the exact heading works):
+  the earlier-reviews file was unbounded. Fixed: last two reviews only, `head -c 131072`.
 - Codex round 4, one new P1, valid: a blanket `Write` could reach the runner's per-step command files under
   `$RUNNER_TEMP/_runner_file_commands` and put `BASH_ENV=<file in pr-head>` into `GITHUB_ENV`, so the next
   trusted shell step would source PR-controlled code with both tokens in its environment. Fixed: `Write` is
