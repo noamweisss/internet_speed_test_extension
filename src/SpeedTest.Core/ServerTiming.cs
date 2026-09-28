@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Text;
 
 namespace SpeedTest.Core;
 
@@ -8,10 +9,14 @@ namespace SpeedTest.Core;
 /// Reads the time Cloudflare spent handling a request from its Server-Timing headers, so latency reflects the
 /// network and not the server. The real probe response splits that time over several metrics and header values
 /// (observed 2026-09-28: "cfSpeedEdge;dur=4, cfSpeedWorker;dur=18" plus a "cfL4;desc=..." value), so every
-/// "dur=" is summed. A malformed, negative or non-finite duration is ignored.
+/// "dur" parameter is summed. Quoted descriptions are skipped before parsing, so a "dur=" inside one does not
+/// count. A malformed, negative or implausibly large duration is ignored, and the sum is bounded the same way.
 /// </summary>
 public static class ServerTiming
 {
+    /// <summary>Longer than any probe can take (the HttpClient timeout is 30 s); a larger value is a bogus header.</summary>
+    private const double MaxDurationMs = 60_000;
+
     public static double DurationMs(HttpResponseHeaders headers)
     {
         if (!headers.TryGetValues("Server-Timing", out var values))
@@ -22,20 +27,41 @@ public static class ServerTiming
         double total = 0;
         foreach (var value in values)
         {
-            var rest = value.AsSpan();
-            int index;
-            while ((index = rest.IndexOf("dur=", StringComparison.OrdinalIgnoreCase)) >= 0)
+            foreach (var metric in Unquoted(value).Split(','))
             {
-                rest = rest[(index + 4)..];
-                var end = rest.IndexOfAny(';', ',');
-                var token = end >= 0 ? rest[..end] : rest;
-                if (double.TryParse(token.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var ms) && double.IsFinite(ms) && ms >= 0)
+                foreach (var parameter in metric.Split(';'))
                 {
-                    total += ms;
+                    var trimmed = parameter.AsSpan().Trim();
+                    if (trimmed.StartsWith("dur=", StringComparison.OrdinalIgnoreCase)
+                        && double.TryParse(trimmed[4..].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var ms)
+                        && ms >= 0 && ms <= MaxDurationMs)
+                    {
+                        total += ms;
+                    }
                 }
             }
         }
 
-        return total;
+        return Math.Min(total, MaxDurationMs);
+    }
+
+    /// <summary>The header value without its quoted strings, which may hold anything, separators included.</summary>
+    private static string Unquoted(string value)
+    {
+        var text = new StringBuilder(value.Length);
+        var inQuotes = false;
+        foreach (var ch in value)
+        {
+            if (ch == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (!inQuotes)
+            {
+                text.Append(ch);
+            }
+        }
+
+        return text.ToString();
     }
 }

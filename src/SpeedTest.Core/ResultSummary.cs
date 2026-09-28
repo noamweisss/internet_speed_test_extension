@@ -40,10 +40,10 @@ public static class ResultSummary
         return text.ToString();
     }
 
-    /// <summary>The test time once there is one, otherwise the status line as plain text.</summary>
+    /// <summary>The test time once there is one, otherwise the status line as plain text, on one line.</summary>
     private static string Heading(SpeedTestSnapshot snapshot) =>
         snapshot.CompletedAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
-        ?? MeterMarkdown.StatusLine(snapshot).Replace("**", string.Empty, StringComparison.Ordinal);
+        ?? OneLine(MeterMarkdown.StatusLine(snapshot).Replace("**", string.Empty, StringComparison.Ordinal));
 
     private static IEnumerable<(string Label, string Value)> Rows(SpeedTestSnapshot snapshot)
     {
@@ -61,13 +61,10 @@ public static class ResultSummary
     /// Server-supplied text with every control character replaced by a space, so a line break inside an ISP name
     /// from /meta cannot add lines to the summary the user pastes (the markdown form escapes it again on top).
     /// </summary>
-    private static string Field(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return SpeedFormatter.Unknown;
-        }
+    private static string Field(string? value) => string.IsNullOrEmpty(value) ? SpeedFormatter.Unknown : OneLine(value);
 
+    private static string OneLine(string value)
+    {
         var text = new StringBuilder(value.Length);
         foreach (var ch in value)
         {

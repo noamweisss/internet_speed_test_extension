@@ -33,11 +33,13 @@ public static class GaugeSvg
         svg.Append("<path d='").Append(Arc).Append("0 1 180 100' stroke='#808080' stroke-opacity='0.5").Append(Stroke);
         if (fraction > 0)
         {
-            // Sweep from the left end (180°) over the top to the right end (0°), clockwise on screen.
+            // Sweep from the left end (180°) over the top to the right end (0°), clockwise on screen. The sweep is
+            // never more than a semicircle, so the large-arc flag stays 0: with 1 the arc would take the long way
+            // round, below the baseline (CodeRabbit review).
             var angle = Math.PI * (1 - fraction);
             var x = CenterX + Radius * Math.Cos(angle);
             var y = CenterY - Radius * Math.Sin(angle);
-            svg.Append("<path d='").Append(Arc).Append(fraction > 0.5 ? "1 1 " : "0 1 ")
+            svg.Append("<path d='").Append(Arc).Append("0 1 ")
                 .Append(Number(x)).Append(' ').Append(Number(y))
                 .Append("' stroke='#0078D4").Append(Stroke);
         }

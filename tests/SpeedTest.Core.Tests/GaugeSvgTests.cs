@@ -36,7 +36,7 @@ public sealed class GaugeSvgTests
     {
         var svg = GaugeSvg.Render(100, 100);
 
-        Assert.Contains("M20 100 A80 80 0 1 1 180 100", svg);
+        Assert.Contains("M20 100 A80 80 0 0 1 180 100' stroke='#0078D4'", svg);
         Assert.Contains("#0078D4", svg);
     }
 
@@ -55,8 +55,8 @@ public sealed class GaugeSvgTests
         {
             var svg = GaugeSvg.Render(65, 100);
 
-            // 65 % is 63° past the left end: (100 + 80·cos 63°, 100 − 80·sin 63°).
-            Assert.Contains("A80 80 0 1 1 136.3 28.7", svg);
+            // 65 % is 117° past the left end, the short way round (large-arc flag 0): (100 + 80·cos 63°, 100 − 80·sin 63°).
+            Assert.Contains("A80 80 0 0 1 136.3 28.7", svg);
             Assert.DoesNotContain(",", svg);
         }
         finally

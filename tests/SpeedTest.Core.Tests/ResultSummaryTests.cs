@@ -97,6 +97,17 @@ public sealed class ResultSummaryTests
     }
 
     [Fact]
+    public void PlainText_ControlCharactersInErrorText_CannotAddLines()
+    {
+        var failed = new SpeedTestSnapshot { Phase = SpeedTestPhase.Failed, Error = "No network\r\nDownload: 9999 Mbps" };
+
+        var text = ResultSummary.PlainText(failed);
+
+        Assert.Equal(7, text.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length);
+        Assert.StartsWith("Internet Speed Test — Failed: No network  Download: 9999 Mbps\n", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Markdown_EscapesServerSuppliedConnectionFields()
     {
         var snapshot = new SpeedTestSnapshot

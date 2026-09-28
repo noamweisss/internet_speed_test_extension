@@ -53,6 +53,29 @@ public sealed class ServerTimingTests
         Assert.Equal(expected, ServerTiming.DurationMs(response.Headers));
     }
 
+    [Theory]
+    [InlineData("cfL4;desc=\"dur=500\", cfSpeedEdge;dur=4", 4)]
+    [InlineData("cfL4;desc=\"a, b;dur=500\";dur=2, cfSpeedEdge;dur=4", 6)]
+    public void DurationMs_DurInsideQuotedDescription_IsIgnored(string header, double expected)
+    {
+        using var response = new HttpResponseMessage();
+        response.Headers.Add("Server-Timing", header);
+
+        Assert.Equal(expected, ServerTiming.DurationMs(response.Headers));
+    }
+
+    [Theory]
+    [InlineData("a;dur=1e308, b;dur=1e308", 0)]
+    [InlineData("a;dur=60001, b;dur=18", 18)]
+    [InlineData("a;dur=50000, b;dur=50000", 60000)]
+    public void DurationMs_ImplausiblyLargeValuesAndSums_AreBounded(string header, double expected)
+    {
+        using var response = new HttpResponseMessage();
+        response.Headers.Add("Server-Timing", header);
+
+        Assert.Equal(expected, ServerTiming.DurationMs(response.Headers));
+    }
+
     [Fact]
     public void DurationMs_NoHeader_IsZero()
     {

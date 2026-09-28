@@ -42,6 +42,12 @@ fixed two things in 4.1, wrote the changelog and committed)
   suffixed namespace or a second URL on the same line passed (now only the exact quoted token is removed before the
   scan; both bypasses were reproduced with a probe file and fail again); `/meta` text with a line break could add
   lines to the plain summary (control characters become spaces, test added). 102 tests.
+- CodeRabbit review of PR #15 (5 findings, all fixed): the R6 exemption is now the exact `xmlns` attribute only;
+  the gauge's progress arc had the large-arc flag set above 50 %, sending it the long way round below the
+  baseline (a real bug the subagent's tests had encoded as expected output); `Server-Timing` parsing skips quoted
+  descriptions and bounds each value and the sum at 60 s; the summary heading is one line too. 108 tests.
+  CodeRabbit's docstring-coverage warning (80 % threshold) is not acted on: `docs/CONVENTIONS.md` wants comments
+  that explain why, not one per method.
 
 **Not verified**
 - Nothing from this session has run in Command Palette. The owner's next run checks: the two gauges render (not a

@@ -59,8 +59,9 @@ while IFS= read -r -d '' f; do
       fi
       # R6: no plain-http URLs, in any quote style. The one allowed http:// string is the SVG namespace name in the
       #     meter gauge (ADR-0011): a renderer compares it and never fetches it.
-      #     Only that exact quoted token is removed before the scan, so anything else on the same line is still seen.
-      if printf '%s' "$CONTENT" | sed -E "s#(['\"])http://www\.w3\.org/2000/svg\1##g" | grep -nE "['\"]http://" >/dev/null; then fail R6 "plain http:// URL in $f"; fi
+      #     Only that exact xmlns attribute is removed before the scan, so the same string used as a request URL,
+      #     or anything else on the same line, is still seen.
+      if printf '%s' "$CONTENT" | sed -E "s#xmlns=(['\"])http://www\.w3\.org/2000/svg\1##g" | grep -nE "['\"]http://" >/dev/null; then fail R6 "plain http:// URL in $f"; fi
       # R7: every https host in C# must be in scripts/allowed-hosts.txt.
       for host in $(printf '%s' "$CONTENT" | grep -oE 'https://[A-Za-z0-9.-]+' | sed 's#https://##' | sort -u); do
         grep -qxF "$host" scripts/allowed-hosts.txt || fail R7 "host '$host' in $f is not in scripts/allowed-hosts.txt"
