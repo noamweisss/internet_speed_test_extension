@@ -41,6 +41,12 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
     /// </summary>
     public TimeSpan FirstProbeDelay { get; set; }
 
+    /// <summary>
+    /// When positive, every zero-byte probe answers with a body of this many bytes and no Content-Length, like a
+    /// misbehaving server. The bytes the measurer reads from it land in <see cref="BytesReadPerLengthUnknownResponse"/>.
+    /// </summary>
+    public int ProbeBodyBytes { get; set; }
+
 
     public HttpStatusCode DownloadStatus { get; set; } = HttpStatusCode.OK;
 
@@ -110,8 +116,8 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         var payload = new byte[bytes + (bytes > 0 ? Math.Max(0, DownloadExtraBytes) : 0)];
         HttpContent body = ResetDuringDownload && bytes > 0
             ? new StreamContent(new ResettingStream())
-            : DownloadWithoutContentLength && bytes > 0
-                ? new StreamContent(new NonSeekableStream(payload, this))
+            : (DownloadWithoutContentLength && bytes > 0) || (ProbeBodyBytes > 0 && bytes == 0)
+                ? new StreamContent(new NonSeekableStream(bytes == 0 ? new byte[ProbeBodyBytes] : payload, this))
                 : new ByteArrayContent(payload);
         var response = new HttpResponseMessage(DownloadStatus) { Content = body };
         // The real probe responses carry cf-meta-ip plus bare city/country/colo, with city percent-encoded UTF-8

@@ -250,6 +250,19 @@ public sealed class SpeedMeasurerTests
     }
 
     [Fact]
+    public async Task MeasureAsync_ProbeAnswersWithABody_DoesNotReadIt()
+    {
+        // A zero-byte probe only needs the headers. A body, however large, must never be buffered.
+        var (measurer, handler) = Create();
+        handler.ProbeBodyBytes = 1_000_000;
+
+        await measurer.MeasureAsync(null, CancellationToken.None);
+
+        Assert.Equal(FastOptions.LatencySamples + 1, handler.BytesReadPerLengthUnknownResponse.Count);
+        Assert.All(handler.BytesReadPerLengthUnknownResponse, bytes => Assert.Equal(0, bytes));
+    }
+
+    [Fact]
     public async Task MeasureAsync_ServerTimingPresent_DoesNotProduceNegativeLatency()
     {
         var (measurer, handler) = Create();
