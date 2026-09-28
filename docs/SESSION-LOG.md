@@ -51,7 +51,8 @@ fixed two things in 4.1, wrote the changelog and committed)
   the R6 exemption (now a whole-word match), and a backslash-escaped quote inside a `Server-Timing` description
   ended the quoted string early (quoted-pairs handled, 2 tests). 110 tests. Third pass, 1 finding: `x-xmlns=`
   passed the word boundary (a hyphen is not an identifier character); the exemption is now the literal
-  `<svg xmlns='...'` start tag, the only spelling the code uses, so no boundary rule is needed.
+  `<svg xmlns='...'` start tag, the only spelling the code uses, so no boundary rule is needed. Fourth pass, 1 finding:
+  the exemption now applies to `src/SpeedTest.Core/GaugeSvg.cs` alone; every other file gets the plain rule.
 
 **Not verified**
 - Nothing from this session has run in Command Palette. The owner's next run checks: the two gauges render (not a

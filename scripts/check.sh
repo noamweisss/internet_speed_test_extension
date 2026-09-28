@@ -58,11 +58,15 @@ while IFS= read -r -d '' f; do
         fail R5 "forbidden API usage in $f (docs/SECURITY.md, rule R5)"
       fi
       # R6: no plain-http URLs, in any quote style. The one allowed http:// string is the SVG namespace name in the
-      #     meter gauge (ADR-0011): a renderer compares it and never fetches it.
-      #     Only that attribute on an <svg> start tag, exactly "<svg xmlns='...'" (or double-quoted), is removed
-      #     before the scan, so the same string in any other spelling ("otherxmlns=", "x-xmlns=", a request URL)
-      #     or anywhere else on the line is still seen.
-      if printf '%s' "$CONTENT" | sed -E "s#<svg xmlns=(['\"])http://www\.w3\.org/2000/svg\1#<svg#g" | grep -nE "['\"]http://" >/dev/null; then fail R6 "plain http:// URL in $f"; fi
+      #     meter gauge (ADR-0011): a renderer compares it and never fetches it. Only that attribute on an <svg>
+      #     start tag, exactly "<svg xmlns='...'" (or double-quoted), and only in the one file that draws the gauge,
+      #     is removed before the scan; every other file, spelling ("otherxmlns=", "x-xmlns=", a request URL) or
+      #     place on the line is still seen.
+      R6_CONTENT="$CONTENT"
+      if [ "$f" = "src/SpeedTest.Core/GaugeSvg.cs" ]; then
+        R6_CONTENT="$(printf '%s' "$CONTENT" | sed -E "s#<svg xmlns=(['\"])http://www\.w3\.org/2000/svg\1#<svg#g")"
+      fi
+      if printf '%s' "$R6_CONTENT" | grep -nE "['\"]http://" >/dev/null; then fail R6 "plain http:// URL in $f"; fi
       # R7: every https host in C# must be in scripts/allowed-hosts.txt.
       for host in $(printf '%s' "$CONTENT" | grep -oE 'https://[A-Za-z0-9.-]+' | sed 's#https://##' | sort -u); do
         grep -qxF "$host" scripts/allowed-hosts.txt || fail R7 "host '$host' in $f is not in scripts/allowed-hosts.txt"
