@@ -70,8 +70,12 @@ verified, blocked, next.
    `gh api --slurp` with `--jq`, which gh refuses; 019e733 pipes into `jq`.)
 7. P0: the Grep tool's ripgrep inherits the token and searches `/proc`. Grep removed. P1: pagination downloaded
    every comment before the cut; now one GraphQL request for the last 30. P2: ADR still counted three reviewers.
-8. Dependabot secrets, unbounded diff and commit list, this hand-off's stale opening, and a stale plan status:
-   all four fixed in this entry's commit.
+8. Dependabot secrets (not reproduced: GitHub documents `pull_request_target` as exempt; docs state the
+   condition and a fallback), unbounded diff and commit list, this hand-off's stale opening, and a stale plan
+   status.
+9. P1: without `pipefail` a failed `gh pr diff` behind `head` still succeeded and the reviewer could review an
+   empty diff. Now `set -euo pipefail`, every fetch writes a full file before the cap, an empty diff stops the
+   job. P2: the workflow header still said "three Codex reviews".
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
   heading `## Code Review Rules` with `###` groups is required, and Codex posts only P0 and P1 findings, which
   is why each round showed one. The owner's requests for maintainability and documentation rules, the

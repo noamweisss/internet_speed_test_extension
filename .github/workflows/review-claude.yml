@@ -4,7 +4,7 @@
 # this workflow that it does not control prepare its input and post its output. It cannot push. Actions are
 # pinned to full commit SHAs (tag in the comment) so a retargeted tag cannot change what runs.
 #
-# Trust boundary (three Codex reviews of PR #16):
+# Trust boundary (shaped by the Codex reviews of PR #16; docs/SESSION-LOG.md lists every round):
 # - The event is `pull_request_target`, so this file and the checkout at the workspace root always come from
 #   `main`, never from the pull request. A PR cannot edit its own review, replace the prompt, or add a step that
 #   reads the token. The PR's files are checked out into `pr-head` as data for the reviewer to read; nothing from
@@ -83,29 +83,37 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          set -eu
+          set -euo pipefail
           # A PR could commit a symlink pointing outside its tree (for example at /proc/self/environ) and have
           # the reviewer read the token through an innocent-looking path. Symlinks are data the reviewer does
           # not need; drop them all.
           find pr-head -type l -print -delete | sed 's/^/removed symlink: /'
           mkdir -p "$REVIEW_DIR"
+          cd "$REVIEW_DIR"
+          # Every fetch writes a full file first, so a failed gh call stops the job (fail closed) instead of
+          # leaving a partial input behind a cap; the cap is applied to the complete file afterwards.
           # The diff is capped at 2 MiB and the commit list at the last 50, so a huge PR cannot overrun the
           # reviewer's context; a capped diff ends with a marker line the reviewer is told to report.
-          gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" | head -c 2097152 > "$REVIEW_DIR/pr.diff"
-          if [ "$(wc -c < "$REVIEW_DIR/pr.diff")" -ge 2097152 ]; then
-            printf '\n[diff truncated at 2 MiB; the rest is only in pr-head/]\n' >> "$REVIEW_DIR/pr.diff"
+          gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" > pr.diff.full
+          test -s pr.diff.full || { echo "gh pr diff returned nothing; not reviewing blind."; exit 1; }
+          head -c 2097152 pr.diff.full > pr.diff
+          if [ "$(wc -c < pr.diff.full)" -gt 2097152 ]; then
+            printf '\n[diff truncated at 2 MiB; the rest is only in pr-head/]\n' >> pr.diff
           fi
           gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --json number,title,body,baseRefName,headRefName,commits \
-            | jq '.commits |= .[-50:]' > "$REVIEW_DIR/pr.json"
+            --json number,title,body,baseRefName,headRefName,commits > pr.json.full
+          jq '.commits |= .[-50:]' pr.json.full > pr.json
           # Only the last two of the reviewer's own earlier comments, at most 128 KB, and fetched from a bounded
           # window (the PR's last 30 comments, one request), so a long-lived PR cannot grow this input or the
           # download behind it.
           gh api graphql -F owner="${GITHUB_REPOSITORY%/*}" -F name="${GITHUB_REPOSITORY#*/}" -F pr="$PR_NUMBER" \
             -f query='query($owner:String!,$name:String!,$pr:Int!){repository(owner:$owner,name:$name){pullRequest(number:$pr){comments(last:30){nodes{author{login} body}}}}}' \
-            | jq -r '[.data.repository.pullRequest.comments.nodes[] | select(.author.login == "github-actions" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
-            | head -c 131072 > "$REVIEW_DIR/earlier-reviews.md"
-          wc -c "$REVIEW_DIR"/*
+            > comments.json
+          jq -r '[.data.repository.pullRequest.comments.nodes[] | select(.author.login == "github-actions" and (.body | startswith("## Independent review (Claude)"))) | .body] | .[-2:] | join("\n\n----\n\n")' \
+            comments.json > earlier-reviews.full
+          head -c 131072 earlier-reviews.full > earlier-reviews.md
+          rm -f pr.diff.full pr.json.full comments.json earlier-reviews.full
+          wc -c ./*
 
       - uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790 # v1.0.235
         if: env.HAS_TOKEN == 'true'
@@ -177,7 +185,7 @@ jobs:
           CLAUDE_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          set -eu
+          set -euo pipefail
           cd "$REVIEW_DIR"
           test -s review.md || { echo "review.md is missing or empty; nothing posted."; exit 1; }
           if grep -qF -- "$CLAUDE_TOKEN" review.md; then
