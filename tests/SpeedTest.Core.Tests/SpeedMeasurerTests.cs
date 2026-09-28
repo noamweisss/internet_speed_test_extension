@@ -61,6 +61,28 @@ public sealed class SpeedMeasurerTests
         Assert.Equal(new ConnectionInfo("Example ISP", "203.0.113.7", "Tel Aviv", "IL", "TLV"), result.Connection);
     }
 
+    [Fact]
+    public async Task MeasureAsync_Meta_SendsRefererOfTheSpeedTestHost()
+    {
+        var (measurer, handler) = Create();
+
+        await measurer.MeasureAsync(null, CancellationToken.None);
+
+        Assert.Equal(CloudflareEndpoints.Base, handler.MetaReferer);
+    }
+
+    [Fact]
+    public async Task MeasureAsync_MetaForbidden_FallsBackToProbeHeaders()
+    {
+        var (measurer, handler) = Create();
+        handler.MetaStatus = HttpStatusCode.Forbidden;
+        handler.MetaJson = "{}";
+
+        var result = await measurer.MeasureAsync(null, CancellationToken.None);
+
+        Assert.Equal(new ConnectionInfo(null, "198.51.100.9", "H̱olon", "IL", "HFA"), result.Connection);
+    }
+
     [Theory]
     [InlineData("{}")]
     [InlineData("not json at all")]
@@ -71,7 +93,7 @@ public sealed class SpeedMeasurerTests
 
         var result = await measurer.MeasureAsync(null, CancellationToken.None);
 
-        Assert.Equal(new ConnectionInfo(null, "198.51.100.9", "Haifa", "IL", "HFA"), result.Connection);
+        Assert.Equal(new ConnectionInfo(null, "198.51.100.9", "H̱olon", "IL", "HFA"), result.Connection);
     }
 
     [Fact]
@@ -154,7 +176,8 @@ public sealed class SpeedMeasurerTests
 
         await measurer.MeasureAsync(null, CancellationToken.None);
 
-        Assert.Equal(FastOptions.LatencySamples, handler.Requests.Count(u => u.Query == "?bytes=0"));
+        // One unmeasured warm-up probe, then LatencySamples measured ones.
+        Assert.Equal(FastOptions.LatencySamples + 1, handler.Requests.Count(u => u.Query == "?bytes=0"));
         Assert.All(handler.Requests.Where(u => u.AbsolutePath == "/__down" && u.Query != "?bytes=0"), u => Assert.Equal("?bytes=4096", u.Query));
         Assert.All(handler.Requests, u => Assert.Equal("speed.cloudflare.com", u.Host));
     }
@@ -209,6 +232,34 @@ public sealed class SpeedMeasurerTests
         var task = measurer.MeasureAsync(progress, cts.Token);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => task.WaitAsync(TimeSpan.FromSeconds(10)));
+    }
+
+    [Fact]
+    public async Task MeasureAsync_SlowFirstProbe_DoesNotInflateJitter()
+    {
+        // With /meta blocked, the first probe also opens the connection. That one slow sample must not count:
+        // without a warm-up probe the jitter here would be about 400 ms, far above the 100 ms bound.
+        var (measurer, handler) = Create();
+        handler.MetaStatus = HttpStatusCode.Forbidden;
+        handler.FirstProbeDelay = TimeSpan.FromMilliseconds(400);
+
+        var result = await measurer.MeasureAsync(null, CancellationToken.None);
+
+        Assert.NotNull(result.JitterMs);
+        Assert.InRange(result.JitterMs.Value, 0, 100);
+    }
+
+    [Fact]
+    public async Task MeasureAsync_ProbeAnswersWithABody_DoesNotReadIt()
+    {
+        // A zero-byte probe only needs the headers. A body, however large, must never be buffered.
+        var (measurer, handler) = Create();
+        handler.ProbeBodyBytes = 1_000_000;
+
+        await measurer.MeasureAsync(null, CancellationToken.None);
+
+        Assert.Equal(FastOptions.LatencySamples + 1, handler.BytesReadPerLengthUnknownResponse.Count);
+        Assert.All(handler.BytesReadPerLengthUnknownResponse, bytes => Assert.Equal(0, bytes));
     }
 
     [Fact]

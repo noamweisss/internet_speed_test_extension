@@ -17,15 +17,24 @@ internal sealed class CloudflareMeta
     [JsonPropertyName("country")]
     public string? Country { get; set; }
 
+    /// <summary>The serving data centre. An object, not a string (observed 2026-09-28; a string here broke every parse).</summary>
     [JsonPropertyName("colo")]
-    public string? Colo { get; set; }
+    public CloudflareColo? Colo { get; set; }
 
-    public ConnectionInfo ToConnectionInfo() => new(AsOrganization, ClientIp, City, Country, Colo);
+    public ConnectionInfo ToConnectionInfo() => new(AsOrganization, ClientIp, City, Country, Colo?.Iata);
+}
+
+/// <summary>The <c>colo</c> object inside /meta. Only the airport code is shown; the coordinates are ignored.</summary>
+internal sealed class CloudflareColo
+{
+    [JsonPropertyName("iata")]
+    public string? Iata { get; set; }
 }
 
 /// <summary>Source-generated serializer context so the extension stays trim- and AOT-safe.</summary>
 [JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(CloudflareMeta))]
+[JsonSerializable(typeof(CloudflareColo))]
 internal sealed partial class CloudflareJsonContext : JsonSerializerContext
 {
 }
