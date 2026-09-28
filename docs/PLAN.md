@@ -41,7 +41,7 @@ Expected state at the end of session 2: a usable v0.1.0 you can install and run 
 |---|------|--------|
 | 3.1 | Fix the connection-info and jitter bugs from the second VM run: `/meta` Referer, `colo` object, percent-encoded header values, latency warm-up probe (`docs/SESSION-LOG.md`, session 2) | verified (VM run 2026-09-28: ISP, location, jitter all correct; PR #11) |
 | 3.2 | Merge Dependabot PRs #2, #3, #4, #6 (add their Safety impact notes) | done |
-| 3.3 | Tag `v0.1.0`, GitHub release with the MSIX and install notes  | done (draft release `v0.1.0` on 42bda4b created 2026-09-28; verified once the owner publishes it and installs from the Releases page) |
+| 3.3 | Tag `v0.1.0`, GitHub release with the MSIX and install notes  | verified (published 2026-09-28; owner installed from the Releases page on the laptop and ran it) |
 
 Expected state at the end of session 3: a usable v0.1.0 you can install and run daily.
 
