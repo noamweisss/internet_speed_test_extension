@@ -103,7 +103,9 @@ building agent did on their behalf, and what a reviewing agent said.
   each). Every fetch fails closed: the
   collect step runs with `pipefail`, writes each full file before capping it, and stops the job on an empty
   diff, so a failed API call never turns into a clean review of nothing (Codex's ninth review). The diff is
-  taken between the event's exact base and head SHAs, the posted comment names that head, and the posting
+  taken between the event's exact base and head SHAs, the root checkout is pinned to that base SHA (a commit
+  of `main`, since the job runs only for pull requests into the default branch), the posted comment names
+  both SHAs, and the posting
   step re-reads the PR head and the PR body first and drops a stale result; an edited body also triggers a
   fresh run, because the "Safety impact" section is part of what is reviewed (Codex's fourteenth and
   sixteenth reviews: a push or a body edit during the run could otherwise mix two revisions into one review).

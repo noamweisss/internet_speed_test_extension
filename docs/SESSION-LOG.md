@@ -125,6 +125,10 @@ verified, blocked, next.
     Dependabot consequence still pointed at the removed extra-secret fallback. Two P2s: "every pull request"
     qualified to eligible ones in the workflow header, the ADR, and this entry; plan item 4.0 now separates
     implementation (done) from the owner's environment setup (pending).
+18. P1: the root checkout tracked the tip of `main` while the diff used the event's base SHA; now the checkout
+    is pinned to that base SHA (a commit of `main`) and the comment names both SHAs. Codex also asked to drop
+    the review when `main` advances during the run; not done, since a base push starts no new run and the
+    PR would silently get no review. Last round by the owner's stop rule.
 - Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
   heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
   where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the
