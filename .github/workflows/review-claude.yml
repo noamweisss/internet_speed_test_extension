@@ -89,9 +89,15 @@ jobs:
           # not need; drop them all.
           find pr-head -type l -print -delete | sed 's/^/removed symlink: /'
           mkdir -p "$REVIEW_DIR"
-          gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" > "$REVIEW_DIR/pr.diff"
+          # The diff is capped at 2 MiB and the commit list at the last 50, so a huge PR cannot overrun the
+          # reviewer's context; a capped diff ends with a marker line the reviewer is told to report.
+          gh pr diff "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" | head -c 2097152 > "$REVIEW_DIR/pr.diff"
+          if [ "$(wc -c < "$REVIEW_DIR/pr.diff")" -ge 2097152 ]; then
+            printf '\n[diff truncated at 2 MiB; the rest is only in pr-head/]\n' >> "$REVIEW_DIR/pr.diff"
+          fi
           gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --json number,title,body,baseRefName,headRefName,commits > "$REVIEW_DIR/pr.json"
+            --json number,title,body,baseRefName,headRefName,commits \
+            | jq '.commits |= .[-50:]' > "$REVIEW_DIR/pr.json"
           # Only the last two of the reviewer's own earlier comments, at most 128 KB, and fetched from a bounded
           # window (the PR's last 30 comments, one request), so a long-lived PR cannot grow this input or the
           # download behind it.
@@ -112,8 +118,9 @@ jobs:
             ${{ github.repository }}. You have no shell and no network; everything you need is on disk.
             - The working directory is the base branch (main).
             - `pr-head/` holds the pull request's files: read the changed code there.
-            - `${{ runner.temp }}/review/pr.diff` is the diff between main and the pull request's head.
-            - `${{ runner.temp }}/review/pr.json` is the pull request's title, body, and commits.
+            - `${{ runner.temp }}/review/pr.diff` is the diff between main and the pull request's head. If it
+              ends with a "[diff truncated" line, say so in Part 4 and review the rest by file in `pr-head/`.
+            - `${{ runner.temp }}/review/pr.json` is the pull request's title, body, and last 50 commits.
             - `${{ runner.temp }}/review/earlier-reviews.md` holds your own last two reviews of this pull
               request, if any (empty otherwise).
             Read docs/SAFETY-CONTRACT.md, docs/SECURITY.md, and the "Code Review Rules" section of AGENTS.md

@@ -84,7 +84,11 @@ building agent did on their behalf, and what a reviewing agent said.
 - The workflow, `.claude/settings.json`, and `AGENTS.md` are guard files: changes need the `Guard-Change`
   trailer and a "Safety impact" note (R9, R13).
 - Each Claude review spends the owner's subscription quota, not API credit. Drafts wait until ready and fork
-  pull requests are skipped; Dependabot pull requests are reviewed.
+  pull requests are skipped; Dependabot pull requests are reviewed: GitHub withholds Actions secrets from
+  Dependabot-triggered `pull_request` runs but documents `pull_request_target` as exempt, and
+  `docs/REVIEW-PROMPT.md` says what to add if a run still logs the skip line (Codex's eighth review).
+- Every input the reviewer gets is bounded: the diff at 2 MiB with a marker line it must report, the commit
+  list at 50, its earlier comments at two and 128 KB (Codex's eighth review).
 - Text in a pull request reaches the reviewer as data. A prompt injection there can at most make the review
   wrong: the reviewer has no shell and no network, only file reads and one file write, the posting step is
   fixed, and the posted body is checked for the token first.

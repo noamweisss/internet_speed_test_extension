@@ -52,8 +52,9 @@ workflow and its settings always come from `main` (`pull_request_target`); the P
 side directory as data, so a PR cannot change its own review or reach the token. The reviewer has no shell:
 a trusted step writes the diff, the PR metadata, and the reviewer's own earlier comments to files, the reviewer
 reads and writes files only, and another trusted step posts `review.md` after checking it does not contain the
-token. Drafts wait until ready; fork PRs get no Claude review (their authors have no write access here);
-Dependabot PRs are reviewed.
+token. Drafts wait until ready; fork PRs get no Claude review (their authors have no write access here).
+A Dependabot PR is reviewed when the token is available to its run: if such a PR shows the job's "not set"
+line, store the same token as a Dependabot secret too (step 5 below).
 
 ### Setting up the Claude review workflow (owner, once)
 
@@ -64,6 +65,10 @@ Dependabot PRs are reviewed.
    `CLAUDE_CODE_OAUTH_TOKEN`, value the token. Never paste the token anywhere else.
 4. Push to any open PR, or re-run the "Review (Claude)" workflow. A comment headed "Independent review (Claude)"
    appears on the PR within a few minutes, posted by `github-actions[bot]`.
+
+5. Optional, for Dependabot PRs: if their runs log "CLAUDE_CODE_OAUTH_TOKEN is not set", add the same secret
+   under Settings → Secrets and variables → Dependabot as well; GitHub keeps Actions and Dependabot secrets
+   separate.
 
 To pause it, delete the secret: the job then logs "not set" and exits green. To remove it, delete the workflow
 file, the secret, and uninstall the app.
