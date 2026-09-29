@@ -34,5 +34,9 @@ reviews:
       instructions: |
         These are the project's guards. A change that makes a rule weaker, adds a bypass, or removes a check
         is Major unless the PR body's "Safety impact" section justifies it and names an ADR.
+    - path: "{AGENTS,CLAUDE}.md"
+      instructions: |
+        These are the project's guards. A change that makes a rule weaker, adds a bypass, or removes a check
+        is Major unless the PR body's "Safety impact" section justifies it and names an ADR.
 chat:
   auto_reply: true
