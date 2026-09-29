@@ -74,7 +74,7 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_Active_MarksTitleAndShowsValue()
     {
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 245.3, 250, active: true);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(245.3, 250), active: true);
 
         Assert.Contains("## ⬇ Download ●", markdown);
         Assert.Contains("\n## 245.3 Mbps\n", markdown);
@@ -83,7 +83,7 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_Inactive_HasNoActiveMarker()
     {
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, 40.1, 50, active: false);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, new MeterFrame(40.1, 50), active: false);
 
         Assert.StartsWith("## ⬆ Upload\n", markdown, StringComparison.Ordinal);
         Assert.Contains("\n## 40.1 Mbps\n", markdown);
@@ -92,7 +92,7 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_WithValue_DrawsTextBarAsCode()
     {
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 245.3, 250, active: true);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(245.3, 250), active: true);
 
         // 245.3 of the 250 scale fills every cell (ADR-0006). No image: the SVG gauge waits for plan item 5.1.
         Assert.EndsWith("`▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰`\n", markdown, StringComparison.Ordinal);
@@ -104,7 +104,7 @@ public sealed class MeterMarkdownTests
     public void Meter_WithCallerScale_FillsBarAgainstThatScale()
     {
         // 9.5 alone would pick the 10 scale and fill 19 cells; the caller's 100 keeps the bar where the run left it.
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 9.5, 100, active: true);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(9.5, 100), active: true);
 
         Assert.EndsWith("`▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
     }
@@ -112,7 +112,7 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_NotMeasured_ShowsPlaceholderAndEmptyBar()
     {
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, null, 0, active: false);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, MeterFrame.Empty, active: false);
 
         Assert.Contains("\n## —\n", markdown);
         Assert.EndsWith("`▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
