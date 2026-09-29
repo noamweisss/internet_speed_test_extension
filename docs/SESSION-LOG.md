@@ -50,10 +50,18 @@ verified, blocked, next.
   in the download phase (12, 17, 21, 25, 27, 38, 46, 56): the bar vanished for one frame without moving the
   layout. At 800×480 the title, status, latency, download value, bar and scale line show without scrolling; the
   footer cuts the upload heading. The bar fell back once, at the 250 to 500 scale step.
+- CI run 36570235851 after the fix round: green (Core tests, rules, Windows extension build).
+- Second VM run after the fix round, 2026-09-29, build `c34480c`, same VM `SpeedTest-Win11` (PowerToys 0.101.2652,
+  Command Palette 0.12.12651, 1920×1080 at 100 %, palette 800×480, frames every 150 ms): 137 frames (one 1.8 s
+  capture stall at frame 12, a slow save in the VM); connecting at frame 1, latency 2, download 7, upload 47,
+  complete 88 (17.4 s). The page icon next to the back arrow is back (the base fix `444d929` restored the glyph).
+  9 blank frames in 40 download frames (7, 12, 13, 16, 21, 29, 34, 37, 45) plus one at connecting and one at the
+  start of upload; the bar vanishes for one frame with its space kept, so nothing jumps (first run: 8 of 44).
+  Title, status, latency, download value, bar and scale line are visible without scrolling; the footer cuts the
+  upload heading. The scale stepped 100 to 250 Mbps at frame 12 and the bar fell from 57 % to 43 %.
 - Branches A and B: their own builders' numbers go in their own entries.
 
 **Not verified**
-- The fix round in the VM: a second VM run follows it.
 - The 200 % display of the owner's laptop, where the width is rasterised at scale and the height is not (§4 rule
   3); the VM runs at 100 %.
 

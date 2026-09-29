@@ -72,11 +72,19 @@ vanished for one frame each time while its space stayed, so nothing jumped. At 8
 download value, bar and scale line show without scrolling; the footer cuts the upload heading. The bar fell back
 once, at the 250 to 500 Mbps scale step.
 
+A second run after the fix round (2026-09-29, same VM, build `c34480c`, 137 frames, one 1.8 s capture stall at frame
+12): connecting at frame 1, latency 2, download 7, upload 47, complete 88 (17.4 s). The flicker is about one frame in
+four: 9 blank frames in 40 download frames (7, 12, 13, 16, 21, 29, 34, 37, 45) plus one at connecting and one at the
+start of upload; the first run had 8 of 44. The bar still vanishes for one frame with its space kept, so nothing
+jumps. The scale stepped 100 to 250 Mbps at frame 12 and the bar fell from 57 % to 43 %. The upload heading is cut by
+the footer at 800×480, as before.
+
 ## Consequences
 - Needs PowerToys 0.95 or newer for `data:` images. An older host shows nothing where the bar is; the readout and
   the scale line still show.
 - The blank frame per rebuild (§5 step 5) is Verified in the VM run: 8 blank frames in 44 download frames at 4 Hz,
-  about one in five. The bar vanished for one frame each time while its space stayed, so nothing jumped.
+  about one in five; 9 in 40 in the second run, about one in four. The bar vanished for one frame each time while
+  its space stayed, so nothing jumped.
 - The scale steps up while a speed rises (10, 25, 50, 100, 250, 500 Mbps), and the bar falls back at each step
   (seen once in the VM run, 250 to 500). A follow-up may start a run at the previous run's scale.
 - On a 200 % display (the owner's laptop) the width is rasterised at scale and the height is not (§4 rule 3). The
