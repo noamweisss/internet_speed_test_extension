@@ -29,6 +29,28 @@ public sealed class MeterMarkdownTests
     }
 
     [Fact]
+    public void Render_WithValue_DrawsSvgGaugeWithBarAsAltText()
+    {
+        var snapshot = new SpeedTestSnapshot { Phase = SpeedTestPhase.Download, DownloadMbps = 245.3 };
+
+        var markdown = MeterMarkdown.Render(snapshot);
+
+        // 245.3 of the 250 scale fills every cell; the bar is the alt text, the gauge is the image.
+        Assert.Contains("![▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰](data:image/svg+xml;base64,", markdown);
+        Assert.Contains("](" + GaugeSvg.DataUri(245.3, 250) + ")\n\n", markdown);
+        Assert.DoesNotContain("`▰", markdown);
+    }
+
+    [Fact]
+    public void Render_Idle_DrawsEmptyGauges()
+    {
+        var markdown = MeterMarkdown.Render(SpeedTestSnapshot.Idle);
+
+        var emptyGauge = "![▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱](" + GaugeSvg.DataUri(0, 10) + ")";
+        Assert.Equal(2, markdown.Split(emptyGauge).Length - 1);
+    }
+
+    [Fact]
     public void Render_Any_ListsSectionsInMeasurementOrder()
     {
         var markdown = MeterMarkdown.Render(SpeedTestSnapshot.Idle);

@@ -14,7 +14,7 @@ namespace SpeedTest.Core.Tests;
 /// </summary>
 internal sealed class FakeCloudflareHandler : HttpMessageHandler
 {
-    private bool _firstProbeSeen;
+    private int _probesSeen;
 
     public List<Uri> Requests { get; } = new();
 
@@ -40,6 +40,14 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
     /// on a cold connection pays. Later probes answer at once.
     /// </summary>
     public TimeSpan FirstProbeDelay { get; set; }
+
+    /// <summary>
+    /// Zero-based index, among the measured probes (the ones after the warm-up), of one probe that answers only
+    /// after <see cref="SlowProbeDelay"/>: an isolated slow sample, as process scheduling produces. Null for none.
+    /// </summary>
+    public int? SlowProbeIndex { get; set; }
+
+    public TimeSpan SlowProbeDelay { get; set; }
 
     /// <summary>
     /// When positive, every zero-byte probe answers with a body of this many bytes and no Content-Length, like a
@@ -104,12 +112,18 @@ internal sealed class FakeCloudflareHandler : HttpMessageHandler
         }
 
         var bytes = long.Parse(request.RequestUri.Query.Replace("?bytes=", string.Empty), System.Globalization.CultureInfo.InvariantCulture);
-        if (bytes == 0 && !_firstProbeSeen)
+        if (bytes == 0)
         {
-            _firstProbeSeen = true;
-            if (FirstProbeDelay > TimeSpan.Zero)
+            // Probe 0 is the measurer's warm-up; measured probe i is probe i + 1. Probes run one at a time.
+            var probe = _probesSeen++;
+            if (probe == 0 && FirstProbeDelay > TimeSpan.Zero)
             {
                 await Task.Delay(FirstProbeDelay, cancellationToken);
+            }
+
+            if (SlowProbeIndex is { } slow && probe == slow + 1 && SlowProbeDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(SlowProbeDelay, cancellationToken);
             }
         }
 

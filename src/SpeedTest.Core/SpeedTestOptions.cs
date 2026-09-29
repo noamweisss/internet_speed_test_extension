@@ -11,8 +11,11 @@ public sealed record SpeedTestOptions
 {
     public static SpeedTestOptions Default { get; } = new();
 
-    /// <summary>Number of zero-byte requests used to estimate latency and jitter.</summary>
-    public int LatencySamples { get; init; } = 10;
+    /// <summary>
+    /// Number of zero-byte requests used to estimate latency and jitter. More samples make the median latency and
+    /// the median jitter steadier; each sample is one zero-byte request, so the phase grows by well under a second.
+    /// </summary>
+    public int LatencySamples { get; init; } = 20;
 
     /// <summary>Wall-clock length of the download phase and of the upload phase.</summary>
     public TimeSpan PhaseDuration { get; init; } = TimeSpan.FromSeconds(8);

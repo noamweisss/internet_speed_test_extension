@@ -36,8 +36,8 @@ Phases, in order, each reporting progress through `IProgress<SpeedTestSnapshot>`
 1. **Meta**: one request to `/meta` gives ISP, public IP, location, and the Cloudflare data centre serving the
    test. It is optional and size-bounded: on any failure the headers of the first latency probe fill in what they
    can. Shown in the UI, never persisted. Server-supplied text is markdown-escaped before display.
-2. **Latency**: N small `GET /__down?bytes=0` requests. Report median latency and jitter (mean absolute deviation of
-   consecutive samples). `server-timing` header is subtracted where present so server processing time is excluded.
+2. **Latency**: N small `GET /__down?bytes=0` requests. Report median latency and jitter (median of the absolute
+   differences between consecutive samples, ADR-0010). `server-timing` header is subtracted where present so server processing time is excluded.
 3. **Download**: several parallel `GET /__down?bytes=<size>` streams for a fixed duration; throughput is bytes
    received over elapsed time, sampled every ~200 ms for the live meter. Bytes are read and discarded.
 4. **Upload**: several parallel `POST /__up` streams of a fixed-size zero-filled body for a fixed duration.
@@ -49,11 +49,14 @@ the extension, which owns its lifetime.
 
 ## Views
 
-- **Meter** (`ContentPage` + `MarkdownContent`): the dashboard. v1 draws the meters as text (Unicode bars) because
-  Command Palette markdown has no native gauge and an image-based gauge is unverified (ADR-0006). Shows the phase in
-  progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns.
+- **Meter** (`ContentPage` + `MarkdownContent`): the dashboard. The meters are SVG gauges embedded as `data:` URIs
+  (ADR-0011), with the Unicode bar as the image's alt text for renderers that cannot show them. Shows the phase in
+  progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
+  the summary (`ResultSummary.PlainText`), `Ctrl+Shift+M` copies it as a markdown table.
 - **Details** (`ListPage`): one `ListItem` per value (download, upload, latency, jitter, ISP, IP, location, server,
-  test time). Each item's command copies the value. `Ctrl+L` opens Meter, `Ctrl+R` reruns.
+  test time). Each item's command copies the value. `Ctrl+L` opens Meter, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
+  the summary, `Ctrl+Shift+M` copies it as a markdown table. The summary leaves the IP address out; it is copyable
+  only from its own row.
 - **Default view**: `ChoiceSetSetting("defaultView")` in `SettingsManager`. The top-level command opens the chosen
   page. Both pages share one `SpeedTestSession`, so switching views never restarts a running test.
 

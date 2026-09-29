@@ -4,15 +4,15 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
-## Session 4 — 2026-09-28 — branch `chore/independent-reviewers`
+## Session 4b — 2026-09-28 to 2026-09-29 — branch `chore/independent-reviewers` (in parallel with session 4)
 
 **Final state (read this, the history below is how it got here)**
 - Two independent reviewers, both on plans the owner already pays for (ADR-0012); Codex on every pull
   request, Claude on every eligible one (into `main`, from a repository branch, not a draft):
   Codex (`chatgpt-codex-connector`, automatic, reads the `## Code Review Rules` section of `AGENTS.md`) and
   the Claude workflow `.github/workflows/review-claude.yml` (comment by `github-actions[bot]` headed
-  "Independent review (Claude)"). CodeRabbit is removed from the repository; the owner uninstalls the app after
-  PR #15, which still uses it.
+  "Independent review (Claude)"). CodeRabbit is removed from the repository and the owner uninstalled the app
+  on 2026-09-29, after PR #15 (which still used it) merged.
 - The Claude workflow's trust boundary, shaped by the Codex review rounds on PR #16 (listed at the end): event
   `pull_request_target` (workflow, prompt, `.claude/` settings from `main`); the PR head checked out into
   `pr-head` as data, symlinks deleted; the reviewer has no shell and no Grep, only `Read`, `Glob`, and `Write`
@@ -40,8 +40,8 @@ verified, blocked, next.
 - `scripts/check.sh all` green locally on every commit; workflow YAML parses (js-yaml); every collect-step
   command dry-run against this repository's own API data. No actionlint on this machine.
 - The owner installed the Claude GitHub App and added `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret during
-  the session; after round 15 it has to move into the `claude-review` environment (`docs/REVIEW-PROMPT.md`,
-  step 3) and the repository-level copy has to be deleted. The first
+  the session; after round 15 the owner created the `claude-review` environment and configured it
+  (2026-09-29, `docs/REVIEW-PROMPT.md`, step 3). The first
   run of the workflow on PR #16 (before the secret) took the skip path; a re-run with the secret reached the
   action, which refused to review because the file did not yet exist on `main` (its own check). With
   `pull_request_target` no run appears on PR #16 at all; the first real review lands on the next PR.
@@ -63,13 +63,13 @@ verified, blocked, next.
   in parallel so two reviewers see the same commit. The rules now ask reviewers for completeness in one pass.
 
 **Next**
-- Owner: create the `claude-review` environment (deployment branches: `main` only), add the token there, delete
-  the repository-level secret (`docs/REVIEW-PROMPT.md`, step 3); uninstall CodeRabbit after PR #15; on GitHub
-  Settings → Emails tick "Keep my email addresses private"
+- Owner: confirm the repository-level `CLAUDE_CODE_OAUTH_TOKEN` secret is deleted now that the environment
+  holds it; on GitHub Settings → Emails tick "Keep my email addresses private"
   and "Block command line pushes that expose my email".
 - After merge: watch the first real Claude review on the next PR; a Dependabot PR that shows the skip line is
   left to Codex.
-- Then plan session 4 (polish) as listed in `docs/PLAN.md`; PR #15 is already under way on another branch.
+- Session 4 (polish, PR #15) merged on 2026-09-29 while this branch was open; this branch merged `main` to
+  resolve the plan and hand-off conflicts. Next work: session 5 in `docs/PLAN.md`.
 
 **History of PR #16 (the Codex rounds, one entry each; the vendor's own review of our reviewer)**
 1. `pull_request` let a same-repository PR edit the workflow and run the edited copy with the secret. Now
@@ -133,6 +133,82 @@ verified, blocked, next.
   heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
   where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the
   no-merge and thread-resolution rules, and CodeRabbit's removal were folded in along the way.
+
+## Session 4 — 2026-09-28 to 2026-09-29 — branch `feat/session-4-polish`
+
+**Done** (three implementation subagents in parallel, one per plan item, with file ownership; the lead reviewed,
+fixed two things in 4.1, wrote the changelog and committed)
+- Harness branch renamed to `feat/session-4-polish` (AGENTS.md §4). Toolchain in the cloud container: .NET SDK
+  10.0.401 under `/root/.dotnet` (not on `PATH`), 79 tests green, `scripts/check.sh all` green at the start.
+- Plan item 4.3 (7d266d6), the jitter decision left open by session 3: `Statistics.Jitter` is the median, not the
+  mean, of the absolute consecutive differences, and `LatencySamples` is 20 (ADR-0010). Test-first: one 300 ms
+  probe among six leaves jitter under 50 ms (the mean gave about 120). Also from session 3's "found, not fixed":
+  `ServerTiming.DurationMs` sums every `dur=` across all header values. 8 tests added.
+- Plan item 4.1 (68d6fc1): Microsoft documents `data:` images in `MarkdownContent` since PowerToys 0.95 (Learn,
+  "Display markdown content in Command Palette extensions"; the PowerToys `SampleMarkdownImagesPage` embeds a
+  base64 SVG). `GaugeSvg` draws a semicircular arc (track plus progress, 318 bytes, no text, theme-neutral colours),
+  `MeterMarkdown` embeds it as `![<Unicode bar>](data:image/svg+xml;base64,...)` so the old bar is the alt text.
+  ADR-0011 supersedes ADR-0006. Lead's fixes: the subagent had used single quotes to slip the `xmlns` past rule R6
+  ("workaround", a SAFETY-CONTRACT §2 red flag); R6 now scans any quote style and names the SVG namespace as the one
+  allowed `http://` string (`Guard-Change:` trailer, safety impact in the PR). The track colour `#80808080` became
+  `stroke-opacity='0.5'`, since Direct2D's SVG renderer is SVG 1.1 and does not know 8-digit hex colours. 8 tests.
+- Plan item 4.2 (14af51e): `ResultSummary.PlainText` and `.Markdown` in Core (6 tests), `Ctrl+Shift+C` and
+  `Ctrl+Shift+M` in `ViewCommands` on both views. `ClipboardHelper.SetText` and `CommandResult.ShowToast` verified
+  against the toolkit DLL inside the `Microsoft.CommandPalette.Extensions` 0.9.260303001 package (metadata dump in
+  the scratchpad, nothing in the repo). The summary omits the IP address on purpose (documented in the class).
+  Subagent finding worth keeping: the Claude Code Write tool strips Segoe private-use glyphs (U+E7xx, U+E8xx); the
+  "Run again" icon was blanked and restored by code point (0xE72C). Check glyphs after any write to a page file.
+- Plan item 4.4 researched, deferred: the decision and the sources are in `docs/PLAN.md`. Short form: Microsoft's
+  WinGet route swaps the MSIX for an Inno Setup `.exe` (Program Files, admin rights, COM class in the registry),
+  which breaks SAFETY-CONTRACT §1 and ADR-0008; the Store route keeps the MSIX and Microsoft signs it, but needs the
+  owner's Partner Center account and identity values in `Package.appxmanifest`. Owner's call, ADR when taken.
+
+**Verified**
+- `dotnet test tests/SpeedTest.Core.Tests`: 101 passed (79 + 22). `scripts/check.sh all` green after the R6 change.
+- CI run 36429657652 on 10d970b (PR [#15](https://github.com/noamweisss/internet_speed_test_extension/pull/15)):
+  all jobs green, including the Windows build, the first compile of the new `ViewCommands.cs`, the safety-impact
+  check on the R6 change, and CodeQL.
+- Codex review of PR #15 (2 findings, both valid, fixed in 51b8203): the R6 exemption dropped whole lines, so a
+  suffixed namespace or a second URL on the same line passed (now only the exact quoted token is removed before the
+  scan; both bypasses were reproduced with a probe file and fail again); `/meta` text with a line break could add
+  lines to the plain summary (control characters become spaces, test added). 102 tests.
+- CodeRabbit review of PR #15 (5 findings, all fixed): the R6 exemption is now the exact `xmlns` attribute only;
+  the gauge's progress arc had the large-arc flag set above 50 %, sending it the long way round below the
+  baseline (a real bug the subagent's tests had encoded as expected output); `Server-Timing` parsing skips quoted
+  descriptions and bounds each value and the sum at 60 s; the summary heading is one line too. 108 tests.
+  CodeRabbit's docstring-coverage warning (80 % threshold) is not acted on: `docs/CONVENTIONS.md` wants comments
+  that explain why, not one per method. Second CodeRabbit pass, 2 findings, both fixed: `otherxmlns=` slipped past
+  the R6 exemption (now a whole-word match), and a backslash-escaped quote inside a `Server-Timing` description
+  ended the quoted string early (quoted-pairs handled, 2 tests). 110 tests. Third pass, 1 finding: `x-xmlns=`
+  passed the word boundary (a hyphen is not an identifier character); the exemption is now the literal
+  `<svg xmlns='...'` start tag, the only spelling the code uses, so no boundary rule is needed. Fourth pass, 1 finding:
+  the exemption now applies to `src/SpeedTest.Core/GaugeSvg.cs` alone; every other file gets the plain rule.
+  CodeRabbit approved head 48baf41 on 2026-09-28 (review 5344094661); CI run 36468774687 green on that head;
+  110 tests; all 11 review threads resolved; merge state clean.
+- Owner's run in the VM (2026-09-29, build 48baf41): the gauge arcs render as `data:` SVG images in
+  `MarkdownContent` and follow the measurement (ADR-0011 verified on PowerToys 0.101), the values are correct, and
+  jitter is plausible again (plan item 4.3 verified). The owner's verdict on the gauge itself: the layout and the
+  animation are "not very good"; a session 5 item, not a blocker for this PR.
+
+**Not verified**
+- The copy commands (`Ctrl+Shift+C`, `Ctrl+Shift+M`) and the gauge in the other theme were not reported from the
+  VM run; `docs/TESTING.md` step 6 covers the copy commands.
+- The power-throttling suspicion from session 3 is still unproven: Task Manager → Details → "Power throttling"
+  column for `internet_speed_test_extension.exe` during a test, on battery and on mains. The median hides the
+  spikes either way; the check only tells whether the suspicion was right.
+- Session 2 leftovers: `Ctrl+L`, `Ctrl+R`, copy a row, default-view setting.
+
+**Found, not fixed**
+- The cloud container's `dotnet` is not on `PATH` (`/root/.dotnet/dotnet`); the SessionStart hook could export it.
+- Two leftover worktrees under `.claude/worktrees/` from earlier sessions (not touched, G6 blocks branch deletion).
+
+**Next**
+- Owner: merge PR #15, then publish a `v0.2.0` release the same way as `v0.1.0` (session 3).
+- Session 5, item 5.1 (`docs/PLAN.md`): the gauge's layout and animation. Start by asking the owner what looked
+  wrong (size, placement under the heading, the arc jumping between progress reports, colours in their theme) and
+  whether a screenshot of the VM is available; the SVG is a pure function in `GaugeSvg`, so every layout change is
+  unit-testable, but only a run on Windows shows the result. Other candidates: 4.3 streams and durations (nothing
+  asked for it), 4.4 Store publishing (owner decision), the `dotnet` PATH line in the SessionStart hook.
 
 ## Session 3 — 2026-09-28 — branch `fix/connection-info-and-jitter`
 

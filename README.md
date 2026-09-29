@@ -6,6 +6,7 @@ measures download, upload, and latency from inside the palette, modelled on the
 
 - **Meter view**: a dashboard that follows the running test (latency → download → upload).
 - **Details view**: every measured value as a list, one keystroke away (`Ctrl+L`), each copyable.
+- **Copy the result** from either view: `Ctrl+Shift+C` as plain text, `Ctrl+Shift+M` as a markdown table.
 - **Configurable default view** in the extension's settings.
 - Measures against Cloudflare's public speed-test endpoints with plain HTTPS. No third-party executables, nothing
   downloaded at runtime, no accounts (see `docs/decisions/ADR-0002-cloudflare-backend.md`).
