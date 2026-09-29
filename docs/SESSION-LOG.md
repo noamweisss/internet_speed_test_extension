@@ -81,6 +81,14 @@ verified, blocked, next.
   deny, turn the two `Write(...)` denies into `Edit(...)`) is a workflow change for its own PR into `main`,
   described in a PR #19 comment and queued as a task for the owner.
 
+- First real Claude review (on 77e0f10, after PR #21): one Blocker, the new `AGENTS.md` subsection is a guard
+  change without an ADR. Fixed with ADR-0015, linked from the subsection and from "Safety impact". Its Minor
+  on the subsection's wording is fixed. Its other Minor is pre-existing and outside this PR: the illustrative
+  guard list in safety question 4 (`docs/REVIEW-PROMPT.md` and the workflow prompt) omits `AGENTS.md` and
+  `CLAUDE.md`; it belongs in the stop-rule PR, which changes rule files only.
+- Stop rule applied from here: Codex round 15 was clean, no further Codex round was requested; the Claude
+  review re-runs once on the fix (a body edit triggers it) and the PR then goes to the owner.
+
 **Not verified**
 - Nothing in the two documents was run on Windows: the pipeline is Verified from source, what it looks like
   on screen is Inferred, and §16 of the technical document lists the seven questions for the owner's PC (first: whether the blank frame of a

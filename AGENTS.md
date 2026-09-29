@@ -146,9 +146,9 @@ Wording and tone are P3.
 
 ### Documentation-only pull requests
 
-A pull request is documentation-only when every file in its diff is a document that states no rule: a `.md`
-file at the repository root or under `docs/`, or a `.html` file under `docs/`, and none of the rule files,
-which are exactly `AGENTS.md`, `CLAUDE.md`, everything under `.github/`, `docs/SAFETY-CONTRACT.md`,
+ADR-0015 records this decision. A pull request is documentation-only when every file in its diff is a document
+that states no rule: a `.md` file at the repository root or under `docs/`, or a `.html` file under `docs/`, and
+not one of the rule files, which are exactly `AGENTS.md`, `CLAUDE.md`, everything under `.github/`, `docs/SAFETY-CONTRACT.md`,
 `docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`, `docs/CONVENTIONS.md` and `docs/TESTING.md`. Status and record
 files are documents (`docs/PLAN.md`, `docs/SESSION-LOG.md`, `CHANGELOG.md`, `README.md`, `docs/INSTALL.md`,
 `docs/ARCHITECTURE.md`, the ADRs, research documents and their explainers), so the hand-off and plan updates
