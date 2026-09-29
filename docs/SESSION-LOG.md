@@ -4,6 +4,30 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 5 — 2026-09-29 — branch `docs/cmdpal-rendering-research` (research, no code)
+
+**Why**
+- The owner, before plan item 5.1: find out exactly how Command Palette renders extension content (markdown,
+  images and SVG, icons, grid layouts, Adaptive Cards, live updates), with sources, so the gauge can be redrawn
+  against facts instead of the "lists and markdown" summary of session 4. Two deliverables: a technical document
+  for building agents and an HTML explainer for the owner.
+
+**Done (in progress; this entry is completed at the end of the session)**
+- `AGENTS.md` Code Review Rules gain "Documentation-only pull requests" (2da315d, `Guard-Change:` trailer), so
+  both reviewers apply the documentation rules to a PR with no code instead of asking for tests and ADRs;
+  `docs/CONVENTIONS.md` names the owner-facing HTML explainer (`docs/UPPERCASE.html`), `docs/REVIEW-PROMPT.md`
+  points at the subsection.
+- Five research subagents in parallel (markdown renderer, icons and grids, Adaptive Cards, update and animation
+  mechanics, official docs and precedents); their reports are merged into `docs/CMDPAL-RENDERING.md` and
+  `docs/CMDPAL-RENDERING.html`.
+
+**Verified**
+- The `html-artifacts` skill the owner uploaded is byte-identical to the account-synced copy the cloud container
+  already has (`~/.claude/skills/synced/…/html-artifacts`), so nothing had to be installed for future sessions.
+
+**Next**
+- Finish the two documents, screenshot-check the HTML page, open the PR, get both reviewers to agree.
+
 ## Session 4a — 2026-09-29 — branch `chore/release-v0.1.1` (unplanned, local session on the owner's laptop)
 
 **Why**
