@@ -53,14 +53,14 @@ All three share a base branch with options 1 and 2 and differ in how a speed is 
 The SVG gauge of ADR-0011 is not restored, and `GaugeSvg` stays out of the code. Reasons: the §14 diagnosis; the
 §15 ranking, where a text meter is the cheapest smooth and eased option and needs no new capability; the blank
 frame on every rebuild of a markdown image, which options 1 and 2 do not remove; the 256-DIP cap and the
-DPI-dependent rasterisation of `data:` images; and R14, under which restoring `GaugeSvg` needs its R6 exemption in
-`scripts/check.sh` merged first in a separate rules pull request.
+DPI-dependent rasterisation of `data:` images. (A restored `GaugeSvg` needs no R6 exemption: the SVG root carries no
+`xmlns`, which the session 5 research and the VM runs verified renders fine, so R14 forces no separate rules pull request.)
 
 Two alternatives were built on the same base, on their own branches, for the owner to compare on the VM:
 
 - **B, SVG arc gauge** (`feat/meter-arc-gauge`): `GaugeSvg` restored from `6034b22` with a numeric root size and a
-  `viewBox`, in its own block, ticking at 250 ms. It needs the R6 exemption pull request
-  (`chore/r6-exempts-gauge-svg`) merged first, and keeps the blank frame and DPI-dependent size of §14.
+  `viewBox` and no `xmlns`, in its own block, ticking at 250 ms. It keeps the blank frame and DPI-dependent size
+  of §14.
 - **C, SVG horizontal bar** (`feat/meter-svg-bars`): a bar drawn by `GaugeSvg`, same block and tick, same
   constraints as B.
 
@@ -72,7 +72,7 @@ fold at 800×480, and needs one pull request.
   meter works on any host that renders markdown with fenced code blocks.
 - Every `docs/SAFETY-CONTRACT.md` §3 answer stays "No": no host, file, dependency, capability or guard changes; the
   timer and the formatting are in-process.
-- `GaugeSvg` and its R6 exemption stay out of the code; R6 keeps no exception.
+- `GaugeSvg` stays out of the code; R6 keeps no exception.
 - ADR-0006's `▰▱` bar is replaced by this one. ADR-0013's plan to restore the gauge in 5.1 is replaced by this
   decision.
 - The scale steps up while a speed rises (10, 25, 50, 100, 250, 500 Mbps), and the bar shortens at each step:

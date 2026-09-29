@@ -86,7 +86,8 @@ verified, blocked, next.
 - After merge: the release.
 - The backlog branches `feat/meter-arc-gauge` (B) and `feat/meter-svg-bars` (C) stay on GitHub; they need no
   rules branch (no `xmlns`, so no R6 exemption). Plan 5.3 says when to revisit them.
-- Follow-ups: a run starts at the previous run's scale, so the bar does not shorten at each scale step; a rules
+- Follow-ups, not built: make a run start at the previous run's scale, so the bar does not shorten at each scale step
+  (today a new run publishes null speeds and `MeterEasing.Next` resets the frame, so the scale starts from 10 Mbps); a rules
   pull request rewords the stale R6 comment in `scripts/check.sh` (the gauge exemption "returns with it, 5.1"), a
   guard file, so on its own branch (R14).
 
