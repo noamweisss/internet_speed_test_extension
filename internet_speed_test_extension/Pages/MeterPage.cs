@@ -7,7 +7,7 @@ using SpeedTest.Core;
 namespace SpeedTest.Extension.Pages;
 
 /// <summary>
-/// The meter dashboard (ADR-0006): four markdown blocks rendered by <see cref="MeterMarkdown"/>, returned as the same
+/// The meter dashboard (ADR-0017): four markdown blocks rendered by <see cref="MeterMarkdown"/>, returned as the same
 /// instances every time. The host rebuilds a block whole when its Body changes and leaves the others alone
 /// (docs/CMDPAL-RENDERING.md §5), so a live download value does not re-parse the heading or the connection line.
 /// Never RaiseItemsChanged here: the host answers it by calling GetContent again on the same thread
