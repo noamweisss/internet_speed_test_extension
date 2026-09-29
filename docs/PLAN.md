@@ -49,6 +49,7 @@ Expected state at the end of session 3: a usable v0.1.0 you can install and run 
 
 | # | Item | Status |
 |---|------|--------|
+| 4.0 | Independent reviewers on every PR without the hourly wait: Claude review workflow on the owner's subscription, Codex rules in `AGENTS.md`, commit identities (ADR-0012) | done (owner setup completed 2026-09-29: `claude-review` environment with the token, CodeRabbit uninstalled; first real Claude review lands on the next PR into `main`) |
 | 4.1 | Meter view as an image gauge if the markdown renderer supports it (ADR-0006 revisit) | verified (ADR-0011: SVG speedometer as a `data:` image; owner's VM run 2026-09-29 on PowerToys 0.101: the arcs render and follow the test). Layout and animation still need work: item 5.1 |
 | 4.2 | Copy full summary; optional "result as markdown" | done (`Ctrl+Shift+C` plain text, `Ctrl+Shift+M` markdown table, both views) |
 | 4.3 | Measurement tuning (parallel streams, durations) against real connections | verified for jitter (ADR-0010: median of consecutive differences, 20 samples; `Server-Timing` durations summed; owner's run 2026-09-29: jitter plausible). Streams and durations unchanged: the VM and laptop numbers were plausible, nothing asked for it |

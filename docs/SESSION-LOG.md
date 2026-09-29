@@ -4,6 +4,136 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 4b — 2026-09-28 to 2026-09-29 — branch `chore/independent-reviewers` (in parallel with session 4)
+
+**Final state (read this, the history below is how it got here)**
+- Two independent reviewers, both on plans the owner already pays for (ADR-0012); Codex on every pull
+  request, Claude on every eligible one (into `main`, from a repository branch, not a draft):
+  Codex (`chatgpt-codex-connector`, automatic, reads the `## Code Review Rules` section of `AGENTS.md`) and
+  the Claude workflow `.github/workflows/review-claude.yml` (comment by `github-actions[bot]` headed
+  "Independent review (Claude)"). CodeRabbit is removed from the repository and the owner uninstalled the app
+  on 2026-09-29, after PR #15 (which still used it) merged.
+- The Claude workflow's trust boundary, shaped by the Codex review rounds on PR #16 (listed at the end): event
+  `pull_request_target` (workflow, prompt, `.claude/` settings from `main`); the PR head checked out into
+  `pr-head` as data, symlinks deleted; the reviewer has no shell and no Grep, only `Read`, `Glob`, and `Write`
+  of the single path `$RUNNER_TEMP/review/review.md`, with `/proc`, `~/.claude`, and the runner's command files
+  denied; a trusted step collects `pr.diff` (a diff over 2 MiB is not reviewed, a notice is posted instead),
+  `pr.json` (last 50 commits, first 100 changed files, total counts), and the reviewer's last two earlier
+  comments (128 KB cap), all from one GraphQL request with explicit bounds, failing closed on any failed
+  fetch; a trusted step posts `review.md` after a token check and a size check. The token is an environment
+  secret (`claude-review`, deployment-branch policy `main` only), never a repository secret, and the job runs
+  only for pull requests into the default branch. Drafts wait, fork PRs are skipped, Dependabot PRs are
+  reviewed when GitHub grants the environment to their run (`docs/REVIEW-PROMPT.md`).
+- Rules (`AGENTS.md` §2 and "Code Review Rules"): agents never merge unless the owner asks for that PR with a
+  reason; reviews are comments, never verdicts; a thread is resolved by the building agent only after the
+  reviewer that opened it reviewed the fixed commit without repeating the finding, naming that review;
+  reviewers guard safety, maintainability (eight concrete habits, P1), and documentation (separate list, P1
+  or P2) with the same weight. "Require conversation resolution" stays on in the `main` ruleset as the gate.
+- Commit identity (`docs/CONVENTIONS.md`): agent commits carry author `Claude Code` via the `env` block in
+  `.claude/settings.json`, committer stays the owner, every identity uses the GitHub noreply address. The
+  owner's real e-mail was the git author on 21 of 89 commits; the global git config now uses the noreply
+  address and the old commits stay (no history rewrite).
+- Numbering: this session's ADR is ADR-0012 because PR #15 (`feat/session-4-polish`) takes ADR-0010 and
+  ADR-0011.
+
+**Verified**
+- `scripts/check.sh all` green locally on every commit; workflow YAML parses (js-yaml); every collect-step
+  command dry-run against this repository's own API data. No actionlint on this machine.
+- The owner installed the Claude GitHub App and added `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret during
+  the session; after round 15 the owner created the `claude-review` environment and configured it
+  (2026-09-29, `docs/REVIEW-PROMPT.md`, step 3). The first
+  run of the workflow on PR #16 (before the secret) took the skip path; a re-run with the secret reached the
+  action, which refused to review because the file did not yet exist on `main` (its own check). With
+  `pull_request_target` no run appears on PR #16 at all; the first real review lands on the next PR.
+- Codex reads the rules: from round 6 on it cites the "Code Review Rules" section by line on every finding,
+  and round 7 produced the first P2 documentation finding.
+
+**Not verified**
+- A complete real run of the Claude workflow (collect, review, post) on a PR after this one merges.
+- Whether the `env` block sets the author on the next agent session (this session set it inline per commit).
+- Whether GitHub grants the `claude-review` environment to Dependabot-triggered `pull_request_target` runs; if
+  not, those PRs are left to Codex (`docs/REVIEW-PROMPT.md`, step 5).
+
+**Lesson for the next building agent**
+- Stop rule (owner's call on PR #16, recorded in `docs/REVIEW-PROMPT.md`): a round with no Blocker or Major
+  in code ends the loop; fix what is cheap, do not request again, hand the PR to the owner.
+- PR #16 took many Codex rounds (the history below). The first seven were a chain where each fix opened the
+  next hole; most of the rest were documentation that still described an earlier design. Before requesting a review round: grep every doc
+  for the facts a design change touched, batch all fixes into one push, and expect the Claude workflow to run
+  in parallel so two reviewers see the same commit. The rules now ask reviewers for completeness in one pass.
+
+**Next**
+- Owner: confirm the repository-level `CLAUDE_CODE_OAUTH_TOKEN` secret is deleted now that the environment
+  holds it; on GitHub Settings → Emails tick "Keep my email addresses private"
+  and "Block command line pushes that expose my email".
+- After merge: watch the first real Claude review on the next PR; a Dependabot PR that shows the skip line is
+  left to Codex.
+- Session 4 (polish, PR #15) merged on 2026-09-29 while this branch was open; this branch merged `main` to
+  resolve the plan and hand-off conflicts. Next work: session 5 in `docs/PLAN.md`.
+
+**History of PR #16 (the Codex rounds, one entry each; the vendor's own review of our reviewer)**
+1. `pull_request` let a same-repository PR edit the workflow and run the edited copy with the secret. Now
+   `pull_request_target` with the PR head in `pr-head` (the action's security guide pattern).
+2. `Bash(gh pr comment:*)` let a prompt-injected reviewer post `/proc/self/environ`. Now a trusted step posts
+   a fixed file after a token check.
+3. Any allowed `gh` command let shell expansion print token fragments into the public log. Now no shell; a
+   trusted collect step writes the inputs as files in `$RUNNER_TEMP/review`, outside the checkout so the
+   project's Stop hook (S1) does not fire.
+4. A blanket `Write` could reach the runner's command files and plant `BASH_ENV` for the next step. Now one
+   writable path, command-file directory denied.
+5. A committed symlink to `/proc/self/environ` would be read under the `pr-head` path. Now symlinks deleted.
+6. The earlier-reviews file was unbounded. Now the last two, 128 KB cap. (First attempt 501e502 combined
+   `gh api --slurp` with `--jq`, which gh refuses; 019e733 pipes into `jq`.)
+7. P0: the Grep tool's ripgrep inherits the token and searches `/proc`. Grep removed. P1: pagination downloaded
+   every comment before the cut; now one GraphQL request for the last 30. P2: ADR still counted three reviewers.
+8. Dependabot secrets (not reproduced: GitHub documents `pull_request_target` as exempt; docs state the
+   condition and a fallback), unbounded diff and commit list, this hand-off's stale opening, and a stale plan
+   status.
+9. P1: without `pipefail` a failed `gh pr diff` behind `head` still succeeded and the reviewer could review an
+   empty diff. Now `set -euo pipefail`, every fetch writes a full file before the cap, an empty diff stops the
+   job. P2: the workflow header still said "three Codex reviews".
+10. Not reproduced: a missing `Guard-Change` trailer on commit `cd475ab`, which does not exist in this
+    repository (a merge commit built in the review sandbox); all 17 guard commits on the branch carry the
+    trailer, hook-enforced, and the `main` ruleset allows merge commits only. Answered with the list.
+11. P1: a diff truncated at 2 MiB left later files unexamined behind a clean-looking review. Now a diff over
+    2 MiB is not reviewed; the job posts a notice and skips the reviewer; `pr.json` carries the changed-file
+    list. P2: this hand-off still counted eight rounds; counts removed.
+12. Two P2s: `gh pr view --json commits,files` fetches only the first 100 of each, so "last 50 commits" was
+    commits 51 to 100 and "up to 500 files" was 100; now one GraphQL request with `commits(last:50)`,
+    `files(first:100)`, and the total counts. And REVIEW-PROMPT.md claimed Codex posts only P0 and P1, which
+    its own P2 findings on this PR contradict; reworded.
+13. Two P2s in `docs/SECURITY.md`: "every PR" qualified to eligible PRs (repository branches, not drafts, no
+    forks), and the threat-model row "Secrets: none exist" now separates the extension (none) from the
+    repository (one Actions secret for the review workflow).
+14. P1: `gh pr diff` and the metadata query read the PR's current state while `pr-head` is the event's head,
+    so a push during the run could mix two revisions. Now the diff comes from the compare API between the
+    event's exact base and head SHAs, the comment names the reviewed commit, and the posting step re-reads
+    the PR head and skips a stale result.
+15. P0: on `pull_request_target` the workflow and the root checkout come from the base branch, which for a PR
+    into a side branch is author-controlled, so its `.claude/` hooks would run with the token. Wider than
+    Codex said: GitHub gives repository secrets to a workflow on any branch, so any branch with its own
+    workflow could read the token. Fix: the token moves into the `claude-review` environment with a
+    deployment-branch policy of `main` only, the job runs only for PRs into the default branch, and the root
+    checkout names that branch. Owner step: create the environment, move the secret.
+16. Five findings in one round, the completeness rule at work. P1: a PR body edited after collection left the
+    reviewed "Safety impact" text stale; now `edited` triggers a run and the posting step compares a hash of
+    the reviewed body with the current one. P1: the setup guide gave two contradictory Dependabot fallbacks;
+    one now (left to Codex). P1: the ADR still called the token a repository secret in one place. Two P2s:
+    a stale severity sentence in the ADR and a stale round count here.
+17. P1: the compare API diffs at most 300 changed files, so a PR with more (under 2 MiB) got a silently
+    incomplete diff; now such a PR is not reviewed and a notice is posted, like the size cap. P1: the ADR's
+    Dependabot consequence still pointed at the removed extra-secret fallback. Two P2s: "every pull request"
+    qualified to eligible ones in the workflow header, the ADR, and this entry; plan item 4.0 now separates
+    implementation (done) from the owner's environment setup (pending).
+18. P1: the root checkout tracked the tip of `main` while the diff used the event's base SHA; now the checkout
+    is pinned to that base SHA (a commit of `main`) and the comment names both SHAs. Codex also asked to drop
+    the review when `main` advances during the run; not done, since a base push starts no new run and the
+    PR would silently get no review. Last round by the owner's stop rule.
+- Also this session: Codex ignored the rules while the heading was `## 5. Code review rules`; the exact
+  heading `## Code Review Rules` with `###` groups is required, and Codex posts P0 and P1 by default (P2 only
+  where a rule asks, as the documentation rule does), which is why the early rounds showed one finding each. The owner's requests for maintainability and documentation rules, the
+  no-merge and thread-resolution rules, and CodeRabbit's removal were folded in along the way.
+
 ## Session 4 — 2026-09-28 to 2026-09-29 — branch `feat/session-4-polish`
 
 **Done** (three implementation subagents in parallel, one per plan item, with file ownership; the lead reviewed,

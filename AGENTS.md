@@ -29,6 +29,11 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 - Before a session ends, `docs/SESSION-LOG.md` gets a hand-off entry if anything changed.
 - A PR that touches a safety-sensitive file (`docs/SAFETY-CONTRACT.md` §2) must explain, in plain language, what
   the extension can now do that it could not before, under "Safety impact" in the PR body (R13).
+- Merging a pull request is the owner's decision. An agent merges only when the owner asks for that specific PR
+  in the current session and says why; the request is quoted in `docs/SESSION-LOG.md`. Reviews are comments,
+  never verdicts. A review thread is resolved by the building agent only after the reviewer that opened it has
+  reviewed the fixed commit and not repeated the finding; the resolving reply names that review. The owner may
+  resolve or dismiss anything.
 
 ## 3. Non-negotiables (judgement, reviewed by humans and audit agents)
 
@@ -71,3 +76,80 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 | `install/` | `Install-SpeedTestExtension.ps1`: the owner's install script (Windows, ADR-0008). Safety-sensitive (R13). |
 | `.github/workflows/` | CI: Windows build, package, and install test of the extension; Core tests; `check.sh all`. |
 | `docs/` | Plan, architecture, conventions, security, testing, session log, ADRs. |
+
+## Code Review Rules
+
+For every reviewing agent (Codex reads this section; the Claude workflow is told to read it) and every human
+reviewer. The full prompt is `docs/REVIEW-PROMPT.md`; its severities map P0 = Blocker, P1 = Major, P2 = Minor,
+P3 = Nit. The owner wants two things guarded with equal weight: the safety promises, and a codebase that stays
+small, tested, and cheap to change.
+
+### Safety questions
+
+Answer the five questions of `docs/SAFETY-CONTRACT.md` §3 on every pull request, each with Yes or No and a
+file:line for every Yes. A Yes without a linked ADR in `docs/decisions/` is P0: the extension reaching a host
+other than speed.cloudflare.com; reading, writing, or deleting files, registry keys, or processes; storing,
+logging, or sending anything about the user (IP, ISP, location, results); a new dependency, Windows capability,
+or weakened guard; network input used without bounds on size, time, or format.
+
+### Guards
+
+A change under `.githooks/`, `.claude/`, `scripts/`, `.github/workflows/`, `AGENTS.md`, or `CLAUDE.md` that
+makes a rule weaker, adds a bypass, or removes a check is P1 unless the pull request's "Safety impact" section
+justifies it and names an ADR. A workflow that holds a secret and executes anything a pull request controls
+is P0.
+
+### Correctness
+
+A finding that crashes, hangs, or mis-measures on a real input is P1: say what goes wrong, under which input,
+and the smallest fix, and verify it against the code before posting. Treat a network read without a byte
+bound or a timeout as P1. Style is never above P3.
+
+### Design and maintainability
+
+The project is deliberately small (`docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`). Each of these is P1, with
+the file:line and the smaller alternative:
+
+- Logic in the wrong layer: measurement, parsing, formatting, or maths added under `internet_speed_test_extension/`
+  instead of `src/SpeedTest.Core` (ADR-0003). The extension is a thin adapter over Core.
+- Testable logic without a unit test in `tests/SpeedTest.Core.Tests`, or a bug fix without the test that would
+  have caught it (`docs/TESTING.md`).
+- A second copy of a calculation, a parser, or a constant instead of a call to the existing one. A constant
+  that belongs in `SpeedTestOptions` or `CloudflareEndpoints` hard-coded elsewhere.
+- Speculative structure: an interface, base class, option, setting, or parameter with one implementation or
+  no caller. Less code is better; delete over add.
+- Hot paths: work started inside `GetItems()` or `GetContent()`, `RaiseItemsChanged()` called from them or
+  from code they call, or a network call, file read, or large allocation per render.
+- Waste on the measurement path: an `HttpClient` created per call, a task never awaited, a stream or response
+  never disposed, a loop that spins or polls without delay, per-sample allocations inside the sampling loop.
+- State outside `SpeedTestSession`: new statics, singletons, or shared mutable fields; Core stays stateless per
+  run.
+- A name that needs a comment to be understood, a placeholder or generated name, a file holding more than one
+  type (`docs/CONVENTIONS.md`).
+
+Formatting, comment wording, and ordering are P3 at most.
+
+### Documentation and instructions
+
+Report these in a separate list from code findings, never mixed with them. Each is P1 when it could send an
+agent or a human the wrong way, P2 otherwise:
+
+- A document that contradicts the code, another document, or an ADR (a status, a file name, a rule, a number).
+- An instruction in `AGENTS.md`, `docs/`, a hook message, or a PR template that can be read two ways, names a
+  file or rule that does not exist, or asks for something the guards prevent.
+- A change in behaviour, guard, or interface without the matching change in `docs/`, `CHANGELOG.md`, or an ADR.
+- A hand-off note (`docs/SESSION-LOG.md`) or plan status that does not match what the pull request did.
+
+Wording and tone are P3.
+
+### Completeness
+
+Report in one review everything you can verify, across every group above; never keep a finding for the next
+round. A pull request should need one fix round, not a dozen. If a fix would open a new hole, say so in the
+same finding.
+
+### Conduct
+
+Review the code, not other reviewers' threads or the author's replies. Never change code, never approve or
+request changes, never speak for another reviewer. On a re-review, do not repeat a finding the current head
+has fixed; a finding not repeated counts as fixed.
