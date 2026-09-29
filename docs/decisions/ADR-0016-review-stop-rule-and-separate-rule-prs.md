@@ -43,8 +43,7 @@ keeps working; the log line starts with `RULE R14`.
   pull request merges first.
 - A merge of `main` into a branch does not trip the check: CI compares the pull request's merge commit with its
   base, so only the branch's own changes count.
-- PR #19, still open, fails R14 once this merges: its `AGENTS.md`, `docs/CONVENTIONS.md` and
-  `docs/REVIEW-PROMPT.md` changes and its ADR-0015 move to their own pull request, or PR #19 merges first.
-  This ADR takes number 0016 because PR #19 already holds 0015.
+- PR #19 merged before this rule and would have failed it (its two research documents next to rule files).
+  ADR-0015 is its decision; this one is 0016.
 - Documentation threads can stay open after the stop. The owner resolves or dismisses them (`AGENTS.md` §2).
 - Every `docs/SAFETY-CONTRACT.md` §3 answer stays "No": the change adds a check and weakens none.

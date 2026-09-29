@@ -19,21 +19,118 @@ verified, blocked, next.
   except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and `docs/decisions/`. Written in `AGENTS.md` §2,
   the Guards group of "Code Review Rules", `docs/SECURITY.md`, `docs/SAFETY-CONTRACT.md` §2, `docs/CONVENTIONS.md`.
   ADRs are allowed because the Guards rule asks a guard change to name one. The CI job keeps its name.
-- ADR-0016 (0015 is taken by PR #19's branch).
+- ADR-0016 (PR #19 holds ADR-0015). `main` merged in after PR #19 landed; the log conflict kept both entries.
 
 **Verified**
 - `scripts/check.sh all` green. R14 replayed on every merge commit of `main` from PR #4 on: PRs #18, #20, #21,
-  the Dependabot PRs and the code-only PRs pass; #15, #16, #17 would have failed (listed in ADR-0016). PR #19's
-  branch fails with its two research documents named.
+  the Dependabot PRs and the code-only PRs pass; #15, #16, #17 would have failed (listed in ADR-0016). PR #19
+  (merged before this rule) would have failed too, with its two research documents named.
 
 **Not verified**
 - The check on a real Dependabot run after this merges (replayed on #2, #3, #4, #6 only).
 
 **Next**
-- Owner: merge this PR with a merge commit. Then PR #19 fails R14: either merge it before this one, or split its
-  `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/REVIEW-PROMPT.md` changes and ADR-0015 into their own PR.
+- Owner: merge this PR with a merge commit.
 - Deferred, for the owner (discussed in the PR body): option 3 (research-document inconsistencies at P2 at most)
   and option 4 (a thinner HTML explainer that links to the `.md`).
+
+## Session 5 — 2026-09-29 — branch `docs/cmdpal-rendering-research` (research, no code)
+
+**Why**
+- The owner, before plan item 5.1: find out exactly how Command Palette renders extension content (markdown,
+  images and SVG, icons, grid layouts, Adaptive Cards, live updates), with sources, so the gauge can be redrawn
+  against facts instead of the "lists and markdown" summary of session 4. Two deliverables: a technical document
+  for building agents and an HTML explainer for the owner, in one PR that both reviewers accept.
+
+**Done**
+- Five research subagents in parallel, one per surface (markdown renderer, icons/lists/grids, Adaptive Cards,
+  update and animation mechanics, official docs and precedents), each reading the PowerToys source at the
+  0.101 release tag `v0.101.2362.0`, the latest 0.101 tag `v0.101.2684.0` (the owner's VM runs 0.101.2652.0,
+  between them; the rendering files cited are identical across all three apart from two small changes the document names where it cites them) and `main` (2026-09-29), the CommunityToolkit Labs `MarkdownTextBlock`
+  source, the Adaptive Cards WinUI3 renderer source, Microsoft Learn, release notes, issues and PRs. Their
+  reports (about 1,400 lines, every claim labelled Verified / Inferred / Unknown with a citation) are merged
+  into `docs/CMDPAL-RENDERING.md` (17 sections: surfaces, markdown engine and constructs, images and the
+  Direct2D SVG subset, the `Body`-to-pixels pipeline with the 40 ms batch and the full rebuild, icons and
+  caches, lists/tags/details/grids, `ImageContent`, Adaptive Cards, native animation, window, precedents,
+  version history, the diagnosis of the session 4 gauge, eight ranked options for 5.1, rules and the list of
+  things only a Windows run can answer, sources). The raw reports stay in the session scratchpad.
+- `docs/CMDPAL-RENDERING.html`: the owner's explainer, one self-contained file that loads nothing from the
+  network: TL;DR, a pipeline diagram, an interactive simulation of the steps-and-blink problem against the
+  fixes, a surface comparison table, the diagnosis, what cannot work, the ranked options, what is proposed upstream,
+  and a margin glossary. Written with the `html-artifacts` skill.
+- Review rules for a PR with no code (2da315d, `Guard-Change:` trailer): `AGENTS.md` Code Review Rules gain
+  "Documentation-only pull requests" (safety answers from the diff; no tests or ADRs asked for text; a source
+  and confidence label per external claim; an HTML explainer checked against its `.md`, its markup not
+  reviewed as code, network loads P1; no changelog line for agent- or owner-facing documents).
+  `docs/CONVENTIONS.md` names `docs/UPPERCASE.html`; `docs/REVIEW-PROMPT.md` points at the subsection;
+  `AGENTS.md` §1 read order gains the rendering document. `docs/PLAN.md` gets item 5.0 (done) and a pointer
+  from 5.1 to §14–16 of the document.
+- Facts checked twice where the reports disagreed: PR #50151 (re-theme Adaptive Cards) is closed unmerged,
+  PR #50211 (in-place card updates) is open with auto-merge for 0.102, PR #50443 (graph content) is a draft.
+
+**Verified**
+- `scripts/check.sh all` green. The HTML page rendered headless with Playwright at 1280 px light, 1280 px
+  dark, and 400 px: no console errors, no horizontal overflow, the simulation runs; screenshots inspected.
+- The `html-artifacts` skill the owner uploaded is byte-identical to the account-synced copy the cloud
+  container already has (`~/.claude/skills/synced/…/html-artifacts`), so nothing had to be installed and
+  future cloud sessions on this account have it from the start.
+
+**Found; fixed in PR #20 (queued as a task with the diff, done from the owner's laptop, merged 2026-09-29)**
+- The Claude review workflow ran for the first time on PR #19 and failed before reviewing: the action's exchange
+  of the runner's OIDC token for a Claude GitHub App token answers "401 Invalid OIDC token" three times.
+  Anthropic's exchange rejects `pull_request_target` runs (anthropics/claude-code-action issue 713, open since
+  2025-12-02), and the workflow uses that event on purpose (ADR-0012; `pull_request` would not get the
+  `claude-review` environment secret). Fix: `github_token: ${{ github.token }}` on the action step, which skips
+  the exchange (the action's `src/github/token.ts` returns the override token; `action.yml` already passes the
+  same token as `DEFAULT_WORKFLOW_TOKEN`, so nothing new is exposed), and `id-token: write` dropped; step 1 of
+  the setup in `docs/REVIEW-PROMPT.md` (install the app) becomes "no app needed". The workflow runs from `main`,
+  so the fix needs its own PR; this session's harness guard refused to write a token into a workflow, so the
+  change is left to the owner. Until it merges, PR #19 has only the Codex review.
+- Outcome: a local session on the owner's laptop made exactly that change in PR
+  [#20](https://github.com/noamweisss/internet_speed_test_extension/pull/20) (`fix/review-workflow-oidc-token`,
+  f4a5ef2, `Guard-Change:` trailer): `github_token: ${{ github.token }}` with a comment naming issue 713,
+  `id-token: write` removed, `docs/REVIEW-PROMPT.md` step 1 now "no GitHub App is needed" and the removal line
+  without "uninstall the app". It checked the pinned action source first (`setupGitHubToken()` returns
+  `OVERRIDE_GITHUB_TOKEN` before any OIDC request). YAML parses, `scripts/check.sh all` green. PR #20 itself
+  gets only the Codex review (the workflow runs from `main`); after it merges, editing PR #19's body or pushing
+  to it starts the first Claude review.
+
+**Reviews**
+- Codex reviewed 13 rounds (3b6ad91 to e685812). Every finding was about documentation or the review rules, none
+  about code; all were fixed in the round after and every thread was resolved only after the next round did not
+  repeat it (`AGENTS.md` §2). The findings that changed substance: the documentation-only rule was narrowed in
+  four steps (documents only; rule files excluded; an explainer's script stays in scope; an exact list of rule
+  files, with plan and hand-off counted as documents), plan item 5.1 was aligned with ADR-0013, a temp-folder
+  write was marked as breaking the safety contract's no-file promise, PR #50211 was marked proposed rather than
+  shipped, and every statement about a visible blink was brought back to "Verified empty-image interval,
+  visibility Inferred". The rest were wording and unit fixes (DIP instead of px, batching wording).
+- The Claude review never posted on this PR. First blocker: the OIDC exchange (fixed in PR #20, ADR-0014).
+  Second blocker, found here: the workflow allows the reviewer `Write(<path>)`, a rule form Claude Code accepts
+  but never consults (its permissions page: only `Edit(path)` and `Read(path)` rules are checked), so the
+  reviewer runs to the end and cannot write `review.md`. The fix (allow `Edit(<path>)`, drop the bare `Edit`
+  deny, turn the two `Write(...)` denies into `Edit(...)`) is a workflow change for its own PR into `main`,
+  described in a PR #19 comment and queued as a task for the owner.
+
+- First real Claude review (on 77e0f10, after PR #21): one Blocker, the new `AGENTS.md` subsection is a guard
+  change without an ADR. Fixed with ADR-0015, linked from the subsection and from "Safety impact". Its Minor
+  on the subsection's wording is fixed. Its other Minor is pre-existing and outside this PR: the illustrative
+  guard list in safety question 4 (`docs/REVIEW-PROMPT.md` and the workflow prompt) omits `AGENTS.md` and
+  `CLAUDE.md`; it belongs in the stop-rule PR, which changes rule files only.
+- Stop rule applied from here: Codex round 15 was clean, no further Codex round was requested; the Claude
+  review re-runs once on the fix (a body edit triggers it) and the PR then goes to the owner.
+
+**Not verified**
+- Nothing in the two documents was run on Windows: the pipeline is Verified from source, what it looks like
+  on screen is Inferred, and §16 of the technical document lists the seven questions for the owner's PC (first: whether the blank frame of a
+  rebuilt markdown image is visible at 2 to 4 updates a second).
+
+**Next**
+- Owner: PR #20 (ADR-0014) and PR #21 (the `Edit(...)` rule) are merged; this branch merged `main` after
+  PR #21, which starts the Claude review on PR #19. Read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
+  says: restore `GaugeSvg` from 6034b22, redraw, and record the result in the ADR that supersedes ADR-0013.
+  `docs/CMDPAL-RENDERING.md` §15 ranks the options for that redraw; options 1 to 3 (ease in the extension, one
+  block per moving part, a text meter) add no capability and keep every safety answer "No", option 4 keeps the
+  SVG with the fixes of §4, and whichever is chosen goes into that ADR.
 
 ## Review workflow Edit permission — 2026-09-29 — branch `fix/review-workflow-edit-permission` (cloud session)
 
