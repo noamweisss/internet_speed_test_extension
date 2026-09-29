@@ -83,7 +83,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 <header>
   <h1>What Command Palette can draw, and why the gauge blinked</h1>
   <p class="sub">Research for plan item 5.1 · PowerToys 0.101 · 29 September 2026 · the agents' version with every citation is <code>docs/CMDPAL-RENDERING.md</code></p>
-  <p class="tldr"><strong>Short version.</strong> Command Palette never animates anything for an extension. Each frame is the extension replacing a value, the host reading it back over COM, waiting up to 40 ms, and rebuilding the whole markdown block on its UI thread. Images inside markdown are recreated empty and filled a moment later, and a <code>data:</code> image cannot be given a size. That is why the arc jumped between measurements and flashed on every update. The fix is on our side: ease the value in the extension, put the moving part in its own small block, and prefer text or a fixed-size picture over a regenerated one. Details and options below.</p>
+  <p class="tldr"><strong>Short version.</strong> Command Palette never animates anything for an extension. Each frame is the extension replacing a value, the host reading it back over COM, waiting up to 40 ms, and rebuilding the whole markdown block on its UI thread. Images inside markdown are recreated empty and filled a moment later, and a <code>data:</code> image cannot take the host's size hints. That is why the arc jumped between measurements and flashed on every update. The fix is on our side: ease the value in the extension, put the moving part in its own small block, and prefer text or a fixed-size picture over a regenerated one. Details and options below.</p>
 </header>
 
 <div class="layout">
@@ -145,7 +145,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 <figcaption>Figure 1. What one <code>Body</code> update costs on PowerToys 0.101. The dashed step is the blank frame. Verified in the host and toolkit source; the timing constant is 40 ms in code (the comment beside it says 30).</figcaption>
 </figure>
 
-<p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it disappears for at least a frame. And no update can be faster than the 40 ms batch, so the host cannot show more than about 25 distinct frames a second; above 5 to 10 a second each extra frame is one more full rebuild for no visible gain.</p>
+<p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it disappears for at least a frame. And no update can be faster than the 40 ms batch, so the host cannot show more than about 25 distinct frames a second. The technical document suggests 5 to 10 a second as the range to try; whether the eye gains anything above that is untested, since every extra frame is one more full rebuild.</p>
 
 <h2>2. See it: steps and blinks, then the fixes</h2>
 <p>The left gauge behaves like the session 4 build: it moves only when a measurement arrives and goes blank for a moment on each update. The right gauge applies the two changes that are ours to make. Both receive the same measurements.</p>
