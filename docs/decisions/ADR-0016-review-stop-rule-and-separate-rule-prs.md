@@ -46,12 +46,12 @@ keeps working; the log line starts with `RULE R14`.
 ## Consequences
 - Replayed on the merged history: PRs #18, #20 and #21 (workflow fixes), the Dependabot PRs #2, #3, #4 and #6,
   and the code-only PRs pass. PRs #15 and #17 would have failed (a `scripts/check.sh` exemption shipped with the
-  gauge code), and PR #16 too (`.coderabbit.yaml` deleted next to rule files). Those now take two pull requests;
+  gauge code), and PR #16 too (`.coderabbit.yaml` deleted next to rule or guard files). Those now take two pull requests;
   when the content depends on the rule (a check exemption, a new host in `scripts/allowed-hosts.txt`), the rule
   pull request merges first.
 - A merge of `main` into a branch does not trip the check: CI compares the pull request's merge commit with its
   base, so only the branch's own changes count.
-- PR #19 merged before this rule and would have failed it (its two research documents next to rule files).
+- PR #19 merged before this rule and would have failed it (its two research documents next to rule or guard files).
   ADR-0015 is its decision; this one is 0016.
 - Documentation threads can stay open after the stop. The owner resolves or dismisses them (`AGENTS.md` §2).
 - Every `docs/SAFETY-CONTRACT.md` §3 answer stays "No": the change adds a check and weakens none.

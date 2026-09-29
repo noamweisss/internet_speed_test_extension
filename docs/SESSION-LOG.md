@@ -22,9 +22,11 @@ verified, blocked, next.
 - Claude reviewer prompt (owner's request in the same session: "stop slopping out these endless essays"):
   a fixed short format and a re-review that lists only unfixed findings and new Blockers or Majors (ADR-0016
   point 3). Written into the prompt, not loaded as a skill (reasons in ADR-0016). `docs/REVIEW-PROMPT.md` in step.
-- Codex round 1 on bb834d2, 3 findings, all fixed in one push: renames hid a moved rule file from R14
+- Codex round 1 on bb834d2, 3 findings, all fixed in one push: renames hid a moved rule or guard file from R14
   (`--no-renames`), `docs/SAFETY-CONTRACT.md` left out R14's exceptions, the script comment named ADR-0015.
   Same wording swept in `docs/CONVENTIONS.md` and the R14 error message.
+- Claude round 1 on bb834d2: the same ADR-0015 slip (Major), and "rule file" in the script where R14 means
+  "rule or guard file" (Minor); both fixed, the second swept through the diff.
 - ADR-0016 (PR #19 holds ADR-0015). `main` merged in after PR #19 landed; the log conflict kept both entries.
 
 **Verified**
