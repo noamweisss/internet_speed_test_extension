@@ -22,32 +22,47 @@ verified, blocked, next.
     `#0078D4` fill at least 12 wide, ticks at 25, 50 and 75 % over the fill), a `data:` image on its own paragraph
     under the H2 readout, then a body-text line `scale 250 Mbps` (`SpeedFormatter.ScaleLabel`).
     `SpeedFormatter.Bar` lost its only caller and is deleted with its tests. `MeterEasing.TickMilliseconds` is
-    250 ms (4 Hz), the time constant 500 ms. ADR-0017 supersedes ADR-0013; the owner's choice and its date are
-    placeholders in it.
+    250 ms (4 Hz), the time constant 500 ms. ADR-0017 (status `proposed`) supersedes ADR-0013; the owner's choice
+    and its date are placeholders in it.
+- The base branch's review fix (444d929, cherry-picked here as 3ff5ec1): `MeterFrame` and `MeterEasing.Next` in
+  Core, `MeterMarkdown.Meter(title, MeterFrame, active)`, the page icon restored, the tick guarded by a `finally`.
+- Fix round after the review of the first push: every `GaugeSvg` number derived from named constants (`Width`,
+  `Height`, `TrackHeight`, `TrackY`, `CornerRadius`, `MinimumFillWidth`, ticks at `Width * k / 4` in a loop, one
+  `TrackColour`) with byte-identical output; the `http://` wording gone from its comment; `MeterPage` cites
+  ADR-0017; ADR-0017 back to `proposed` with the VM facts; plan, architecture and `docs/CMDPAL-RENDERING.md` in step.
 - No rules branch is needed: the SVG carries no `xmlns`, so there is no `http://` string and R6 keeps no exception
   (verified in session 5: the host's sniff and size probe ignore the namespace, Direct2D draws without one on the
   owner's laptop, Microsoft's `ChartHelper` omits it). A prepared branch `chore/r6-exempts-gauge-svg` with the
   48baf41 exemption exists locally as a fallback and is not pushed.
-- A VM capture harness in the session scratchpad (`vm\Test-MeterOnVM.ps1`, `Capture-MeterRun.ps1`) installs a CI
-  build into `SpeedTest-Win11` over PowerShell Direct and screenshots the run from an interactive scheduled task.
-  The owner signed in on the VM console so a new checkpoint can be taken.
+- A VM capture harness, outside the repository in the session scratchpad (`vm\Test-MeterOnVM.ps1`,
+  `Capture-MeterRun.ps1`), installs a CI build into `SpeedTest-Win11` over PowerShell Direct and screenshots the
+  run from an interactive scheduled task. The owner signed in on the VM console so a new checkpoint can be taken.
 - An HTML review artifact with mockups and the frame captures, for the owner's choice.
 
 **Verified**
-- This branch: `dotnet test tests/SpeedTest.Core.Tests` 139 passed, 0 failed; `scripts/check.sh all` exit 0.
-  `MeterPage.cs` is unchanged on this branch (the tick constant lives in Core), so the extension needed no new
-  compile check beyond the base branch's.
+- This branch after the fix round: `dotnet test tests/SpeedTest.Core.Tests` 147 passed, 0 failed;
+  `scripts/check.sh all` exit 0. `MeterPage.cs` equals the base branch's 444d929 apart from the ADR number in its
+  class comment, so the extension needed no compile check beyond the base branch's. CI run 36566806127 green on
+  the first push.
+- The test VM, build ff20768 on `SpeedTest-Win11` (PowerToys 0.101.2652, Command Palette 0.12.12651, 1920×1080 at
+  100 %), 149 frames at 150 ms: the page shows and the bar renders, so the host's `SvgImageSource` path accepts a
+  root without `xmlns`. Phases: latency at frame 3, download 12, upload 56, complete 104 (17.9 s). 8 blank frames
+  in the download phase (12, 17, 21, 25, 27, 38, 46, 56): the bar vanished for one frame without moving the
+  layout. At 800×480 the title, status, latency, download value, bar and scale line show without scrolling; the
+  footer cuts the upload heading. The bar fell back once, at the 250 to 500 scale step.
 - Branches A and B: their own builders' numbers go in their own entries.
 
 **Not verified**
-- Nothing has run on Windows yet: not the bar, not the 4 Hz tick. CI and the VM captures come after the push.
-- Whether the bar blinks when it is recreated four times a second (§5 step 5, Inferred).
+- The fix round in the VM: a second VM run follows it.
 - The 200 % display of the owner's laptop, where the width is rasterised at scale and the height is not (§4 rule
   3); the VM runs at 100 %.
 
 **Next**
 - Owner: pick a design. The chosen branch gets its pull request; the other branches are deleted; the ADR's
-  "chosen by the owner" sentence is filled in.
+  "chosen by the owner" sentence is filled in and its status becomes `accepted`.
+- Follow-ups if C is chosen: a run could start at the previous run's scale, so the bar does not fall back at each
+  step; the R6 comment in `scripts/check.sh` still says the exemption "returns with" the gauge, which is stale now,
+  and gets its own rules pull request (R14).
 
 ## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
 

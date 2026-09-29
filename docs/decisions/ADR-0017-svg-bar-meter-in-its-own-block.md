@@ -1,6 +1,7 @@
 # ADR-0017: Draw each speed as an SVG bar in its own block, eased at 4 Hz
 
-Status: accepted · Date: 2026-09-29 · Supersedes ADR-0013 (and replaces the arc of ADR-0011 with a bar)
+Status: proposed · Date: 2026-09-29 · Supersedes ADR-0013, and with it ADR-0006's text bar, which ADR-0013 had
+reinstated (and replaces the arc of ADR-0011 with a bar)
 
 ## Context
 ADR-0011 drew each speed as an SVG speedometer arc inside the one markdown block of the meter page. The owner's VM
@@ -20,9 +21,10 @@ share a base branch that carries `docs/CMDPAL-RENDERING.md` §15 options 1 and 2
    header (title, status, latency), download meter, upload meter, footer (connection line). A sample rebuilds only
    its own meter's block.
 2. **Easing in the extension, maths in Core** (§15 option 1). A one-shot timer in `MeterPage`, re-armed after each
-   tick, moves the shown value toward the last measurement through `MeterEasing.Step` (exponential approach, never
-   overshoots, snaps when the remainder is below what the readout shows). A meter whose phase is not live shows its
-   value exactly.
+   tick, moves the shown value toward the last measurement through `MeterEasing.Next`, which returns a `MeterFrame`
+   (the shown value and the bar's scale; exponential approach, never overshoots, snaps when the remainder is too
+   small to see). The readout and the bar both show the eased value while a phase runs; a meter whose phase is not
+   live shows its value exactly, so the final value is exact.
 3. **A scale that never shrinks during a run.** `SpeedFormatter.ScaleFor(mbps, atLeast)` grows with the measured
    value and never drops back, so the eased bar grows into its scale instead of jumping back at 10, 25, 50 Mbps and
    so on.
@@ -62,14 +64,24 @@ What C offers over them: a drawn bar with a smooth fill at any value (A moves in
 the scale), less than a fifth of the arc's height (20 DIP against 110), and the same left edge as the text around it.
 Chosen by the owner on <date> after the VM comparison.
 
+**Verified in the test VM** (2026-09-29, build `ff20768` on `SpeedTest-Win11`: PowerToys 0.101.2652, Command Palette
+0.12.12651, 1920×1080 at 100 %; 149 frames captured 150 ms apart): the page shows and the bar renders, so the host's
+`SvgImageSource` path accepts a root without `xmlns`. A full run took 17.9 s (latency from frame 3, download 12,
+upload 56, complete 104). In the download phase 8 of 44 frames were blank at 4 Hz (about one in five): the bar
+vanished for one frame each time while its space stayed, so nothing jumped. At 800×480 the title, status, latency,
+download value, bar and scale line show without scrolling; the footer cuts the upload heading. The bar fell back
+once, at the 250 to 500 Mbps scale step.
+
 ## Consequences
 - Needs PowerToys 0.95 or newer for `data:` images. An older host shows nothing where the bar is; the readout and
   the scale line still show.
-- The blank frame per rebuild (§5 step 5) is Inferred until the VM run: whether a 20-DIP image that is recreated
-  four times a second blinks is not known yet.
+- The blank frame per rebuild (§5 step 5) is Verified in the VM run: 8 blank frames in 44 download frames at 4 Hz,
+  about one in five. The bar vanished for one frame each time while its space stayed, so nothing jumped.
+- The scale steps up while a speed rises (10, 25, 50, 100, 250, 500 Mbps), and the bar falls back at each step
+  (seen once in the VM run, 250 to 500). A follow-up may start a run at the previous run's scale.
 - On a 200 % display (the owner's laptop) the width is rasterised at scale and the height is not (§4 rule 3). The
   VM runs at 100 %, so it cannot show this; only the laptop can.
 - The text bar `SpeedFormatter.Bar` loses its only caller and is deleted with its tests.
 - Every `docs/SAFETY-CONTRACT.md` §3 answer stays "No": the data URI is generated in the process, not fetched; no
   file, no host, no dependency, no capability. Rule R6 keeps no exception.
-- ADR-0013 and ADR-0011 stay as written (ADRs are not edited after acceptance).
+- ADR-0013, ADR-0011 and ADR-0006 stay as written (ADRs are not edited after acceptance).

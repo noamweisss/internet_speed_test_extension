@@ -1,8 +1,9 @@
 # How Command Palette renders extension content
 
 Research for plan item 5.1 (the gauge), session 5, 2026-09-29. Written for the building agent that redraws the
-meter view; the owner's version is `docs/CMDPAL-RENDERING.html` (same facts, fewer citations). Nothing here was
-run on Windows: every statement comes from reading source and documentation, and is labelled.
+meter view; the owner's version is `docs/CMDPAL-RENDERING.html` (same facts, fewer citations). The research ran
+nothing on Windows: every statement comes from reading source and documentation, and is labelled. The few lines
+marked "session 5" were checked on Windows afterwards (the owner's laptop and the test VM).
 
 - **Verified**: read in the PowerToys or toolkit source, or in a Microsoft document; the citation follows.
 - **Inferred**: follows from verified code, but the behaviour was not observed running.
@@ -179,7 +180,9 @@ clip-path transform visibility display`, and the per-element `style="…"` attri
 `<mask>`, `<pattern>`, `<marker>`, `<symbol>`, `<foreignObject>`, every `<animate*>` element ("SvgImageSource
 supports secure static mode … and does not support animations or interactions"), `em`/`ex` units, and remote
 `<image>` references. Eight-digit `#RRGGBBAA` colours are not in SVG 1.1; use `stroke-opacity` (session 4
-found this the hard way). Numbers on a gauge must be markdown text next to the image, or outlined paths.
+found this the hard way).
+**Verified** (session 5, 2026-09-29): Direct2D renders a root `<svg>` without `xmlns` (laptop test; the VM run of
+option C confirmed it in the host), and an 8-digit `#RRGGBBAA` colour draws black rather than being ignored. Numbers on a gauge must be markdown text next to the image, or outlined paths.
 
 **Animated formats.** `BitmapImage` plays animated GIF with `AutoPlay` on by default (Learn, `BitmapImage`
 "Animated images"); nothing in the host turns it off, so a GIF should animate in markdown (Inferred, not
@@ -223,8 +226,9 @@ Labs build 2514).
 5. **Images after the rebuild.** Every `![…](…)` becomes a new **empty** `Image` in an `InlineUIContainer`;
    loading starts on its `Loaded` event, after layout, and the host provider then **replaces** the element
    after an `await` (`Labs/TextElements/MyImage.cs:84–102`). Between the clear and the swap the image has
-   no size, so the block collapses and re-expands (structure Verified). Whether that shows as a flash at
-   5 Hz is untested (§16 item 1).
+   no size, so the block collapses and re-expands (structure Verified). Session 5, test VM (ADR-0017): with a
+   240×20 bar redrawn at 4 Hz, about one frame in five showed the bar missing while its space stayed, so the
+   blank is visible as a blink but no collapse showed at that frame rate (Verified for that case, §16 item 1).
 6. **Control identity.** The view model instance is unchanged, so the `ItemsRepeater` keeps the same
    `MarkdownTextBlock` and the `ScrollView` is not reset; scroll offset survives unless the content shrinks.
 7. **`RaiseItemsChanged()` is worse.** `ContentPageViewModel.Model_ItemsChanged` runs `FetchContent()`
@@ -519,7 +523,7 @@ code. "Smooth" means no blank frame; "eased" means the value moves between measu
 4. **Keep an SVG gauge, but fix it and slow it.** Root `<svg>` with numeric `width`/`height` ≤ 256 and a
    `viewBox`; only §4's element subset; numbers as markdown text; transparent background; in its own block
    (option 2) at 2 to 4 Hz with easing (option 1). Risk: the blank frame per update remains (Verified
-   structure, Inferred visibility); DPI-dependent rasterisation remains; centring needs `<p align="center">`.
+   structure; visible in the session 5 VM run as about one frame in five at 4 Hz, a blink without a jump); DPI-dependent rasterisation remains; centring needs `<p align="center">`.
 5. **`file:` frames with hints instead of `data:`.** Pre-render, say, 51 frames (0 to 100 % in 2 % steps) as
    `.svg` files into the extension's temp folder once, and reference
    `file:///…/gauge_050.svg?--x-cmdpal-fit=fit&--x-cmdpal-maxwidth=320&--x-cmdpal-height=160`. Hints apply to
@@ -554,9 +558,8 @@ side-by-side content blocks; waiting for PR #50443.
 **Suggested experiment order on the owner's PC:** options 1 + 2 + 3 first (expected smooth and eased, no
 new capability, all testable in Core); then option 4 in the same structure at 2 to 4 Hz to see whether the
 blank frame is visible; then, only if an image is wanted, option 6 (a temp-folder write needs the owner's
-decision and a contract change) or option 7 once PR #50211 ships. Whatever is chosen, plan item 5.1 proceeds as ADR-0013 says: it starts by restoring
-`GaugeSvg` from `6034b22` (option 4 reuses it; the text options remove it again) and records the redrawn meter
-in the ADR that supersedes ADR-0013. This document ranks; that ADR decides.
+decision and a contract change) or option 7 once PR #50211 ships. ADR-0017 supersedes ADR-0013; the bar branch writes a new `GaugeSvg` without the R6
+exemption. This document ranks; that ADR decides.
 
 ## 16. Rules for the building agent, and what only Windows can answer
 
@@ -565,10 +568,11 @@ Rules that follow from the evidence:
 - Return the same content instances from `GetContent()`; update by setting properties; never
   `RaiseItemsChanged` from the meter path or from inside `GetContent()`.
 - One block for the moving part; static text in its own block.
-- Ease in the extension; tick at 100 to 200 ms; skip a tick when the string is unchanged.
+- Ease in the extension; tick at 100 to 200 ms for a text block, 250 ms or slower for a block with an image;
+  skip a tick when the string is unchanged.
 - If an SVG is embedded: numeric `width`/`height` and `viewBox` on the root; width ≤ 256; only §4's elements
-  and attributes; `stroke-opacity` rather than 8-digit hex; no text; transparent background; centre with
-  `<p align="center">`.
+  and attributes; `stroke-opacity` rather than 8-digit hex; no text; transparent background; centring with
+  `<p align="center">` is the design's choice.
 - Big numbers in H1/H2 or bold; never H3.
 - Do not add a file write, a temp folder, or a network fetch for images: each breaks a promise in
   `docs/SAFETY-CONTRACT.md` §1 and needs the owner's decision, a change to that contract and to
@@ -579,7 +583,8 @@ Rules that follow from the evidence:
 Unknown until a Windows run (all Inferred above):
 
 1. Whether the blank frame of a rebuilt markdown image is visible at 2 to 5 Hz, and whether a constant
-   image box turns it into a blink rather than a jump.
+   image box turns it into a blink rather than a jump. Answered for option C's bar in session 5 (test VM,
+   ADR-0017): visible, about one frame in five at 4 Hz, as a blink without a jump.
 2. Whether `IsTextSelectionEnabled` and identical-string `Text` sets trigger a re-render.
 3. Glyph width uniformity of `█ ▌ ░` in the inline-code font (Consolas has them; the eighth blocks are not
    uniform, §3).
