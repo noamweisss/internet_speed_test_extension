@@ -15,11 +15,9 @@ reviews:
   path_instructions:
     - path: "**"
       instructions: |
-        Apply the "Code Review Rules" section of AGENTS.md in full: safety questions, guards, correctness,
-        design and maintainability, documentation and instructions, documentation-only pull requests,
-        completeness. Severities: P0 = Blocker, P1 = Major, P2 = Minor, P3 = Nit. Report documentation
-        findings as a separate list from code findings. Report everything in one review; never keep a finding
-        for the next round.
+        Apply every rule in the "Code Review Rules" section of AGENTS.md. Severities: P0 = Blocker,
+        P1 = Major, P2 = Minor, P3 = Nit. List documentation findings separately from code findings. Report
+        everything in one review.
     - path: "**/*.cs"
       instructions: |
         Read docs/SAFETY-CONTRACT.md and docs/SECURITY.md first. In your summary, answer these five questions
