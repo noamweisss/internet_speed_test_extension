@@ -120,7 +120,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
       <text x="445" y="145" text-anchor="middle" font-size="11" fill-opacity=".7">then reads Body back: 2 COM hops</text>
       <rect x="570" y="110" width="130" height="44" rx="6" fill="none" stroke="currentColor"/>
       <text x="635" y="128" text-anchor="middle">40 ms batch</text>
-      <text x="635" y="145" text-anchor="middle" font-size="11" fill-opacity=".7">merges anything closer</text>
+      <text x="635" y="145" text-anchor="middle" font-size="11" fill-opacity=".7">one UI task; changes stay queued</text>
     </g>
     <!-- UI lane -->
     <g>
@@ -189,7 +189,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
     <tr><td>Markdown block with a <code>data:</code> SVG</td><td class="m">Yes, no text inside the SVG</td><td>Block rebuilt, image re-decoded</td><td class="n">Yes</td><td class="m">Root <code>width</code>/<code>height</code> only; no query hints; capped at 256 px</td><td class="n">Picture no, text yes</td><td class="y">Yes</td></tr>
     <tr><td>Markdown block with a <code>file:</code> SVG</td><td class="m">Yes</td><td>Same</td><td class="n">Yes</td><td class="y">Hints work (fit, width, height)</td><td class="n">Picture no</td><td class="y">Yes, needs a temp folder</td></tr>
     <tr><td>Image block (<code>ImageContent</code>)</td><td class="m">Yes, from a file path</td><td>Only the image swaps</td><td class="m">Probably not (unverified)</td><td class="y">Max width and height</td><td class="m">Light and dark files</td><td class="y">Since 0.99</td></tr>
-    <tr><td>Adaptive Card with an SVG image</td><td class="y">Yes, Microsoft's own pattern</td><td>Whole card rebuilt</td><td class="n">Yes, until 0.102</td><td class="y">Pixel width and height</td><td class="m">Named colours for text</td><td class="y">Yes</td></tr>
+    <tr><td>Adaptive Card with an SVG image</td><td class="y">Yes, Microsoft's own pattern</td><td>Whole card rebuilt</td><td class="n">Yes, until pull request 50211 ships</td><td class="y">Pixel width and height</td><td class="m">Named colours for text</td><td class="y">Yes</td></tr>
     <tr><td>List row icon, grid tile, details hero</td><td class="m">Pre-rendered frames by file name</td><td>Icon swaps in place, cached</td><td class="y">No</td><td>Fixed slots (20 to 160 px)</td><td class="y">Light and dark variants</td><td class="y">Yes</td></tr>
     <tr><td>Tag pills with colour</td><td class="m">Numbers and phase, not a shape</td><td>In place</td><td class="y">No</td><td>Fixed</td><td class="n">Your colours, both themes</td><td class="y">Yes</td></tr>
     <tr><td>Status message with a percentage</td><td class="n">Not drawn at all</td><td>n/a</td><td>n/a</td><td>n/a</td><td>n/a</td><td class="n">The bar is hidden in the host's XAML</td></tr>
@@ -216,7 +216,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <li>Size hints on a <code>data:</code> image, and any width above 256 px for one.</li>
   <li>A <code>data:</code> string as an icon (list rows, tiles, image block): icons want a file path, a glyph, one emoji, or a bitmap stream.</li>
   <li>A percentage in a status message: the progress bar exists in the host's XAML and is permanently collapsed.</li>
-  <li>Colours that follow the theme inside any picture: the host never tells the extension which theme is active.</li>
+  <li>Colours that follow the theme inside a generated picture (markdown or card): the host never tells the extension which theme is active. Icons and the image block can carry a light file and a dark file, which the host picks.</li>
   <li>Two content blocks side by side: blocks only stack vertically.</li>
   <li>Waiting for native graph content: the pull request is a draft with no milestone and an unanswered request for API sign-off.</li>
 </ul>
@@ -232,19 +232,19 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <li><strong>Keep an SVG, but fix it and slow it.</strong>
     <span class="why">Numeric width and height and a viewBox on the root, width at most 256, only the supported elements, transparent background, its own block, two to four updates a second with easing. The blink per update remains; only a run on the PC shows whether it is visible.</span></li>
   <li><strong>Pre-rendered frames as files with size hints.</strong>
-    <span class="why">Fifty-one SVG files written once to the extension's temp folder, referenced by path with fit and height hints. Gains size control, keeps the blink, and writing files is a new capability that needs an ADR and a "Yes" in the safety questions.</span></li>
+    <span class="why">Fifty-one SVG files written once to the extension's temp folder, referenced by path with fit and height hints. Gains size control, keeps the blink, and writing files breaks the promise in the safety contract that the extension never reads or writes files, so it needs your decision, a contract change, an ADR and a "Yes" in the safety questions.</span></li>
   <li><strong>An image block with pre-rendered frames.</strong>
     <span class="why">The same files, shown through the image block, which swaps only the picture and probably keeps the old one until the new one is ready. Same file-write question; a zoom button appears on the image and cannot be removed.</span></li>
-  <li><strong>An Adaptive Card with a raw-SVG image.</strong> <span class="tag later">after 0.102</span>
-    <span class="why">Exactly how the built-in Performance Monitor draws its charts. It flickers on 0.101, and the in-place update that fixes it is approved for 0.102. The right second step if you upgrade.</span></li>
+  <li><strong>An Adaptive Card with a raw-SVG image.</strong> <span class="tag later">if 50211 ships</span>
+    <span class="why">Exactly how the built-in Performance Monitor draws its charts. It flickers on 0.101; the in-place update that would fix it (pull request 50211) is approved with milestone 0.102 but not merged. The right second step once that ships.</span></li>
   <li><strong>Tiles or the details pane as the dashboard.</strong>
     <span class="why">Gallery tiles or the details pane with frame icons by file name (cached after the first decode) and coloured tag pills for the numbers. A different layout for you to judge, not a smaller change.</span></li>
 </ol>
-<p>Suggested order on your PC: options 1 to 3 together first (no new capability, all unit-testable). Then option 4 in the same structure, to see whether the blink shows at two to four updates a second. Only then a file-based option, or option 7 after 0.102.</p>
+<p>Suggested order on your PC: options 1 to 3 together first (no new capability, all unit-testable). Then option 4 in the same structure, to see whether the blink shows at two to four updates a second. Only then a file-based option, or option 7 once pull request 50211 ships.</p>
 
 <h2>7. What is coming in PowerToys</h2>
 <ul>
-  <li><strong>0.102:</strong> in-place Adaptive Card updates that patch text and an inline SVG image without rebuilding the card (pull request 50211, approved, auto-merge armed on 28 September).</li>
+  <li><strong>Proposed for 0.102, not yet on main:</strong> in-place Adaptive Card updates that patch text and an inline SVG image without rebuilding the card (pull request 50211, approved, auto-merge armed on 28 September).</li>
   <li><strong>On main, not yet released:</strong> generated icons (colour swatches, one-to-three-letter initials) merged on 29 September; inline and theme-aware SVG icons still in review.</li>
   <li><strong>Draft, no date:</strong> native line, doughnut and bar graph content for extensions ("SVG, you're fired!"), waiting for an API decision.</li>
 </ul>

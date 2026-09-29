@@ -215,8 +215,8 @@ Labs build 2514).
 5. **Images after the rebuild.** Every `![…](…)` becomes a new **empty** `Image` in an `InlineUIContainer`;
    loading starts on its `Loaded` event, after layout, and the host provider then **replaces** the element
    after an `await` (`Labs/TextElements/MyImage.cs:84–102`). Between the clear and the swap the image has
-   no size, so the block collapses and re-expands. At 5 Hz that is the flash the owner saw (structure
-   Verified; visibility of the flash Inferred).
+   no size, so the block collapses and re-expands (structure Verified). Whether that shows as a flash at
+   5 Hz is untested (§16 item 1).
 6. **Control identity.** The view model instance is unchanged, so the `ItemsRepeater` keeps the same
    `MarkdownTextBlock` and the `ScrollView` is not reset; scroll offset survives unless the content shrinks.
 7. **`RaiseItemsChanged()` is worse.** `ContentPageViewModel.Model_ItemsChanged` runs `FetchContent()`
@@ -391,7 +391,7 @@ flicker", open, milestone 0.102); input values, toggle state and selection are l
 only content on the page, focus moves to its first focusable control after every rebuild
 (`OnlyControlOnPage`, `ContentPageViewModel.cs:85–86`). `StateJson` changes after initialisation are ignored.
 
-**What 0.102 changes (Verified from PR #50211, open, approved, auto-merge armed 2026-09-28, milestone 0.102).**
+**What PR #50211 would change if it ships (Verified from the PR: open, approved, auto-merge armed 2026-09-28, milestone 0.102, not on `main`).**
 An `IncrementalAdaptiveCardUpdater` patches **only `TextBlock.text` and an inline-SVG `Image.url`** in place
 when the card's shape is unchanged; anything else still rebuilds. A card made of text blocks plus one inline
 SVG image is the shape that becomes flicker-free.
@@ -511,8 +511,10 @@ code. "Smooth" means no blank frame; "eased" means the value moves between measu
    `.svg` files into the extension's temp folder once, and reference
    `file:///…/gauge_050.svg?--x-cmdpal-fit=fit&--x-cmdpal-maxwidth=320&--x-cmdpal-height=160`. Hints apply to
    `file:` (§4), `fit` gives uniform stretch, the `.svg` extension skips sniffing. Risk: writes to the temp
-   folder are a new capability (SAFETY-CONTRACT §3 question 2: "Yes", needs an ADR); still one rebuild and
-   one blank frame per update; no cache, so each frame is re-read from disk.
+   folder break the promise in `docs/SAFETY-CONTRACT.md` §1 that the extension never reads or writes files,
+   so they need the owner's decision, a change to that contract and to `docs/SECURITY.md`, an ADR, and a "Yes"
+   to §3 question 2; still one rebuild and one blank frame per update; no cache, so each frame is re-read
+   from disk.
 6. **`ImageContent` with pre-rendered `.svg` frame files.** Same frames as option 5, but
    `ImageContent.Image = new IconInfo(absolutePath)` per tick swaps only the image (§8) with no markdown
    parse; `MaxWidth`/`MaxHeight` fix the box; the old image stays until the new one loads (Inferred). Risk:
@@ -523,8 +525,8 @@ code. "Smooth" means no blank frame; "eased" means the value moves between measu
    carries `data:image/svg+xml;utf8,<svg …>` into an `Image` with explicit px width and height, plus
    `TextBlock`s for the numbers; no actions or inputs on the card, and a sibling markdown block so it is not
    the only content (focus stealing, §9). Risk: on 0.101 it flickers like the Performance Monitor (#46362);
-   colours are the named palette; on 0.102 this exact shape becomes flicker-free (PR #50211). A reasonable
-   second step if the owner upgrades, not a first step.
+   colours are the named palette; if PR #50211 ships (milestone 0.102) this exact shape becomes flicker-free.
+   A reasonable second step once that is released, not a first step.
 8. **A gallery of tiles or a details pane as the dashboard.** Gallery tiles (160×160, 256-px bucket) or the
    details pane (`ContentSize.Large`, markdown body with `data:` images, live since 0.101) with pre-rendered
    frame icons by path (cached after first decode, §6) or live tag pills with colours (§7). Risk: a different
@@ -532,13 +534,14 @@ code. "Smooth" means no blank frame; "eased" means the value moves between measu
 
 **Not viable on 0.101 (Verified unless marked):** SMIL or CSS animation in SVG; `<text>` in SVG; hints on a
 `data:` URI; `data:` strings as icons (Inferred); SVG streams as icons; `ProgressPercent` in a status message;
-Adaptive Card `ProgressBar`/`Chart.Gauge`; multi-character glyph icons; theme-aware colours in any image;
+Adaptive Card `ProgressBar`/`Chart.Gauge`; multi-character glyph icons; theme-aware colours inside a generated
+markdown or card image (an `IconInfo(light, dark)` pair, §6, is the one theme-aware image mechanism);
 side-by-side content blocks; waiting for PR #50443.
 
 **Suggested experiment order on the owner's PC:** options 1 + 2 + 3 first (expected smooth and eased, no
 new capability, all testable in Core); then option 4 in the same structure at 2 to 4 Hz to see whether the
-blank frame is visible; then, only if an image is wanted, option 6 (a temp-folder write is a new capability)
-or option 7 after 0.102. Whatever is chosen, plan item 5.1 proceeds as ADR-0013 says: it starts by restoring
+blank frame is visible; then, only if an image is wanted, option 6 (a temp-folder write needs the owner's
+decision and a contract change) or option 7 once PR #50211 ships. Whatever is chosen, plan item 5.1 proceeds as ADR-0013 says: it starts by restoring
 `GaugeSvg` from `6034b22` (option 4 reuses it; the text options remove it again) and records the redrawn meter
 in the ADR that supersedes ADR-0013. This document ranks; that ADR decides.
 
@@ -554,8 +557,9 @@ Rules that follow from the evidence:
   and attributes; `stroke-opacity` rather than 8-digit hex; no text; transparent background; centre with
   `<p align="center">`.
 - Big numbers in H1/H2 or bold; never H3.
-- Do not add a file write, a temp folder, or a network fetch for images without an ADR and a "Yes" in the
-  PR's safety questions.
+- Do not add a file write, a temp folder, or a network fetch for images: each breaks a promise in
+  `docs/SAFETY-CONTRACT.md` §1 and needs the owner's decision, a change to that contract and to
+  `docs/SECURITY.md`, an ADR, and a "Yes" in the PR's safety questions.
 - Keep the measurement loop off the UI path: raise property changes from the timer thread (two cross-process
   hops per set, §5 step 2), not from inside a transfer.
 

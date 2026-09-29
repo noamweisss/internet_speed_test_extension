@@ -26,7 +26,7 @@ verified, blocked, next.
   things only a Windows run can answer, sources). The raw reports stay in the session scratchpad.
 - `docs/CMDPAL-RENDERING.html`: the owner's explainer, one self-contained file that loads nothing from the
   network: TL;DR, a pipeline diagram, an interactive simulation of the steps-and-blink problem against the
-  fixes, a surface comparison table, the diagnosis, what cannot work, the ranked options, what 0.102 brings,
+  fixes, a surface comparison table, the diagnosis, what cannot work, the ranked options, what is proposed upstream,
   and a margin glossary. Written with the `html-artifacts` skill.
 - Review rules for a PR with no code (2da315d, `Guard-Change:` trailer): `AGENTS.md` Code Review Rules gain
   "Documentation-only pull requests" (safety answers from the diff; no tests or ADRs asked for text; a source
@@ -66,8 +66,8 @@ verified, blocked, next.
   to it starts the first Claude review.
 
 **Not verified**
-- Nothing in the two documents was run on Windows; every runtime claim is labelled Inferred and §16 of the
-  technical document lists the seven questions for the owner's PC (first: whether the blank frame of a
+- Nothing in the two documents was run on Windows: the pipeline is Verified from source, what it looks like
+  on screen is Inferred, and §16 of the technical document lists the seven questions for the owner's PC (first: whether the blank frame of a
   rebuilt markdown image is visible at 2 to 4 updates a second).
 
 **Next**
