@@ -147,7 +147,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 
 <p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it is empty until it is decoded again (whether a rendered frame ever shows that is untested). And no update can be faster than the 40 ms batch, so the host cannot show more than about 25 distinct frames a second. The technical document suggests 5 to 10 a second as the range to try; whether the eye gains anything above that is untested, since every extra frame is one more full rebuild.</p>
 
-<h2>2. See it: steps and blank frames, then the fixes</h2>
+<h2>2. See it: steps and empty images, then the fixes</h2>
 <p>The left gauge behaves as the source says the session 4 build should: it moves only when a measurement arrives and its arc is empty for a moment after each update while the number stays (the empty interval is inferred; whether it was visible on your PC is untested). The right gauge applies the two changes that are ours to make, each switchable. Both receive the same measurements.</p>
 
 <figure class="demo" id="demo">
@@ -228,7 +228,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <li><strong>Split the page into blocks; move only one.</strong> <span class="tag rec">recommended first</span>
     <span class="why">Heading, status, latency and ISP line in a static block; the meter in its own block. The host rebuilds only the block whose text changed. Keep the same block objects and never ask the host to refetch the page.</span></li>
   <li><strong>Draw the moving part as text.</strong> <span class="tag rec">recommended first</span>
-    <span class="why">No picture means no blank frame. Finer bars from eighth-width block characters at a constant length; the number in a large heading or bold. Stays a pure function in Core with unit tests. Another extension (HardwareMonitor) ships its charts this way on purpose.</span></li>
+    <span class="why">No picture means no empty-image interval. Finer bars from eighth-width block characters at a constant length; the number in a large heading or bold. Stays a pure function in Core with unit tests. Another extension (HardwareMonitor) ships its charts this way on purpose.</span></li>
   <li><strong>Keep an SVG, but fix it and slow it.</strong>
     <span class="why">Numeric width and height and a viewBox on the root, width at most 256, only the supported elements, transparent background, its own block, two to four updates a second with easing. The blink per update remains; only a run on the PC shows whether it is visible.</span></li>
   <li><strong>Pre-rendered frames as files with size hints.</strong>
