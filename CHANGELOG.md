@@ -13,7 +13,7 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   (10, 25, 50, 100 Mbps and so on) as the speed rises, and the bar shortens at that moment, but a dip in speed no
   longer drops it back.
 - The numbers under Latency, Download and Upload are bigger. The meter view is drawn once when the extension starts and
-  then redraws only the section that changed.
+  then redraws only the section that changed (a value, a scale, or the phase marker).
 
 ## [0.1.1] - 2026-09-29
 

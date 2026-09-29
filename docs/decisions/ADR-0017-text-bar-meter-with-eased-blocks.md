@@ -31,7 +31,8 @@ All three share a base branch with options 1 and 2 and differ in how a speed is 
    through `MeterEasing.Next`, which returns an immutable `MeterFrame(Shown, Scale)` (exponential approach, time
    constant 250 ms, no overshoot; the last remainder snaps once it is invisible on the bar). A meter whose phase is
    not live shows its value exactly. The readout and the bar both show the eased value while a phase runs; the
-   final value is exact. A meter block is set only when its frame changes (record equality). 100 ms is enough
+   final value is exact. A meter block is set when its frame changes (record equality) or a new snapshot arrives (the active marker
+   depends on the phase). 100 ms is enough
    here: a text block has no image stage (§5 step 5), and it is the floor §15 gives.
 3. **A scale that never shrinks during a run.** `MeterEasing.Next` picks the scale from the measured value, not the
    eased one, through `SpeedFormatter.ScaleFor(mbps, atLeast)`, and it only grows, so the bar does not drop back at

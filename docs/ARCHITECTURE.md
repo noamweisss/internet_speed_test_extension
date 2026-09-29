@@ -54,7 +54,7 @@ the extension, which owns its lifetime.
   whose text changed (`docs/CMDPAL-RENDERING.md` §5). While a test runs, a 100 ms ticker in the page moves each
   meter toward the last measurement and snaps it to the exact value when its phase ends: `MeterEasing.Next` in Core
   returns a `MeterFrame` (shown value, scale), the scale never shrinks during a run, and the page redraws a meter
-  block only when its frame changed. Each speed is an H2 readout over a fenced code block with a 24-cell text bar in
+  block when its frame changed or a new snapshot arrived (the phase marker lives in the block). Each speed is an H2 readout over a fenced code block with a 24-cell text bar in
   half-cell steps (`███████▌░░░`) and a scale line (`0 … 250 Mbps`), drawn by `MeterMarkdown.Meter`, ADR-0017; the
   SVG gauge of ADR-0011 is not restored. Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
   the summary (`ResultSummary.PlainText`), `Ctrl+Shift+M` copies it as a markdown table.
