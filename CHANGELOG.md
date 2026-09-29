@@ -5,7 +5,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+- The meter view redraws only the section whose value changed (download, upload, or the text around them).
 
 ## [0.1.1] - 2026-09-29
 

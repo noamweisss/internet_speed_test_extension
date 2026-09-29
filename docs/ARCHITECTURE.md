@@ -49,7 +49,9 @@ the extension, which owns its lifetime.
 
 ## Views
 
-- **Meter** (`ContentPage` + `MarkdownContent`): the dashboard. Each speed is a Unicode bar (`▰▰▰▱▱▱`, ADR-0006);
+- **Meter** (`ContentPage` + four `MarkdownContent` blocks: heading with status and latency, download, upload,
+  connection line): the dashboard. The page returns the same blocks every time, so the host rebuilds only a block
+  whose text changed (`docs/CMDPAL-RENDERING.md` §5). Each speed is a Unicode bar (`▰▰▰▱▱▱`, ADR-0006);
   the SVG gauge of ADR-0011 rendered but did not look right, so it is out of the code until plan item 5.1 redraws
   it (ADR-0013). Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
   the summary (`ResultSummary.PlainText`), `Ctrl+Shift+M` copies it as a markdown table.
