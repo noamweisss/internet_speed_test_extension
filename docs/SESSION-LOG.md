@@ -19,15 +19,23 @@ verified, blocked, next.
   except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and `docs/decisions/`. Written in `AGENTS.md` §2,
   the Guards group of "Code Review Rules", `docs/SECURITY.md`, `docs/SAFETY-CONTRACT.md` §2, `docs/CONVENTIONS.md`.
   ADRs are allowed because the Guards rule asks a guard change to name one. The CI job keeps its name.
+- Claude reviewer prompt (owner's request in the same session: "stop slopping out these endless essays"):
+  a fixed short format and a re-review that lists only unfixed findings and new Blockers or Majors (ADR-0016
+  point 3). Written into the prompt, not loaded as a skill (reasons in ADR-0016). `docs/REVIEW-PROMPT.md` in step.
+- Codex round 1 on bb834d2, 3 findings, all fixed in one push: renames hid a moved rule file from R14
+  (`--no-renames`), `docs/SAFETY-CONTRACT.md` left out R14's exceptions, the script comment named ADR-0015.
+  Same wording swept in `docs/CONVENTIONS.md` and the R14 error message.
 - ADR-0016 (PR #19 holds ADR-0015). `main` merged in after PR #19 landed; the log conflict kept both entries.
 
 **Verified**
 - `scripts/check.sh all` green. R14 replayed on every merge commit of `main` from PR #4 on: PRs #18, #20, #21,
   the Dependabot PRs and the code-only PRs pass; #15, #16, #17 would have failed (listed in ADR-0016). PR #19
-  (merged before this rule) would have failed too, with its two research documents named.
+  (merged before this rule) would have failed too, with its two research documents named. A rename of
+  `AGENTS.md` next to a code file now fails R14 (tested in a throwaway worktree). The workflow parses (PyYAML).
 
 **Not verified**
 - The check on a real Dependabot run after this merges (replayed on #2, #3, #4, #6 only).
+- The new reviewer prompt: the workflow runs from `main`, so this PR is still reviewed with the old prompt.
 
 **Next**
 - Owner: merge this PR with a merge commit.

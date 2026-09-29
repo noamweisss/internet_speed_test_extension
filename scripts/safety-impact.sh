@@ -3,16 +3,17 @@
 # Usage: scripts/safety-impact.sh <base-ref> <head-ref>   with the PR body in $PR_BODY.
 # Sensitive files are listed in docs/SAFETY-CONTRACT.md §2; keep the two in sync.
 # R14 (checked first): a pull request that changes a rule file changes nothing else except the hand-off files
-# and ADRs, so a rule change is reviewed on its own (ADR-0015). Rule files are the ones agents and reviewers follow.
+# and ADRs, so a rule change is reviewed on its own (ADR-0016). Rule files are the ones agents and reviewers follow.
 set -u
 BASE="$1"; HEAD="$2"
-CHANGED="$(git diff --name-only "$BASE" "$HEAD")"
+# --no-renames lists both sides of a rename, so moving a rule or sensitive file out of its path still counts.
+CHANGED="$(git diff --no-renames --name-only "$BASE" "$HEAD")"
 RULE_FILES='^(AGENTS\.md$|CLAUDE\.md$|\.github/|\.githooks/|\.claude/|scripts/|docs/(SAFETY-CONTRACT|SECURITY|REVIEW-PROMPT|CONVENTIONS|TESTING)\.md$)'
 HANDOFF_FILES='^(docs/SESSION-LOG\.md$|docs/PLAN\.md$|CHANGELOG\.md$|docs/decisions/)'
 RULES="$(printf '%s\n' "$CHANGED" | grep -E "$RULE_FILES" || true)"
 OTHERS="$(printf '%s\n' "$CHANGED" | grep -vE "$RULE_FILES" | grep -vE "$HANDOFF_FILES" | grep -v '^$' || true)"
 if [ -n "$RULES" ] && [ -n "$OTHERS" ]; then
-  echo "RULE R14: this pull request changes rule files and other files; move these to a separate pull request:" >&2
+  echo "RULE R14: this pull request changes rule files and files outside the exceptions (session log, plan, changelog, ADRs); move these to a separate pull request:" >&2
   printf '%s\n' "$OTHERS" | sed 's/^/  /' >&2; exit 1
 fi
 SENSITIVE="$(printf '%s\n' "$CHANGED" | grep -E '^(scripts/allowed-hosts\.txt|internet_speed_test_extension/Package\.appxmanifest|Directory\.Packages\.props|.*\.csproj|\.githooks/|\.claude/|scripts/|\.github/workflows/|internet_speed_test_extension/Program\.cs|install/|AGENTS\.md|CLAUDE\.md|docs/SECURITY\.md|docs/SAFETY-CONTRACT\.md)' || true)"

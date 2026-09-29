@@ -29,6 +29,14 @@ were units and hedging. The causes:
    `docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`, `docs/CONVENTIONS.md`, `docs/TESTING.md`) changes nothing else
    except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and `docs/decisions/`. ADRs are allowed because
    the Guards rule asks a guard change to name one.
+3. Short Claude reviews that do not repeat themselves (`.github/workflows/review-claude.yml`, prompt only). A
+   fixed output format: Part 1 on one line, one bullet of at most three lines per finding, "None." for an empty
+   part, no heading, introduction or summary. A re-review opens with a count of fixed findings and one line per
+   finding not fixed, and reports only new Blockers and Majors. This replaces the "Fixed / Not fixed per earlier
+   finding" re-review of ADR-0012 point 4 (the rest of that point stands). The format is written into the prompt,
+   not loaded as a skill: a plugin installed at run time is code fetched from the network into a job that holds a
+   secret (a new dependency, safety question 4), and for a one-shot job with a fixed prompt a skill is only
+   prompt text anyway.
 
 Why a check and not only a sentence for point 2: the stop rule that PR #19 ignored was a sentence. The check is
 ten lines in a script that already runs on every pull request (R13) and already reads the diff's file list; no

@@ -22,7 +22,8 @@ desktop app. The code rules above are what keep that power unused.
 
 The **safety-impact** CI check turns red if a PR touches any of these files and the PR body still says
 "None" under "Safety impact". That is your signal to read the explanation and decide. It also turns red when a
-PR changes a rule or guard file together with anything else (R14, ADR-0016); its log names the files to move.
+PR changes a rule or guard file together with any file other than the session log, the plan, the changelog and
+ADRs (R14, ADR-0016); its log names the files to move.
 
 | File | Why it matters |
 |------|---------------|

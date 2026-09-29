@@ -34,6 +34,9 @@ Severity Major when it could send an agent or a human the wrong way, Minor other
 
 Part 4. One-line verdict: "No blocking findings" or "Blocking findings: <count>".
 
+Keep it short: Part 1 on one line, one bullet per finding ("**Major** file:line: what goes wrong. Fix: ..."),
+"None." for an empty part, no introduction, no summary of the pull request, nothing said twice.
+
 Post the result as a review on the pull request (with the gh CLI: gh pr review <PR> --comment --body-file
 <file>), or return it as text for a human to post. Do not approve or request changes on behalf of any other
 reviewer.
@@ -103,10 +106,9 @@ file and the secret.
   the plan, the changelog and ADRs (R14; the "Safety impact declared" CI check fails and names the files to
   move). Your merges of `main` into a branch and Dependabot PRs pass it.
 - How a reviewer confirms a fix: neither replies in threads. The one re-review after the fix push does it
-  (`@codex review`, and the push itself for Claude). The Claude workflow opens its re-review with Fixed /
-  Not fixed per earlier finding (it gets its own earlier comments as a file); Codex simply does not repeat what
-  is fixed.
-  A review of the fixed commit that does not repeat the finding is agreement, and then the building agent
+  (`@codex review`, and the push itself for Claude). The Claude workflow opens its re-review with a count of
+  fixed findings and one line per finding not fixed (it gets its own earlier comments as a file), and reports
+  only new Blockers and Majors; Codex simply does not repeat what is fixed. A review of the fixed commit that does not repeat the finding is agreement, and then the building agent
   resolves the thread, naming that review (`AGENTS.md` §2).
 - Every reviewer posts comments, never "Request changes" (the Claude prompt forbids it; Codex only
   comments). Nothing an agent posts blocks a merge: the merge is your
