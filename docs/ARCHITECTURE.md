@@ -49,9 +49,9 @@ the extension, which owns its lifetime.
 
 ## Views
 
-- **Meter** (`ContentPage` + `MarkdownContent`): the dashboard. The meters are SVG gauges embedded as `data:` URIs
-  (ADR-0011), with the Unicode bar as the image's alt text for renderers that cannot show them. Shows the phase in
-  progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
+- **Meter** (`ContentPage` + `MarkdownContent`): the dashboard. Each speed is a Unicode bar (`▰▰▰▱▱▱`, ADR-0006);
+  the SVG gauge of ADR-0011 rendered but did not look right, so it is out of the code until plan item 5.1 redraws
+  it (ADR-0013). Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
   the summary (`ResultSummary.PlainText`), `Ctrl+Shift+M` copies it as a markdown table.
 - **Details** (`ListPage`): one `ListItem` per value (download, upload, latency, jitter, ISP, IP, location, server,
   test time). Each item's command copies the value. `Ctrl+L` opens Meter, `Ctrl+R` reruns, `Ctrl+Shift+C` copies

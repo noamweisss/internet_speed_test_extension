@@ -4,6 +4,69 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 4a — 2026-09-29 — branch `chore/release-v0.1.1` (unplanned, local session on the owner's laptop)
+
+**Why**
+- The owner, after the session 4 VM run: a `v0.1.1` "that only fixes the jitter measurement issues and other
+  things that were fixed in session 4 but still uses the plain MD display and not the SVG arcs", installable on
+  the laptop over `v0.1.0`; the PR reviewed and left for the owner to merge. Run as a local Claude Code session
+  in a worktree on the laptop (.NET SDK 10.0.401, `gh` 2.92), not in the cloud container. The session is called
+  4a because it sits between session 4 (polish) and session 5 (gauge); session 4b (reviewers) ran before it.
+
+**Done**
+- Branch from `main` at 6034b22 (PR #15 and PR #16 merged); the harness branch renamed `chore/release-v0.1.1`.
+- `MeterMarkdown.AppendMeter` draws the ADR-0006 text bar again, the same line `v0.1.0` shipped. `GaugeSvg.cs`,
+  `GaugeSvgTests.cs` and the R6 exemption for that file in `scripts/check.sh` are deleted, not left in place
+  unused: the Code Review Rules in `AGENTS.md` make code without a caller a P1, and a release should not carry it.
+  R6 keeps the single-quote scan from session 4 and has no exception again (a guard change that makes the rule
+  stricter; `Guard-Change:` trailer, Safety impact in the PR). ADR-0013 records the decision and the restore
+  command (`git checkout 6034b22 -- ...`) and supersedes ADR-0011; ADR-0006 and ADR-0011 are not edited
+  (`docs/CONVENTIONS.md`; the first push of this branch had edited their status lines, Codex round 1).
+- Package version `0.1.1.0`; `CHANGELOG.md` gets `[0.1.1] - 2026-09-29` (the gauge entry dropped since it never
+  shipped, the R6 entry rewritten, compare links); `README.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`,
+  `docs/PLAN.md` (item 4.1 status, section "Session 4a", a note on 5.1) updated. Tests: session 4 ended at 110;
+  minus the 6 in `GaugeSvgTests.cs`, minus the 2 gauge tests in `MeterMarkdownTests.cs`, plus 2 new tests there
+  that assert the text bar and the absence of any image: 104 (`dotnet test` counts, not diff lines).
+- Release, the same way as `v0.1.0` (session 3): CI's push run on the branch head builds the artifact; it is
+  re-zipped as `internet-speed-test-extension-v0.1.1-x64.zip` with `SHA256SUMS.txt`, and a **draft** release
+  `v0.1.1` is created on the branch head commit with the changelog section, the install steps, the run id and the
+  hashes. The owner publishes the draft (that creates the tag) and installs with the usual command; the install
+  script removes `v0.1.0` first (`Get-AppxPackage` before the update: one package, 0.1.0.0, development mode).
+  Merge the PR with a merge commit, as before, so the tagged commit is on `main`.
+
+**Verified**
+- Locally on the laptop: `dotnet test tests/SpeedTest.Core.Tests` 104 passed; `scripts/check.sh all` green.
+- PR [#17](https://github.com/noamweisss/internet_speed_test_extension/pull/17). CI push run 36541424838 on
+  8827157 green (Windows build, Core tests, rules); the PR runs green including the safety-impact check and CodeQL.
+- Codex round 1 on 0abb5d5, 3 findings: P1 "no `Guard-Change` trailer" (false: the trailer is in the commit,
+  `git interpret-trailers --parse` and the GitHub API both show it; answered, no change), P2 "do not edit accepted
+  ADRs" (fixed: ADR-0013, ADR-0006 and ADR-0011 restored), P2 "test-count wording" (fixed: arithmetic stated).
+  Round 2 on 8827157: "no major issues", nothing repeated; the three threads resolved with a reply naming that
+  review (`AGENTS.md` §2). The Claude review workflow could not run, see the next point.
+- Draft release `v0.1.1` created on 8827157 with `internet-speed-test-extension-v0.1.1-x64.zip` (the artifact's
+  two files unchanged; the install script has the same SHA-256 as in v0.1.0) and `SHA256SUMS.txt`; package
+  0.1.1.0, 73 files, 31.0 MB unpacked. The owner publishes it, which creates the tag on 8827157. The docs commit
+  after 8827157 on this branch changes no code.
+
+**Found and fixed on a separate branch**
+- `.github/workflows/review-claude.yml` (ADR-0012) never ran: GitHub refused the file at parse time on every push
+  since bee8582 ("Unrecognized named-value: 'runner'", line 69), because `runner.temp` was used in the job's `env`.
+  Every push shows a failed 0-second run of that workflow, and no PR has a `pull_request_target` run. Fixed in PR
+  [#18](https://github.com/noamweisss/internet_speed_test_extension/pull/18) (`fix/review-workflow-runner-context`,
+  `REVIEW_DIR` per step): on that branch the push no longer produces the failed run, which is the parse check.
+  Codex on PR #18 reports the same false "no `Guard-Change` trailer" P1, twice, on a commit whose message carries
+  the trailer; answered with the API output, for the owner to dismiss. The first real Claude review lands on the
+  first PR opened or updated after #18 is on `main`.
+
+**Not verified**
+- The `v0.1.1` build on the laptop: the owner installs it. Session 4 leftovers (`Ctrl+Shift+C`, `Ctrl+Shift+M`,
+  power throttling, `Ctrl+L`, `Ctrl+R`, default view) unchanged.
+
+**Next**
+- Owner: publish the draft release `v0.1.1`, install it (`docs/INSTALL.md`, "Update"), merge PR #17 with a merge
+  commit, merge PR #18 (dismiss its false Codex thread), and then watch the first real Claude review.
+- Session 5, item 5.1: restore the gauge from 6034b22 (ADR-0013) and redraw it; `v0.2.0` then.
+
 ## Session 4b — 2026-09-28 to 2026-09-29 — branch `chore/independent-reviewers` (in parallel with session 4)
 
 **Final state (read this, the history below is how it got here)**
