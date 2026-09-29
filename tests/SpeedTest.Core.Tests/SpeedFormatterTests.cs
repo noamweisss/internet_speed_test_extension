@@ -18,19 +18,6 @@ public sealed class SpeedFormatterTests
     public void Latency_FormatsWithOneDecimal(double? ms, string expected) => Assert.Equal(expected, SpeedFormatter.Latency(ms));
 
     [Theory]
-    [InlineData(0, 100, 10, "▱▱▱▱▱▱▱▱▱▱")]
-    [InlineData(50, 100, 10, "▰▰▰▰▰▱▱▱▱▱")]
-    [InlineData(100, 100, 10, "▰▰▰▰▰▰▰▰▰▰")]
-    [InlineData(500, 100, 10, "▰▰▰▰▰▰▰▰▰▰")]
-    [InlineData(-5, 100, 10, "▱▱▱▱▱▱▱▱▱▱")]
-    [InlineData(5, 0, 10, "▱▱▱▱▱▱▱▱▱▱")]
-    public void Bar_FillsProportionallyAndClamps(double value, double max, int width, string expected) =>
-        Assert.Equal(expected, SpeedFormatter.Bar(value, max, width));
-
-    [Fact]
-    public void Bar_ZeroWidth_IsEmpty() => Assert.Equal(string.Empty, SpeedFormatter.Bar(5, 10, 0));
-
-    [Theory]
     [InlineData(0, 10)]
     [InlineData(10, 10)]
     [InlineData(11, 25)]

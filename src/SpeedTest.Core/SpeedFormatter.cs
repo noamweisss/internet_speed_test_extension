@@ -29,19 +29,7 @@ public static class SpeedFormatter
     public static string Latency(double? ms) =>
         ms is null ? Unknown : ms.Value.ToString("0.0", CultureInfo.InvariantCulture) + " ms";
 
-    /// <summary>A text gauge: "▰▰▰▱▱▱▱▱▱▱". Filled cells = value / max, clamped to [0, width].</summary>
-    public static string Bar(double value, double max, int width = 20)
-    {
-        if (width <= 0)
-        {
-            return string.Empty;
-        }
-
-        var filled = max <= 0 ? 0 : (int)Math.Round(Math.Clamp(value / max, 0, 1) * width);
-        return new string('▰', filled) + new string('▱', width - filled);
-    }
-
-    /// <summary>The gauge maximum for a value: the next "round" scale above it, so the bar is always readable.</summary>
+    /// <summary>The gauge maximum for a value: the next "round" scale above it, so the dial is always readable.</summary>
     public static double ScaleFor(double mbps)
     {
         foreach (var scale in new[] { 10.0, 25, 50, 100, 250, 500, 1000, 2500, 10000 })
@@ -57,7 +45,7 @@ public static class SpeedFormatter
 
     /// <summary>
     /// The gauge maximum for a value that must not fall below <paramref name="atLeast"/>, the scale already shown in
-    /// this run: a scale that shrank would make the bar jump back when the value moves down across a step.
+    /// this run: a scale that shrank would make the dial jump back when the value moves down across a step.
     /// </summary>
     public static double ScaleFor(double mbps, double atLeast) => Math.Max(atLeast, ScaleFor(mbps));
 }

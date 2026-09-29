@@ -7,7 +7,7 @@ using SpeedTest.Core;
 namespace SpeedTest.Extension.Pages;
 
 /// <summary>
-/// The meter dashboard (ADR-0006): four markdown blocks rendered by <see cref="MeterMarkdown"/>, returned as the same
+/// The meter dashboard (ADR-0017): four markdown blocks rendered by <see cref="MeterMarkdown"/>, returned as the same
 /// instances every time. The host rebuilds a block whole when its Body changes and leaves the others alone
 /// (docs/CMDPAL-RENDERING.md §5), so a live download value does not re-parse the heading or the connection line.
 /// Never RaiseItemsChanged here: the host answers it by calling GetContent again on the same thread
@@ -85,7 +85,7 @@ internal sealed partial class MeterPage : ContentPage
             var shownUpload = MeterEasing.Step(_shownUploadMbps, snapshot.UploadMbps, live: uploading);
 
             // The scale follows the measured value, not the eased one, and only grows: an eased value crossing a
-            // step made the bar drop back. A meter not measured yet has no scale, which resets it for every new run.
+            // step made the dial drop back. A meter not measured yet has no scale, which resets it for every new run.
             var downloadScale = snapshot.DownloadMbps is { } download ? SpeedFormatter.ScaleFor(download, _downloadScale) : 0;
             var uploadScale = snapshot.UploadMbps is { } upload ? SpeedFormatter.ScaleFor(upload, _uploadScale) : 0;
             var snapshotChanged = !ReferenceEquals(snapshot, _drawnSnapshot);

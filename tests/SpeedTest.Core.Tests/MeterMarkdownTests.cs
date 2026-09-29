@@ -90,32 +90,32 @@ public sealed class MeterMarkdownTests
     }
 
     [Fact]
-    public void Meter_WithValue_DrawsTextBarAsCode()
+    public void Meter_WithValue_DrawsTitleThenDialThenReadout()
     {
         var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 245.3, 250, active: true);
 
-        // 245.3 of the 250 scale fills every cell (ADR-0006). No image: the SVG gauge waits for plan item 5.1.
-        Assert.EndsWith("`▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰`\n", markdown, StringComparison.Ordinal);
-        Assert.DoesNotContain("![", markdown);
-        Assert.DoesNotContain("data:", markdown);
+        // The dial is plain markdown in its own paragraph with an empty alt text, the readout an H2 under it; no raw HTML.
+        Assert.Equal("## ⬇ Download ●\n\n![](" + GaugeSvg.DataUri(245.3, 250) + ")\n\n## 245.3 Mbps\n", markdown);
+        Assert.DoesNotContain("<", markdown);
     }
 
     [Fact]
-    public void Meter_WithCallerScale_FillsBarAgainstThatScale()
+    public void Meter_WithCallerScale_DrawsDialAgainstThatScale()
     {
-        // 9.5 alone would pick the 10 scale and fill 19 cells; the caller's 100 keeps the bar where the run left it.
+        // 9.5 alone would pick the 10 scale and nearly fill the dial; the caller's 100 keeps it where the run left it.
         var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 9.5, 100, active: true);
 
-        Assert.EndsWith("`▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
+        Assert.Contains("![](" + GaugeSvg.DataUri(9.5, 100) + ")", markdown);
+        Assert.DoesNotContain(GaugeSvg.DataUri(9.5, SpeedFormatter.ScaleFor(9.5)), markdown);
     }
 
     [Fact]
-    public void Meter_NotMeasured_ShowsPlaceholderAndEmptyBar()
+    public void Meter_NotMeasured_ShowsPlaceholderAndEmptyDial()
     {
         var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, null, 0, active: false);
 
-        Assert.Contains("\n## —\n", markdown);
-        Assert.EndsWith("`▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
+        Assert.EndsWith(")\n\n## —\n", markdown, StringComparison.Ordinal);
+        Assert.Contains("![](" + GaugeSvg.DataUri(0, 0) + ")", markdown);
     }
 
     [Fact]
