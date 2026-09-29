@@ -44,13 +44,26 @@ verified, blocked, next.
   container already has (`~/.claude/skills/synced/…/html-artifacts`), so nothing had to be installed and
   future cloud sessions on this account have it from the start.
 
+**Found, not fixed (the owner's call, queued as a task with the diff)**
+- The Claude review workflow ran for the first time on PR #19 and failed before reviewing: the action's exchange
+  of the runner's OIDC token for a Claude GitHub App token answers "401 Invalid OIDC token" three times.
+  Anthropic's exchange rejects `pull_request_target` runs (anthropics/claude-code-action issue 713, open since
+  2025-12-02), and the workflow uses that event on purpose (ADR-0012; `pull_request` would not get the
+  `claude-review` environment secret). Fix: `github_token: ${{ github.token }}` on the action step, which skips
+  the exchange (the action's `src/github/token.ts` returns the override token; `action.yml` already passes the
+  same token as `DEFAULT_WORKFLOW_TOKEN`, so nothing new is exposed), and `id-token: write` dropped; step 1 of
+  the setup in `docs/REVIEW-PROMPT.md` (install the app) becomes "no app needed". The workflow runs from `main`,
+  so the fix needs its own PR; this session's harness guard refused to write a token into a workflow, so the
+  change is left to the owner. Until it merges, PR #19 has only the Codex review.
+
 **Not verified**
 - Nothing in the two documents was run on Windows; every runtime claim is labelled Inferred and §16 of the
   technical document lists the seven questions for the owner's PC (first: whether the blank frame of a
   rebuilt markdown image is visible at 2 to 4 updates a second).
 
 **Next**
-- Owner: read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 starts from
+- Owner: apply the review-workflow fix above on a branch from `main` and merge it, then push or edit PR #19 so
+  the Claude review runs; read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 starts from
   `docs/CMDPAL-RENDERING.md` §15: options 1 to 3 (ease in the extension, one block per moving part, a text
   meter) need no image, no new capability and no ADR; the SVG comes back only after they are seen on the PC.
 
