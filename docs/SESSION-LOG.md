@@ -20,6 +20,9 @@ verified, blocked, next.
   commit is on `main`.
 
 **Verified**
+- Review round on PR #24 (Codex, one P2): plan 5.4 was `done` before the draft was published; now `doing`, and 5.1
+  says v0.2.0 is drafted. The CI safety-impact check (R13) failed on the first body because the manifest is a
+  safety-sensitive file and the section said "None"; the body now states the version-only change in plain words.
 - `scripts/check.sh all` green on this commit. CI on the branch: see the pull request (it runs after the push).
 
 **Not verified**
