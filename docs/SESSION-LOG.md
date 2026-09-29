@@ -60,9 +60,18 @@ verified, blocked, next.
   value and bar box are visible without scrolling; upload is below the fold. The bar shortened at three scale
   steps (a 200 Mbps line). The code box shows about 40 px of empty space under the scale line (host padding, see
   above).
+- CI run 36569917826 after the fix round: green (Core tests, rules, Windows extension build).
+- Second VM run after the fix round, 2026-09-29, build `870e8b4`, same VM `SpeedTest-Win11` (PowerToys 0.101.2652,
+  Command Palette 0.12.12651, 1920×1080 at 100 %, palette 800×480, frames every 150 ms): 160 frames; latency at
+  frame 2, download 8, upload 59, complete 111 (17.2 s); 0 blank frames. The page icon next to the back arrow is
+  back (the base fix `444d929` restored the glyph). Title, status, latency, download value and the code box are
+  visible without scrolling (box bottom at y 413, footer at 422); upload is below the fold. The speed held at
+  about 125 Mbps, so the bar stood still while the number changed; the scale stepped once, 100 to 250 Mbps. The
+  empty band under the scale line is still there: 41 px of the 84 px box. The markdown is exactly two lines inside
+  the fence, so this is the host's code-block rendering; a follow-up could look at the toolkit's `MyCodeBlock` for
+  a trailing line.
 
 **Not verified**
-- The fix round has not run in the VM yet; a second VM run follows the fix. CI for the fix push comes after it.
 - The owner's laptop at 200 % scaling: the Consolas grid and the 100 ms tick there.
 
 **Next**

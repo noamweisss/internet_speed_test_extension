@@ -86,3 +86,10 @@ build `f623fc5`: 161 frames captured at 150 ms; phases latency at frame 3, downl
 visible without scrolling; upload is below the fold. The code box shows about 40 px of empty space under the scale
 line; the markdown has no blank line in the fence, so that space is the host's padding. The 200 % scaling of the
 owner's laptop is not covered.
+
+A second run after the fix round (2026-09-29, same VM, build `870e8b4`, 160 frames): latency at frame 2, download 8,
+upload 59, complete 111 (17.2 s); again no blank frame. The page icon is back. The speed held at about 125 Mbps, so
+the bar stood still while the number changed, and the scale stepped once, 100 to 250 Mbps. The empty band under the
+scale line is still there, 41 px of the 84 px code box. The markdown is exactly two lines inside the fence, so it
+comes from the host's code-block rendering; a follow-up could look at the toolkit's `MyCodeBlock` for a trailing
+line.
