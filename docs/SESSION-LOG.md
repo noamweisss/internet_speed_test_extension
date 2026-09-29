@@ -4,6 +4,49 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 5 (continued) — 2026-09-29 — branch `feat/meter-arc-gauge` (option B)
+
+**Why**
+- Plan item 5.1. The owner asked for two or three visual designs for the meter, each fully built, so that choosing
+  one is only a pull request.
+
+**Done**
+- A shared base branch, `feat/meter-live-blocks`, with four commits that any design needs
+  (`docs/CMDPAL-RENDERING.md` §15 options 1 and 2): four fixed content blocks (header, download, upload, footer),
+  H2 readouts, easing with the maths in `MeterEasing` in Core and a one-shot ticker in `MeterPage`, and a scale
+  that never shrinks during a run.
+- Three design branches on top of it:
+  - `feat/meter-text-bars` (A): a 24-cell bar of `█ ▌ ░` in a fenced code block with a scale line, 100 ms tick.
+    Consolas lacks the eighth blocks (`▏`–`▉`), verified on the owner's laptop, so the bar uses halves.
+  - `feat/meter-arc-gauge` (B, this branch): `GaugeSvg` restored from `6034b22` (ADR-0013) and fixed: root
+    `viewBox='0 0 200 110' width='200' height='110'`, no `xmlns`, five tick marks, track at `stroke-opacity`
+    0.35, only `svg path line` and stroke attributes. `MeterMarkdown.Meter` renders the title, the dial as
+    `![](data:…)` and the H2 readout, left-aligned. `SpeedFormatter.Bar` and its tests removed (no caller).
+    Tick 250 ms (4 Hz), easing time constant 500 ms. ADR-0017 supersedes ADR-0013.
+  - `feat/meter-svg-bars` (C): an SVG horizontal bar in `GaugeSvg.cs`, 250 ms tick.
+- No rules branch is needed: the SVG carries no `xmlns`, so the C# holds no `http://` and R6 needs no exemption
+  (ADR-0017 gives the verification). A prepared branch `chore/r6-exempts-gauge-svg` with the 48baf41 exemption
+  exists locally as a fallback and is not pushed.
+- A VM capture harness in the session scratchpad (`vm\Test-MeterOnVM.ps1`, `vm\Capture-MeterRun.ps1`): it installs
+  a CI build into the `SpeedTest-Win11` VM over PowerShell Direct and screenshots the run from an interactive
+  scheduled task. The owner signed in on the VM console so a new checkpoint can be taken.
+- An HTML review artifact with mockups of the three designs and the frame captures, for the owner's choice.
+
+**Verified**
+- This branch: `dotnet test tests/SpeedTest.Core.Tests` 132 passed, 0 failed; `bash scripts/check.sh all` exit 0.
+  `MeterPage.cs` (one comment changed) compiles against the toolkit dll in a scratch project with warnings as
+  errors. Branches A and C record their own numbers.
+
+**Not verified**
+- Nothing has run on Windows yet: no CI build of this branch, no VM capture. Both come after the push.
+- Whether the blank frame of a rebuilt image is visible at 4 Hz (§16 item 1), and how the dial looks at 200 %
+  scaling (§4 rule 3; the VM runs at 100 %).
+
+**Next**
+- Owner: pick a design from the review artifact.
+- The chosen branch gets its pull request; the other design branches are deleted.
+- Fill in the "Chosen by the owner on <date> after the VM comparison" sentence in ADR-0017 before its pull request.
+
 ## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
 
 **Why**
