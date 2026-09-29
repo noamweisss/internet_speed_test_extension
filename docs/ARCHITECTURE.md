@@ -51,7 +51,7 @@ the extension, which owns its lifetime.
 
 - **Meter** (`ContentPage` + four `MarkdownContent` blocks: heading with status and latency, download, upload,
   connection line): the dashboard. The page returns the same blocks every time, so the host rebuilds only a block
-  whose text changed (`docs/CMDPAL-RENDERING.md` §5). While a test runs, a 100 ms ticker in the page moves each
+  whose text changed (`docs/CMDPAL-RENDERING.md` §5). While a test runs, a 250 ms ticker in the page moves each
   meter toward the last measurement (`MeterEasing` in Core) and snaps it to the exact value when its phase ends.
   Each speed is a speedometer dial (`GaugeSvg`, a base64 `data:` SVG image) with its value as an H2 under it
   (ADR-0017). Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies

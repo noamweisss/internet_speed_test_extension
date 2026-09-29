@@ -23,7 +23,7 @@ public sealed class MeterEasingTests
     [InlineData(0, 245.3)]
     [InlineData(0, 2500)]
     [InlineData(900, 12.5)]
-    public void Step_Repeated_ReachesTargetExactlyWithinThreeSeconds(double start, double target)
+    public void Step_Repeated_ReachesTargetExactlyWithinSixSeconds(double start, double target)
     {
         double? shown = start;
         var ticks = 0;
@@ -33,8 +33,11 @@ public sealed class MeterEasingTests
             ticks++;
         }
 
+        // The slowest case, 900 down to 12.5, needs 23 ticks at 250 ms: the remainder must shrink by a factor of
+        // about 70,000 to reach the snap distance, at 39 % per tick. A live phase lasts longer, and a phase that ends
+        // snaps its meter at once, so this only bounds how long a steady value takes to show exactly.
         Assert.Equal(target, shown);
-        Assert.True(ticks * MeterEasing.TickMilliseconds <= 3000, $"took {ticks} ticks");
+        Assert.True(ticks * MeterEasing.TickMilliseconds <= 6000, $"took {ticks} ticks");
     }
 
     [Theory]
