@@ -4,6 +4,51 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 5 (continued) — 2026-09-29 — branch `feat/meter-svg-bars` (option C)
+
+**Why**
+- Plan item 5.1: the owner found the session 4 gauge's layout and animation "not very good". They asked for two or
+  three visual designs, each fully built, so that choosing one is only a pull request.
+
+**Done**
+- A shared base branch, `feat/meter-live-blocks`, carries `docs/CMDPAL-RENDERING.md` §15 options 1 and 2 in four
+  commits: fixed content blocks (header, download, upload, footer), H2 readouts, easing with the maths in
+  `MeterEasing` (Core) and the ticker in `MeterPage`, and a scale that never shrinks during a run.
+- Three design branches on top of it:
+  - `feat/meter-text-bars` (A): a 24-cell bar of `█ ▌ ░` in a fenced code block with a scale line, 100 ms tick.
+  - `feat/meter-arc-gauge` (B): `GaugeSvg` restored from `6034b22` with a numeric root size, a viewBox, tick
+    marks, no `xmlns`, its own block, 250 ms tick.
+  - `feat/meter-svg-bars` (C, this branch): `GaugeSvg` draws a 240×20 horizontal bar (rounded track, rounded
+    `#0078D4` fill at least 12 wide, ticks at 25, 50 and 75 % over the fill), a `data:` image on its own paragraph
+    under the H2 readout, then a body-text line `scale 250 Mbps` (`SpeedFormatter.ScaleLabel`).
+    `SpeedFormatter.Bar` lost its only caller and is deleted with its tests. `MeterEasing.TickMilliseconds` is
+    250 ms (4 Hz), the time constant 500 ms. ADR-0017 supersedes ADR-0013; the owner's choice and its date are
+    placeholders in it.
+- No rules branch is needed: the SVG carries no `xmlns`, so there is no `http://` string and R6 keeps no exception
+  (verified in session 5: the host's sniff and size probe ignore the namespace, Direct2D draws without one on the
+  owner's laptop, Microsoft's `ChartHelper` omits it). A prepared branch `chore/r6-exempts-gauge-svg` with the
+  48baf41 exemption exists locally as a fallback and is not pushed.
+- A VM capture harness in the session scratchpad (`vm\Test-MeterOnVM.ps1`, `Capture-MeterRun.ps1`) installs a CI
+  build into `SpeedTest-Win11` over PowerShell Direct and screenshots the run from an interactive scheduled task.
+  The owner signed in on the VM console so a new checkpoint can be taken.
+- An HTML review artifact with mockups and the frame captures, for the owner's choice.
+
+**Verified**
+- This branch: `dotnet test tests/SpeedTest.Core.Tests` 139 passed, 0 failed; `scripts/check.sh all` exit 0.
+  `MeterPage.cs` is unchanged on this branch (the tick constant lives in Core), so the extension needed no new
+  compile check beyond the base branch's.
+- Branches A and B: their own builders' numbers go in their own entries.
+
+**Not verified**
+- Nothing has run on Windows yet: not the bar, not the 4 Hz tick. CI and the VM captures come after the push.
+- Whether the bar blinks when it is recreated four times a second (§5 step 5, Inferred).
+- The 200 % display of the owner's laptop, where the width is rasterised at scale and the height is not (§4 rule
+  3); the VM runs at 100 %.
+
+**Next**
+- Owner: pick a design. The chosen branch gets its pull request; the other branches are deleted; the ADR's
+  "chosen by the owner" sentence is filled in.
+
 ## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
 
 **Why**
