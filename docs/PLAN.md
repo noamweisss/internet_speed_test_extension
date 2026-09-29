@@ -62,13 +62,13 @@ the owner wanted the fixes on the laptop before the gauge is redone, so session 
 
 | # | Item | Status |
 |---|------|--------|
-| 4a.1 | Release `v0.1.1` from `main` after PR #15: the jitter and `Server-Timing` fixes and the copy commands, with the ADR-0006 text bar. `GaugeSvg`, its tests and the R6 exemption removed (no code without a caller); restore from `6034b22` in 5.1 | doing |
+| 4a.1 | Release `v0.1.1` from `main` after PR #15: the jitter and `Server-Timing` fixes and the copy commands, with the ADR-0006 text bar. `GaugeSvg`, its tests and the R6 exemption removed (no code without a caller, ADR-0013); restore from `6034b22` in 5.1 | doing |
 
 ## Session 5 — gauge polish
 
 | # | Item | Status |
 |---|------|--------|
-| 5.1 | Gauge layout and animation in the meter view: the owner's first run (2026-09-29) found both "not very good". Ask what looked wrong first (size, placement, the arc jumping between progress reports, colours per theme); `GaugeSvg` is a pure function, so layout is unit-testable, but only a Windows run shows the result. The gauge code is not on `main` since v0.1.1 (session 4a); restore it from `6034b22` first (ADR-0011, Consequences) | todo |
+| 5.1 | Gauge layout and animation in the meter view: the owner's first run (2026-09-29) found both "not very good". Ask what looked wrong first (size, placement, the arc jumping between progress reports, colours per theme); `GaugeSvg` is a pure function, so layout is unit-testable, but only a Windows run shows the result. The gauge code is not on `main` since v0.1.1 (session 4a); restore it from `6034b22` first (ADR-0013) | todo |
 | 5.2 | Optional: `dotnet` on `PATH` in the SessionStart hook for cloud sessions (`/root/.dotnet`) | todo |
 
 ## Out of scope (unless asked)

@@ -16,15 +16,17 @@ verified, blocked, next.
 **Done**
 - Branch from `main` at 6034b22 (PR #15 and PR #16 merged); the harness branch renamed `chore/release-v0.1.1`.
 - `MeterMarkdown.AppendMeter` draws the ADR-0006 text bar again, the same line `v0.1.0` shipped. `GaugeSvg.cs`,
-  `GaugeSvgTests.cs` (8 tests) and the R6 exemption for that file in `scripts/check.sh` are deleted, not left in
-  place unused: the Code Review Rules in `AGENTS.md` make code without a caller a P1, and a release should not
-  carry it. R6 keeps the single-quote scan from session 4 and has no exception again (a guard change that makes the
-  rule stricter; `Guard-Change:` trailer, Safety impact in the PR). ADR-0011 is marked withdrawn until plan item
-  5.1 and records the restore command (`git checkout 6034b22 -- ...`); ADR-0006 is in force again.
+  `GaugeSvgTests.cs` and the R6 exemption for that file in `scripts/check.sh` are deleted, not left in place
+  unused: the Code Review Rules in `AGENTS.md` make code without a caller a P1, and a release should not carry it.
+  R6 keeps the single-quote scan from session 4 and has no exception again (a guard change that makes the rule
+  stricter; `Guard-Change:` trailer, Safety impact in the PR). ADR-0013 records the decision and the restore
+  command (`git checkout 6034b22 -- ...`) and supersedes ADR-0011; ADR-0006 and ADR-0011 are not edited
+  (`docs/CONVENTIONS.md`; the first push of this branch had edited their status lines, Codex round 1).
 - Package version `0.1.1.0`; `CHANGELOG.md` gets `[0.1.1] - 2026-09-29` (the gauge entry dropped since it never
   shipped, the R6 entry rewritten, compare links); `README.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`,
-  `docs/PLAN.md` (item 4.1 status, section "Session 4a", a note on 5.1) updated. Two tests for the text bar in
-  `MeterMarkdownTests` replace the two gauge tests: 104 tests.
+  `docs/PLAN.md` (item 4.1 status, section "Session 4a", a note on 5.1) updated. Tests: session 4 ended at 110;
+  minus the 6 in `GaugeSvgTests.cs`, minus the 2 gauge tests in `MeterMarkdownTests.cs`, plus 2 new tests there
+  that assert the text bar and the absence of any image: 104 (`dotnet test` counts, not diff lines).
 - Release, the same way as `v0.1.0` (session 3): CI's push run on the branch head builds the artifact; it is
   re-zipped as `internet-speed-test-extension-v0.1.1-x64.zip` with `SHA256SUMS.txt`, and a **draft** release
   `v0.1.1` is created on the branch head commit with the changelog section, the install steps, the run id and the
@@ -42,7 +44,7 @@ verified, blocked, next.
 
 **Next**
 - Owner: publish the draft release, install it, merge the PR (merge commit).
-- Session 5, item 5.1: restore the gauge from 6034b22 (ADR-0011, Consequences) and redraw it; `v0.2.0` then.
+- Session 5, item 5.1: restore the gauge from 6034b22 (ADR-0013) and redraw it; `v0.2.0` then.
 
 ## Session 4b — 2026-09-28 to 2026-09-29 — branch `chore/independent-reviewers` (in parallel with session 4)
 

@@ -10,7 +10,8 @@ Nothing yet.
 ## [0.1.1] - 2026-09-29
 
 The session 4 measurement fixes and the copy commands, without the SVG gauge: it rendered, the owner did not like
-its layout yet, so this version keeps the text bar of v0.1.0 (ADR-0006) and the gauge waits for plan item 5.1.
+its layout yet, so this version keeps the text bar of v0.1.0 (ADR-0006, ADR-0013) and the gauge waits for plan item
+5.1.
 Install it over v0.1.0 with the same command; the old version is removed first.
 
 ### Added
@@ -22,7 +23,7 @@ Install it over v0.1.0 with the same command; the old version is removed first.
 
 ### Changed
 - Rule R6 (no plain `http://` in C#) now scans single-quoted strings too. The exemption for the SVG namespace name
-  in `GaugeSvg.cs` (ADR-0011) was removed together with the gauge; the rule has no exception again.
+  in `GaugeSvg.cs` (ADR-0011) was removed together with the gauge (ADR-0013); the rule has no exception again.
 - Jitter is the median, not the mean, of the differences between consecutive latency samples, and the test takes
   20 samples instead of 10 (ADR-0010). On the owner's laptop the extension process gets a few isolated slow
   samples that a plain console process does not; they made the mean jitter larger than the latency. The median

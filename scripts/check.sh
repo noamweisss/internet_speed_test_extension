@@ -58,7 +58,7 @@ while IFS= read -r -d '' f; do
         fail R5 "forbidden API usage in $f (docs/SECURITY.md, rule R5)"
       fi
       # R6: no plain-http URLs, in any quote style. (The SVG gauge of ADR-0011 needed one exemption, the SVG
-      #     namespace name in GaugeSvg.cs; it went with the gauge in v0.1.1 and returns with it, plan item 5.1.)
+      #     namespace name in GaugeSvg.cs; it went with the gauge in v0.1.1, ADR-0013, and returns with it, 5.1.)
       if printf '%s' "$CONTENT" | grep -nE "['\"]http://" >/dev/null; then fail R6 "plain http:// URL in $f"; fi
       # R7: every https host in C# must be in scripts/allowed-hosts.txt.
       for host in $(printf '%s' "$CONTENT" | grep -oE 'https://[A-Za-z0-9.-]+' | sed 's#https://##' | sort -u); do

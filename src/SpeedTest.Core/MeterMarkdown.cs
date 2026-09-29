@@ -3,7 +3,7 @@ using System.Text;
 namespace SpeedTest.Core;
 
 /// <summary>
-/// Renders the meter dashboard as markdown (ADR-0006). Pure function of the snapshot, so the layout is unit-tested
+/// Renders the meter dashboard as markdown (ADR-0006, kept by ADR-0013). Pure function of the snapshot, so the layout is unit-tested
 /// and the extension's MeterPage only has to hand the string to a MarkdownContent.
 /// </summary>
 public static class MeterMarkdown

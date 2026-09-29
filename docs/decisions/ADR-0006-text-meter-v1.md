@@ -1,6 +1,6 @@
 # ADR-0006: Draw the meter dashboard as text in markdown for v1
 
-Status: accepted · Date: 2026-09-24 · Superseded by ADR-0011 on 2026-09-28; in force again from v0.1.1 (2026-09-29) until plan item 5.1
+Status: accepted · Date: 2026-09-24
 
 ## Context
 Command Palette pages render markdown (`MarkdownContent`) or lists; there is no gauge control. Markdown images work
