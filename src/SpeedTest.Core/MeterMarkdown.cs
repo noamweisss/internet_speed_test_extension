@@ -3,9 +3,8 @@ using System.Text;
 namespace SpeedTest.Core;
 
 /// <summary>
-/// Renders the meter dashboard as markdown with an SVG gauge per speed (ADR-0006, superseded by ADR-0011). Pure
-/// function of the snapshot, so the layout is unit-tested and the extension's MeterPage only has to hand the string
-/// to a MarkdownContent.
+/// Renders the meter dashboard as markdown (ADR-0006). Pure function of the snapshot, so the layout is unit-tested
+/// and the extension's MeterPage only has to hand the string to a MarkdownContent.
 /// </summary>
 public static class MeterMarkdown
 {
@@ -55,11 +54,7 @@ public static class MeterMarkdown
     {
         text.Append("## ").Append(title).Append(active ? " ●" : string.Empty).Append("\n\n");
         text.Append("### ").Append(SpeedFormatter.Speed(mbps)).Append("\n\n");
-        // No value yet still draws the empty gauge. The Unicode bar is the alt text: what shows if the renderer
-        // cannot display data-URI images (PowerToys before 0.95).
         var value = mbps ?? 0;
-        var scale = SpeedFormatter.ScaleFor(value);
-        text.Append("![").Append(SpeedFormatter.Bar(value, scale))
-            .Append("](").Append(GaugeSvg.DataUri(value, scale)).Append(")\n\n");
+        text.Append('`').Append(SpeedFormatter.Bar(value, SpeedFormatter.ScaleFor(value))).Append("`\n\n");
     }
 }

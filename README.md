@@ -13,7 +13,7 @@ measures download, upload, and latency from inside the palette, modelled on the
 
 ## Status
 
-Usable, early. v0.1.0 measures latency, jitter, download and upload and shows the connection details. See
+Usable, early. v0.1.1 measures latency, jitter, download and upload and shows the connection details. See
 `docs/PLAN.md` for the roadmap and `CHANGELOG.md` for what changed.
 
 ## Install

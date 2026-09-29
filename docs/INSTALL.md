@@ -10,7 +10,7 @@ You need Windows 10 or 11, x64. Windows 11 Pro can use Windows Sandbox (path A, 
 Only use a build that CI made from a commit you can see on GitHub.
 
 **A release** (the normal way): open the repository on GitHub → **Releases** → the newest version (for example
-`v0.1.0`) → under **Assets**, download `internet-speed-test-extension-<version>-x64.zip`. The release notes name the
+`v0.1.1`) → under **Assets**, download `internet-speed-test-extension-<version>-x64.zip`. The release notes name the
 CI run that built it and the SHA-256 of each file, so you can check what you downloaded.
 
 **A pre-release build** (to test a change before it is released):
@@ -67,7 +67,8 @@ files in and collect logs, live on the owner's laptop, not in this repository (`
 
 ## Update or remove
 
-- **Update**: download the newer build and run the same command. The old version is removed first.
+- **Update**: download the newer build and run the same command. The old version is removed first; only one
+  version is ever installed.
 - **Remove**: in the extracted folder, run
 
   ```powershell

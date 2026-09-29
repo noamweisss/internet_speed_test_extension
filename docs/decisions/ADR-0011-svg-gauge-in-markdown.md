@@ -1,6 +1,6 @@
 # ADR-0011: Draw the meter as an SVG gauge embedded in markdown
 
-Status: accepted · Date: 2026-09-28 · Supersedes ADR-0006
+Status: accepted, withdrawn from the code on 2026-09-29 (v0.1.1) until plan item 5.1 · Date: 2026-09-28 · Supersedes ADR-0006 (in force again meanwhile)
 
 ## Context
 ADR-0006 chose text bars (`▰▰▰▱▱▱`) for v1 because whether `MarkdownContent` renders images from `data:` URIs
@@ -25,3 +25,9 @@ numbers stay markdown text so they do.
 - If it does not render, reverting is one line in `MeterMarkdown.AppendMeter`.
 - No new dependency and no network: the data URI is content the extension generated, not fetched. Every
   `docs/SAFETY-CONTRACT.md` §3 answer stays "No".
+- Verified by the owner on 2026-09-29 (PowerToys 0.101): the arcs render and follow the test. The owner found the
+  layout and the animation "not very good" and wanted a release with the session 4 fixes but the ADR-0006 bar, so
+  v0.1.1 removed `GaugeSvg`, its tests and the R6 exemption rather than ship unused code (`AGENTS.md`, Code Review
+  Rules: no code without a caller). The last commit that holds them is `6034b22` on `main`:
+  `git checkout 6034b22 -- src/SpeedTest.Core/GaugeSvg.cs tests/SpeedTest.Core.Tests/GaugeSvgTests.cs`, plus the R6
+  exemption in `scripts/check.sh` from the same commit. Plan item 5.1 brings the gauge back once it is redrawn.

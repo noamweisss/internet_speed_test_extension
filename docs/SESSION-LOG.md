@@ -4,6 +4,46 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 4a — 2026-09-29 — branch `chore/release-v0.1.1` (unplanned, local session on the owner's laptop)
+
+**Why**
+- The owner, after the session 4 VM run: a `v0.1.1` "that only fixes the jitter measurement issues and other
+  things that were fixed in session 4 but still uses the plain MD display and not the SVG arcs", installable on
+  the laptop over `v0.1.0`; the PR reviewed and left for the owner to merge. Run as a local Claude Code session
+  in a worktree on the laptop (.NET SDK 10.0.401, `gh` 2.92), not in the cloud container. The session is called
+  4a because it sits between session 4 (polish) and session 5 (gauge); session 4b (reviewers) ran before it.
+
+**Done**
+- Branch from `main` at 6034b22 (PR #15 and PR #16 merged); the harness branch renamed `chore/release-v0.1.1`.
+- `MeterMarkdown.AppendMeter` draws the ADR-0006 text bar again, the same line `v0.1.0` shipped. `GaugeSvg.cs`,
+  `GaugeSvgTests.cs` (8 tests) and the R6 exemption for that file in `scripts/check.sh` are deleted, not left in
+  place unused: the Code Review Rules in `AGENTS.md` make code without a caller a P1, and a release should not
+  carry it. R6 keeps the single-quote scan from session 4 and has no exception again (a guard change that makes the
+  rule stricter; `Guard-Change:` trailer, Safety impact in the PR). ADR-0011 is marked withdrawn until plan item
+  5.1 and records the restore command (`git checkout 6034b22 -- ...`); ADR-0006 is in force again.
+- Package version `0.1.1.0`; `CHANGELOG.md` gets `[0.1.1] - 2026-09-29` (the gauge entry dropped since it never
+  shipped, the R6 entry rewritten, compare links); `README.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`,
+  `docs/PLAN.md` (item 4.1 status, section "Session 4a", a note on 5.1) updated. Two tests for the text bar in
+  `MeterMarkdownTests` replace the two gauge tests: 104 tests.
+- Release, the same way as `v0.1.0` (session 3): CI's push run on the branch head builds the artifact; it is
+  re-zipped as `internet-speed-test-extension-v0.1.1-x64.zip` with `SHA256SUMS.txt`, and a **draft** release
+  `v0.1.1` is created on the branch head commit with the changelog section, the install steps, the run id and the
+  hashes. The owner publishes the draft (that creates the tag) and installs with the usual command; the install
+  script removes `v0.1.0` first (`Get-AppxPackage` before the update: one package, 0.1.0.0, development mode).
+  Merge the PR with a merge commit, as before, so the tagged commit is on `main`.
+
+**Verified**
+- Locally on the laptop: `dotnet test tests/SpeedTest.Core.Tests` 104 passed; `scripts/check.sh all` green.
+- CI, PR and reviews: see the update below this list, written when they were in.
+
+**Not verified**
+- The `v0.1.1` build on the laptop: the owner installs it. Session 4 leftovers (`Ctrl+Shift+C`, `Ctrl+Shift+M`,
+  power throttling, `Ctrl+L`, `Ctrl+R`, default view) unchanged.
+
+**Next**
+- Owner: publish the draft release, install it, merge the PR (merge commit).
+- Session 5, item 5.1: restore the gauge from 6034b22 (ADR-0011, Consequences) and redraw it; `v0.2.0` then.
+
 ## Session 4b — 2026-09-28 to 2026-09-29 — branch `chore/independent-reviewers` (in parallel with session 4)
 
 **Final state (read this, the history below is how it got here)**
