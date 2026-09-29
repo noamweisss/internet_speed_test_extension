@@ -50,7 +50,9 @@ internal sealed partial class MeterPage : ContentPage
         Name = "Meter dashboard";
         _ticker = new Timer(_ => Tick());
         _session.Changed += (_, _) => ScheduleTick();
-        ScheduleTick();
+        // Draw once here, synchronously, so the blocks are never empty when the host first reads them: a timer tick
+        // could lose that race. No host listens yet, so the Body sets are plain assignments (the Claude review of PR #23).
+        Tick();
     }
 
     public override IContent[] GetContent()

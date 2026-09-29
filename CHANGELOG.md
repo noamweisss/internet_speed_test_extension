@@ -12,7 +12,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
   smoothed value, and the final value is exact. A bar's scale never shrinks during a test: it can still step up
   (10, 25, 50, 100 Mbps and so on) as the speed rises, and the bar shortens at that moment, but a dip in speed no
   longer drops it back.
-- The numbers under Latency, Download and Upload are bigger. The meter view redraws only the section that changed.
+- The numbers under Latency, Download and Upload are bigger. The meter view is drawn once when the extension starts and
+  then redraws only the section that changed.
 
 ## [0.1.1] - 2026-09-29
 
