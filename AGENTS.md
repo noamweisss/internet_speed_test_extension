@@ -163,8 +163,9 @@ documentation-only pull request like this:
   about an external system (Command Palette, PowerToys, the SDK, a renderer) needs a source and a confidence
   label (`Verified`, `Inferred`, `Unknown`); one without either is P2, and the reviewer does not reproduce the
   external fact. An HTML explainer under `docs/` is reviewed for what it says, against the document it explains:
-  a claim in one that the other contradicts is P1; its markup, styles, and scripts are not code under these rules
-  and get no findings, except that a page loading anything from the network is P1 (`docs/CONVENTIONS.md`).
+  a claim in one that the other contradicts is P1. Its markup and styles get no findings; its script is
+  reviewed for what it does, since it runs when the owner opens the page: a script that does anything beyond
+  driving the page's own content, or a page that loads anything from the network, is P1 (`docs/CONVENTIONS.md`).
 - `CHANGELOG.md` is for users of the extension; a document for agents or the owner needs no line (R8 covers
   code only). The hand-off entry and the plan status are still required.
 

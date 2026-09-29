@@ -475,7 +475,7 @@ inside the one markdown block, regenerated on every progress report (200 ms). Ag
 2. **A blank interval per update (structure Verified, visibility Inferred).** Every `Body` set rebuilt the
    whole block and recreated the image empty (§5 step 5). Whether that shows as a blink at 5 Hz is untested
    (§16 item 1); the owner reported the animation as "not very good" without naming a blink.
-3. **No size control.** A `data:` image gets no hints, `Stretch = None`, a 256-DIP cap, a DPI-scaled
+3. **Limited size control.** A `data:` image is sized by its root `width`/`height` only: no hints, `Stretch = None`, a 256-DIP cap, a DPI-scaled
    rasterisation width and an unscaled height (§4). The result depends on the monitor's scaling.
 4. **Small readouts.** The value sat under `###`, which the host renders at 12 px normal weight (§3).
 5. **Everything in one block.** The heading, status, latency, both meters and the ISP line were re-parsed
