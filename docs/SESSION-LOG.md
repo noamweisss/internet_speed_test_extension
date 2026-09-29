@@ -65,14 +65,30 @@ verified, blocked, next.
   gets only the Codex review (the workflow runs from `main`); after it merges, editing PR #19's body or pushing
   to it starts the first Claude review.
 
+**Reviews**
+- Codex reviewed 13 rounds (3b6ad91 to e685812). Every finding was about documentation or the review rules, none
+  about code; all were fixed in the round after and every thread was resolved only after the next round did not
+  repeat it (`AGENTS.md` §2). The findings that changed substance: the documentation-only rule was narrowed in
+  four steps (documents only; rule files excluded; an explainer's script stays in scope; an exact list of rule
+  files, with plan and hand-off counted as documents), plan item 5.1 was aligned with ADR-0013, a temp-folder
+  write was marked as breaking the safety contract's no-file promise, PR #50211 was marked proposed rather than
+  shipped, and every statement about a visible blink was brought back to "Verified empty-image interval,
+  visibility Inferred". The rest were wording and unit fixes (DIP instead of px, batching wording).
+- The Claude review never posted on this PR. First blocker: the OIDC exchange (fixed in PR #20, ADR-0014).
+  Second blocker, found here: the workflow allows the reviewer `Write(<path>)`, a rule form Claude Code accepts
+  but never consults (its permissions page: only `Edit(path)` and `Read(path)` rules are checked), so the
+  reviewer runs to the end and cannot write `review.md`. The fix (allow `Edit(<path>)`, drop the bare `Edit`
+  deny, turn the two `Write(...)` denies into `Edit(...)`) is a workflow change for its own PR into `main`,
+  described in a PR #19 comment and queued as a task for the owner.
+
 **Not verified**
 - Nothing in the two documents was run on Windows: the pipeline is Verified from source, what it looks like
   on screen is Inferred, and §16 of the technical document lists the seven questions for the owner's PC (first: whether the blank frame of a
   rebuilt markdown image is visible at 2 to 4 updates a second).
 
 **Next**
-- Owner: PR #20 is merged (ADR-0014); this branch merged `main` afterwards, which starts the first Claude
-  review on PR #19. Read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
+- Owner: PR #20 is merged (ADR-0014). Apply the `Edit(...)` rule fix above in its own PR so the Claude review
+  can post; a body edit on PR #19 then starts it. Read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
   says: restore `GaugeSvg` from 6034b22, redraw, and record the result in the ADR that supersedes ADR-0013.
   `docs/CMDPAL-RENDERING.md` §15 ranks the options for that redraw; options 1 to 3 (ease in the extension, one
   block per moving part, a text meter) add no capability and keep every safety answer "No", option 4 keeps the
