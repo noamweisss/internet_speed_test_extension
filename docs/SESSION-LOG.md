@@ -67,7 +67,6 @@ verified, blocked, next.
 - How the dial looks at 200 % scaling (§4 rule 3; the VM runs at 100 %).
 
 **Next**
-- Second VM run of this branch after the fix push.
 - Owner: pick a design from the review artifact.
 - The chosen branch gets its pull request; the other design branches are deleted.
 - If this design is chosen: fill in the "Chosen by the owner on <date> after the VM comparison" sentence and set
