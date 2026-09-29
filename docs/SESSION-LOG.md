@@ -53,9 +53,17 @@ verified, blocked, next.
   frames in the download phase (`frame-0034`, `frame-0039`): the dial vanished and the layout collapsed for one
   frame. In an 800 × 480 window the download number under the dial was clipped by the footer bar, and the upload
   meter was below the fold; hence the readout moved above the dial in this fix round.
+- CI run 36570229251 after the fix round: green (Core tests, rules, Windows extension build).
+- Second VM run after the fix round, 2026-09-29, build `0cfbf15`, same VM `SpeedTest-Win11` (PowerToys 0.101.2652,
+  Command Palette 0.12.12651, 1920×1080 at 100 %, palette 800×480, frames every 150 ms): 161 frames; connecting at
+  frame 2, latency 3, download 9, upload 60, complete 111 (17.2 s). The page icon next to the back arrow is back
+  (the base fix `444d929` restored the glyph). The number now sits above the dial and is readable without
+  scrolling (162.3 Mbps at about y 310). The dial's lower part (both ends and the baseline) is cut by the footer at
+  800×480; upload is below the fold. 6 blank frames in 51 download frames (12, 17, 27, 37, 42, 55) plus one at the
+  start of upload, each collapsing the layout for one frame (the upload heading jumps up into the dial's place):
+  more than the first run (2 of 49). Scale steps were not visible in this run.
 
 **Not verified**
-- The fix round on Windows: a second VM run follows the fix, and CI on the fix push.
 - How the dial looks at 200 % scaling (§4 rule 3; the VM runs at 100 %).
 
 **Next**

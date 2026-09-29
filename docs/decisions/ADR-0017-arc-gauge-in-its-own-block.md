@@ -73,14 +73,21 @@ Verified in the test VM on 2026-09-29: build `4215649` of this branch on `SpeedT
 page shows and the dial renders, so the host's `SvgImageSource` path accepts a root without `xmlns`. The
 download phase started at frame 7, upload at 56, and the run completed at 109 (17.3 s). With the readout under
 the dial, the footer bar clipped the download number to the tops of its digits in an 800 × 480 window, and the
-upload meter was below the fold; this fix round moves the readout above the dial, and a second VM run follows.
+upload meter was below the fold; this fix round moves the readout above the dial.
+
+A second run after the fix round (2026-09-29, same VM, build `0cfbf15`, 161 frames): connecting at frame 2, latency
+3, download 9, upload 60, complete 111 (17.2 s). The number now sits above the dial and is readable without
+scrolling (162.3 Mbps at about y 310), but the dial's lower part, both ends and the baseline, is cut by the footer
+at 800×480, and upload is still below the fold. The trade-off is number readable, dial bottom clipped. Blank
+frames rose to 6 in 51 download frames (12, 17, 27, 37, 42, 55) plus one at the start of upload, each collapsing
+the layout for one frame; the first run had 2 of 49. Scale steps were not visible in this run.
 
 ## Consequences
 - The dials need PowerToys 0.95 or newer for `data:` images. An older host shows nothing where the dial is
   (the alt text is empty); the readout above it still shows.
 - A rebuild can still blank the image. Verified in the VM run: 2 blank frames in 49 download frames at 4 Hz
   (`frame-0034`, `frame-0039`), each collapsing the layout for one frame: the readout and the next heading jump
-  up about 120 px and back (§16 item 1).
+  up about 120 px and back (§16 item 1). The second run, after the fix round, had 6 in 51 (see above).
 - The scale steps up while a speed rises (10, 25, 50, 100, 250, 500 Mbps), and the arc falls back at each step.
   A follow-up may start a run at the previous run's scale.
 - On a display scaled to 200 % (the owner's laptop) the host rasterises the image's width at scale and its
