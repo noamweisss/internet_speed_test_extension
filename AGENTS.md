@@ -146,10 +146,12 @@ Wording and tone are P3.
 
 ### Documentation-only pull requests
 
-A pull request is documentation-only when every file in its diff is a document: a `.md` file at the
-repository root or under `docs/`, or a `.html` file under `docs/`. A diff that also touches anything else (a
-guard file, `AGENTS.md` included, a workflow, a script, a project file, code, a test, an asset) is reviewed
-under every rule above, with the two rules for research documents below applied to its documents. Review a
+A pull request is documentation-only when every file in its diff is a document that is not a rule: a `.md`
+file at the repository root or under `docs/`, or a `.html` file under `docs/`, and none of the files
+`docs/SAFETY-CONTRACT.md` §2 lists (`AGENTS.md`, `CLAUDE.md`, `docs/SECURITY.md`, `docs/SAFETY-CONTRACT.md`
+among them). A diff that also touches anything else (one of those rule files, a guard file, a workflow, a
+script, a project file, code, a test, an asset) is reviewed under every rule above, with the two rules for
+research documents below applied to its documents. Review a
 documentation-only pull request like this:
 
 - Safety questions: the five answers come from the diff as always. A document cannot reach a host, touch a

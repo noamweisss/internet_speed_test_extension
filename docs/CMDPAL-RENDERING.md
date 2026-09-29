@@ -29,7 +29,8 @@ are not in the repository; this document is their merge.
 
 Command Palette gives an extension five kinds of content on a `ContentPage` (markdown, an Adaptive Card, plain
 text, one image, a tree of the former) plus list pages with icons, tags, a details pane and three grid layouts.
-Nothing animates on the extension's behalf: every visual change is the extension replacing a value, the host
+Nothing moves a value on the extension's behalf (no easing, no transitions, no SVG animation; an animated GIF
+plays its own frames, §4, and cannot show a value): every visual change is the extension replacing a value, the host
 re-reading it over COM, batching for 40 ms, and rebuilding the affected control on its UI thread. Markdown is
 rebuilt whole on every `Body` change, images inside it are recreated empty and filled asynchronously, and a
 `data:` image cannot carry size hints and is capped at 256 device-independent pixels wide. That combination is
