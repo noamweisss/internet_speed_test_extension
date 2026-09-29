@@ -1,0 +1,42 @@
+# CodeRabbit reviewer configuration. Automatic reviews are off: every review is requested by hand with
+# "@coderabbitai review", once per finished pull request. The reviewer's rules are the "Code Review Rules"
+# section of AGENTS.md, which CodeRabbit reads on its own; the path instructions below add only the safety
+# checklist and the severity words that section uses.
+language: en-US
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  review_status: false
+  high_level_summary: true
+  poem: false
+  auto_review:
+    enabled: false
+    drafts: false
+  path_instructions:
+    - path: "**"
+      instructions: |
+        Apply the "Code Review Rules" section of AGENTS.md in full: safety questions, guards, correctness,
+        design and maintainability, documentation and instructions, documentation-only pull requests,
+        completeness. Severities: P0 = Blocker, P1 = Major, P2 = Minor, P3 = Nit. Report documentation
+        findings as a separate list from code findings. Report everything in one review; never keep a finding
+        for the next round.
+    - path: "**/*.cs"
+      instructions: |
+        Read docs/SAFETY-CONTRACT.md and docs/SECURITY.md first. In your summary, answer these five questions
+        explicitly with Yes/No and a file:line for every Yes:
+        1. Can the code reach any host other than speed.cloudflare.com?
+        2. Does it read, write, or delete files, registry keys, or processes?
+        3. Does it store, log, or send anything about the user (IP, ISP, location, results)?
+        4. Does it add a dependency, a Windows capability, or weaken a guard?
+        5. Is any network input used without bounds on size, time, or format?
+        A "Yes" without a linked ADR in docs/decisions/ is a Blocker.
+    - path: "{scripts,.githooks,.claude,.github,install}/**"
+      instructions: |
+        These are the project's guards. A change that makes a rule weaker, adds a bypass, or removes a check
+        is Major unless the PR body's "Safety impact" section justifies it and names an ADR.
+    - path: "{AGENTS,CLAUDE}.md"
+      instructions: |
+        These are the project's guards. A change that makes a rule weaker, adds a bypass, or removes a check
+        is Major unless the PR body's "Safety impact" section justifies it and names an ADR.
+chat:
+  auto_reply: true
