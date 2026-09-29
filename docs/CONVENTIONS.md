@@ -49,7 +49,8 @@ Types inside it use the `SpeedTest.Extension` namespace and PascalCase names.
 
 ## Pull requests
 
-- One PR per session branch. Title is a Conventional Commit line. Body follows `.github/pull_request_template.md`.
+- One PR per branch. A session that changes rule or guard files and also files outside R14's exceptions (session
+  log, plan, changelog, ADRs) uses two branches and two PRs (R14, `AGENTS.md` §2). Title is a Conventional Commit line. Body follows `.github/pull_request_template.md`.
 - The PR body states what was verified and how (CI green, unit tests, manual test on Windows) and what was not.
 - CI must be green. Reviewers (human or agent) check the PR against `docs/SECURITY.md` and this file.
 

@@ -4,6 +4,46 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
+
+**Why**
+- PR #19 took 15 Codex rounds with no finding in code. The owner decided two fixes (ADR-0016): a stop rule that
+  agents follow, and rule changes in their own pull requests.
+
+**Done**
+- Stop rule: `AGENTS.md` §4 step 6 (building agent: one fix push, one re-review, another round only after a
+  Blocker or Major in code or a safety finding; sweep the diff for the same concept before a documentation fix;
+  "agree" means no open Blocker or Major), "Code Review Rules" / Completeness (reviewers), `docs/REVIEW-PROMPT.md`
+  "Reading the results" (owner).
+- R14 in `scripts/safety-impact.sh`: a pull request that changes a rule or guard file changes nothing else
+  except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and `docs/decisions/`. Written in `AGENTS.md` §2,
+  the Guards group of "Code Review Rules", `docs/SECURITY.md`, `docs/SAFETY-CONTRACT.md` §2, `docs/CONVENTIONS.md`.
+  ADRs are allowed because the Guards rule asks a guard change to name one. The CI job keeps its name.
+- Claude reviewer prompt (owner's request in the same session: "stop slopping out these endless essays"):
+  a fixed short format and a re-review that lists only unfixed findings and new Blockers or Majors (ADR-0016
+  point 3). Written into the prompt, not loaded as a skill (reasons in ADR-0016). `docs/REVIEW-PROMPT.md` in step.
+- Codex round 1 on bb834d2, 3 findings, all fixed in one push: renames hid a moved rule or guard file from R14
+  (`--no-renames`), `docs/SAFETY-CONTRACT.md` left out R14's exceptions, the script comment named ADR-0015.
+  Same wording swept in `docs/CONVENTIONS.md` and the R14 error message.
+- Claude round 1 on bb834d2: the same ADR-0015 slip (Major), and "rule file" in the script where R14 means
+  "rule or guard file" (Minor); both fixed, the second swept through the diff.
+- ADR-0016 (PR #19 holds ADR-0015). `main` merged in after PR #19 landed; the log conflict kept both entries.
+
+**Verified**
+- `scripts/check.sh all` green. R14 replayed on every merge commit of `main` from PR #4 on: PRs #18, #20, #21,
+  the Dependabot PRs and the code-only PRs pass; #15, #16, #17 would have failed (listed in ADR-0016). PR #19
+  (merged before this rule) would have failed too, with its two research documents named. A rename of
+  `AGENTS.md` next to a code file now fails R14 (tested in a throwaway worktree). The workflow parses (PyYAML).
+
+**Not verified**
+- The check on a real Dependabot run after this merges (replayed on #2, #3, #4, #6 only).
+- The new reviewer prompt: the workflow runs from `main`, so this PR is still reviewed with the old prompt.
+
+**Next**
+- Owner: merge this PR with a merge commit.
+- Deferred, for the owner (discussed in the PR body): option 3 (research-document inconsistencies at P2 at most)
+  and option 4 (a thinner HTML explainer that links to the `.md`).
+
 ## Session 5 — 2026-09-29 — branch `docs/cmdpal-rendering-research` (research, no code)
 
 **Why**
@@ -101,6 +141,7 @@ verified, blocked, next.
   `docs/CMDPAL-RENDERING.md` §15 ranks the options for that redraw; options 1 to 3 (ease in the extension, one
   block per moving part, a text meter) add no capability and keep every safety answer "No", option 4 keeps the
   SVG with the fixes of §4, and whichever is chosen goes into that ADR.
+
 ## Review workflow Edit permission — 2026-09-29 — branch `fix/review-workflow-edit-permission` (cloud session)
 
 **Why**
