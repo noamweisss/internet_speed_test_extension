@@ -18,12 +18,24 @@ public sealed class MeterEasingTests
         Assert.Equal(MeterEasing.Step(0, 100, live: true), MeterEasing.Step(null, 100, live: true));
     }
 
+    [Fact]
+    public void Step_OneSecondOfTicks_CoversMostOfTheDistance()
+    {
+        double? shown = 0;
+        for (var elapsed = 0; elapsed < 1000; elapsed += MeterEasing.TickMilliseconds)
+        {
+            shown = MeterEasing.Step(shown, 100, live: true);
+        }
+
+        Assert.InRange(shown!.Value, 80, 95);
+    }
+
     [Theory]
-    [InlineData(0, 0.5)]
-    [InlineData(0, 245.3)]
-    [InlineData(0, 2500)]
-    [InlineData(900, 12.5)]
-    public void Step_Repeated_ReachesTargetExactlyWithinThreeSeconds(double start, double target)
+    [InlineData(0, 0.5, 4000)]
+    [InlineData(0, 245.3, 4000)]
+    [InlineData(0, 2500, 4000)]
+    [InlineData(900, 12.5, 6000)] // a 70-fold drop takes longest: the snap distance shrinks with the target
+    public void Step_Repeated_ReachesTargetExactlyInBoundedTime(double start, double target, int maxMilliseconds)
     {
         double? shown = start;
         var ticks = 0;
@@ -34,7 +46,7 @@ public sealed class MeterEasingTests
         }
 
         Assert.Equal(target, shown);
-        Assert.True(ticks * MeterEasing.TickMilliseconds <= 3000, $"took {ticks} ticks");
+        Assert.True(ticks * MeterEasing.TickMilliseconds <= maxMilliseconds, $"took {ticks} ticks");
     }
 
     [Theory]

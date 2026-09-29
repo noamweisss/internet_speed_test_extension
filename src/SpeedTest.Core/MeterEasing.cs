@@ -11,13 +11,18 @@ namespace SpeedTest.Core;
 public static class MeterEasing
 {
     /// <summary>
-    /// How often the meter is redrawn while a test runs. 100 ms is the floor: the host shows only the last of two
-    /// updates closer than its 40 ms batch window and may still rebuild for each (docs/CMDPAL-RENDERING.md §5, §15).
+    /// How often the meter is redrawn while a test runs: 4 Hz, the top of the 2 to 4 Hz that docs/CMDPAL-RENDERING.md
+    /// §15 option 4 gives an image meter. Every redraw recreates the bar image empty until it is decoded again (§5
+    /// step 5), so fewer redraws mean fewer blank frames. 100 ms would be the floor for a text meter (§15 option 1).
     /// </summary>
-    public const int TickMilliseconds = 100;
+    public const int TickMilliseconds = 250;
 
-    /// <summary>Close to the 200 ms measurement interval, so the shown value keeps up without visible steps.</summary>
-    private const double TimeConstantMilliseconds = 250;
+    /// <summary>
+    /// Twice the tick, so each tick covers 39 % of the remaining distance (1 − e^−0.5): small enough steps to read as
+    /// a glide at 4 Hz, and a new measurement is 86 % reached after one second. A 250 ms constant at this tick would
+    /// cover 63 % per tick, which looks like the jumps this class exists to remove.
+    /// </summary>
+    private const double TimeConstantMilliseconds = 500;
 
     /// <summary>Below this remainder the readout cannot show the difference: 1 Kbps is its finest unit.</summary>
     private const double SnapAbsoluteMbps = 0.001;
