@@ -39,6 +39,10 @@ Post the result as a review on the pull request (with the gh CLI: gh pr review <
 reviewer.
 ```
 
+A pull request that changes no code (nothing under `src/`, `tests/`, or `internet_speed_test_extension/`) is
+reviewed with the same prompt; the "Documentation-only pull requests" rules in `AGENTS.md` say what Parts 1 to 3
+then contain, so a reviewer does not ask for tests or ADRs for a document.
+
 ## Who reviews, and when
 
 | Reviewer | Identity on GitHub | Trigger | Where its rules live |

@@ -10,6 +10,8 @@ Rules for every agent (and human) working in this repository. Vendor-neutral: `C
 3. `docs/PLAN.md` – the roadmap and what the current session is expected to deliver.
 4. `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`, `docs/SECURITY.md`, `docs/TESTING.md` – as needed.
 5. `.github/instructions/cmdpal-extension.instructions.md` – Command Palette SDK reference from the template.
+6. `docs/CMDPAL-RENDERING.md` – what the Command Palette host renders and how (research, session 5); read it
+   before any work on the meter view.
 
 ## 2. Non-negotiables (machine-enforced)
 
@@ -141,6 +143,26 @@ agent or a human the wrong way, P2 otherwise:
 - A hand-off note (`docs/SESSION-LOG.md`) or plan status that does not match what the pull request did.
 
 Wording and tone are P3.
+
+### Documentation-only pull requests
+
+A pull request whose diff touches no file under `src/`, `tests/`, or `internet_speed_test_extension/` is
+documentation-only (the diff and the changed-file list say so). Review it like this:
+
+- Safety questions: the five answers come from the diff as always. A `.md` or `.html` file cannot reach a
+  host, touch a file, or add a dependency, so with no code in the diff every answer is "No"; the Guards rule
+  above still applies to every guard file in the diff.
+- Correctness and design: the code rules above have nothing to check, so this list holds only findings about
+  guard files, if any. Do not ask for a unit test, a Core-layer move, or an ADR for text: a research document
+  records what was found and what could be tried, and the pull request that implements a choice carries the ADR.
+- Documentation and instructions: the rules above apply in full, plus two for research documents. A statement
+  about an external system (Command Palette, PowerToys, the SDK, a renderer) needs a source and a confidence
+  label (`Verified`, `Inferred`, `Unknown`); one without either is P2, and the reviewer does not reproduce the
+  external fact. An HTML explainer under `docs/` is reviewed for what it says, against the document it explains:
+  a claim in one that the other contradicts is P1; its markup, styles, and scripts are not code under these rules
+  and get no findings, except that a page loading anything from the network is P1 (`docs/CONVENTIONS.md`).
+- `CHANGELOG.md` is for users of the extension; a document for agents or the owner needs no line (R8 covers
+  code only). The hand-off entry and the plan status are still required.
 
 ### Completeness
 
