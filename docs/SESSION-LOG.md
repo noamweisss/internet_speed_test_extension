@@ -4,7 +4,7 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
-## Session 4 — 2026-09-28 — branch `feat/session-4-polish`
+## Session 4 — 2026-09-28 to 2026-09-29 — branch `feat/session-4-polish`
 
 **Done** (three implementation subagents in parallel, one per plan item, with file ownership; the lead reviewed,
 fixed two things in 4.1, wrote the changelog and committed)
@@ -53,12 +53,16 @@ fixed two things in 4.1, wrote the changelog and committed)
   passed the word boundary (a hyphen is not an identifier character); the exemption is now the literal
   `<svg xmlns='...'` start tag, the only spelling the code uses, so no boundary rule is needed. Fourth pass, 1 finding:
   the exemption now applies to `src/SpeedTest.Core/GaugeSvg.cs` alone; every other file gets the plain rule.
+  CodeRabbit approved head 48baf41 on 2026-09-28 (review 5344094661); CI run 36468774687 green on that head;
+  110 tests; all 11 review threads resolved; merge state clean.
+- Owner's run in the VM (2026-09-29, build 48baf41): the gauge arcs render as `data:` SVG images in
+  `MarkdownContent` and follow the measurement (ADR-0011 verified on PowerToys 0.101), the values are correct, and
+  jitter is plausible again (plan item 4.3 verified). The owner's verdict on the gauge itself: the layout and the
+  animation are "not very good"; a session 5 item, not a blocker for this PR.
 
 **Not verified**
-- Nothing from this session has run in Command Palette. The owner's next run checks: the two gauges render (not a
-  broken-image icon, not the alt-text bar) on PowerToys 0.101, in light and dark theme; `Ctrl+Shift+C` and
-  `Ctrl+Shift+M` copy (a toast "Copied" appears); jitter on the laptop is now plausible (single digits at about
-  30 ms latency). `docs/TESTING.md` step 6 covers the copy commands.
+- The copy commands (`Ctrl+Shift+C`, `Ctrl+Shift+M`) and the gauge in the other theme were not reported from the
+  VM run; `docs/TESTING.md` step 6 covers the copy commands.
 - The power-throttling suspicion from session 3 is still unproven: Task Manager → Details → "Power throttling"
   column for `internet_speed_test_extension.exe` during a test, on battery and on mains. The median hides the
   spikes either way; the check only tells whether the suspicion was right.
@@ -69,11 +73,12 @@ fixed two things in 4.1, wrote the changelog and committed)
 - Two leftover worktrees under `.claude/worktrees/` from earlier sessions (not touched, G6 blocks branch deletion).
 
 **Next**
-- Owner: run the checklist above; publish a `v0.2.0` release the same way as `v0.1.0` (session 3) once verified.
-- If the gauge does not render: revert the one line in `MeterMarkdown.AppendMeter` (ADR-0011 consequences) and
-  note the PowerToys version in a new ADR.
-- Session 5, if any: only what daily use asks for. Remaining candidates: 4.3 streams and durations (nothing asked
-  for it), 4.4 Store publishing (owner decision), the `dotnet` PATH line in the SessionStart hook.
+- Owner: merge PR #15, then publish a `v0.2.0` release the same way as `v0.1.0` (session 3).
+- Session 5, item 5.1 (`docs/PLAN.md`): the gauge's layout and animation. Start by asking the owner what looked
+  wrong (size, placement under the heading, the arc jumping between progress reports, colours in their theme) and
+  whether a screenshot of the VM is available; the SVG is a pure function in `GaugeSvg`, so every layout change is
+  unit-testable, but only a run on Windows shows the result. Other candidates: 4.3 streams and durations (nothing
+  asked for it), 4.4 Store publishing (owner decision), the `dotnet` PATH line in the SessionStart hook.
 
 ## Session 3 — 2026-09-28 — branch `fix/connection-info-and-jitter`
 
