@@ -145,7 +145,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 <figcaption>Figure 1. What one <code>Body</code> update costs on PowerToys 0.101. The dashed step is the blank frame. Verified in the host and toolkit source; the timing constant is 40 ms in code (the comment beside it says 30).</figcaption>
 </figure>
 
-<p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it disappears for at least a frame. And no update can be faster than the 40 ms batch, so the host cannot show more than about 25 distinct frames a second. The technical document suggests 5 to 10 a second as the range to try; whether the eye gains anything above that is untested, since every extra frame is one more full rebuild.</p>
+<p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it is empty until it is decoded again (whether a rendered frame ever shows that is untested). And no update can be faster than the 40 ms batch, so the host cannot show more than about 25 distinct frames a second. The technical document suggests 5 to 10 a second as the range to try; whether the eye gains anything above that is untested, since every extra frame is one more full rebuild.</p>
 
 <h2>2. See it: steps and blank frames, then the fixes</h2>
 <p>The left gauge behaves as the source says the session 4 build should: it moves only when a measurement arrives and its arc is empty for a moment after each update while the number stays (the empty interval is inferred; whether it was visible on your PC is untested). The right gauge applies the two changes that are ours to make, each switchable. Both receive the same measurements.</p>
@@ -284,7 +284,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   var intervalIn = document.getElementById('interval'), intervalOut = document.getElementById('intervalOut');
   var easeIn = document.getElementById('ease'), noblankIn = document.getElementById('noblank');
   var restart = document.getElementById('restart'), readout = document.getElementById('readout');
-  var MAX = 500, target = 0, measured = 0, shownB = 0, t0 = 0, lastMeasure = 0, blankUntil = 0;
+  var MAX = 500, target = 0, measured = 0, shownB = 0, t0 = 0, lastMeasure = 0, lastTickB = 0, blankUntil = 0;
 
   function arcPath(frac) {
     frac = Math.max(0.004, Math.min(1, frac));
@@ -294,7 +294,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   }
   function fmt(v) { return v < 10 ? v.toFixed(1) : Math.round(v).toString(); }
   function reset() {
-    t0 = performance.now(); lastMeasure = t0; measured = 0; shownB = 0; target = 0; blankUntil = 0;
+    t0 = performance.now(); lastMeasure = t0; lastTickB = 0; measured = 0; shownB = 0; target = 0; blankUntil = 0;
     readout.textContent = 'Simulated download ramping up to about 480 Mbps.';
   }
   function trueSpeed(t) {
@@ -318,11 +318,15 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
     arcA.setAttribute('d', arcPath(measured / MAX));
     valA.textContent = fmt(measured);
     // Right, with the fixes the toggles control: eased or not, and blank after each update only while
-    // the moving part is still a picture (second box unticked).
-    if (easeIn.checked) shownB += (measured - shownB) * 0.18; else shownB = measured;
+    // the moving part is still a picture (second box unticked). It redraws on its own 100 ms display tick,
+    // the cadence the technical document proposes, not on every animation frame.
+    if (now - lastTickB >= 100) {
+      lastTickB = now;
+      if (easeIn.checked) shownB += (measured - shownB) * 0.45; else shownB = measured;
+      arcB.setAttribute('d', arcPath(shownB / MAX));
+      valB.textContent = fmt(shownB);
+    }
     arcB.style.visibility = (blank && !noblankIn.checked) ? 'hidden' : 'visible';
-    arcB.setAttribute('d', arcPath(shownB / MAX));
-    valB.textContent = fmt(shownB);
     requestAnimationFrame(frame);
   }
   intervalIn.addEventListener('input', function () { intervalOut.textContent = intervalIn.value + ' ms'; });

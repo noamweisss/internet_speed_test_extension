@@ -242,8 +242,10 @@ frame per rebuild. Text-only blocks skip step 5 entirely.
 Every icon in the host (list rows, tags, grid tiles, the details hero image, `ImageContent`, toasts) goes
 through one pipeline: `IconBox` → `IconProvider` (one provider per size bucket, some cached) →
 `IconLoaderService` (up to 4 workers) → for strings, Terminal's `IconPathConverter` in C++; for streams,
-`BitmapImage.SetSourceAsync`. All Verified and byte-identical between 0.101 and `main`
-(`Microsoft.CmdPal.UI/Helpers/Icons/*`, `Microsoft.Terminal.UI/IconPathConverter.cpp`).
+`BitmapImage.SetSourceAsync`. All Verified; `Microsoft.CmdPal.UI/Helpers/Icons/*` and
+`Microsoft.Terminal.UI/IconPathConverter.cpp` are byte-identical between the 0.101 tag and `main`, and
+`Controls/IconBox.cs` differs only by a 14-line auto-size guard, so the line numbers below apply to the owner's
+build; the post-0.101 additions at the end of this section are on `main` only.
 
 | Icon string or data | 0.101 result | Evidence |
 |---|---|---|
