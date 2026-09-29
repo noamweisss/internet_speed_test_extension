@@ -8,8 +8,9 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 ### Changed
 - Each speed in the meter is a finer text bar in a code box, filling in half-cell steps, with a scale line under it
   (0 at the left, the scale's end such as 250 Mbps at the right) so you can see what a full bar means.
-- The meter glides between measurements instead of jumping, and a bar keeps its scale for the whole test, so it no
-  longer drops back when the speed crosses 10, 25, 50, 100 Mbps and so on.
+- The meter glides between measurements instead of jumping: while a phase runs, the number and the bar show the
+  smoothed value, and the final value is exact. A bar keeps its scale for the whole test, so it no longer drops back
+  when the speed crosses 10, 25, 50, 100 Mbps and so on.
 - The numbers under Latency, Download and Upload are bigger. The meter view redraws only the section that changed.
 
 ## [0.1.1] - 2026-09-29
