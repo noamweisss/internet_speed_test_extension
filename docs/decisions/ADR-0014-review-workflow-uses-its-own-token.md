@@ -1,7 +1,7 @@
 # ADR-0014: The Claude review workflow uses its own token, not the Claude GitHub App
 
-Status: accepted · Date: 2026-09-29 · Supersedes the token and permission points of ADR-0012 (the rest of ADR-0012
-stands)
+Status: superseded by ADR-0018 on 2026-09-30 (the workflow is removed) · Date: 2026-09-29 · Superseded the token
+and permission points of ADR-0012
 
 ## Context
 ADR-0012 set up `.github/workflows/review-claude.yml` with `anthropics/claude-code-action`, which by default

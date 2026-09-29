@@ -16,7 +16,7 @@ and provable:
 | Privacy | Public IP and ISP are shown to the user, never logged or persisted. Only settings are persisted, by the host. |
 | Supply chain | NuGet packages: only those from the template plus xUnit for tests. Central version pinning in `Directory.Packages.props`. `NuGetAuditMode` on. New packages need an ADR. |
 | Capabilities | `internetClient` and `runFullTrust` only (`Package.appxmanifest`). |
-| Secrets | The extension has none: no keys, no certificates, no env files (the hooks refuse them, R2, R4). The repository holds one, outside the extension: `CLAUDE_CODE_OAUTH_TOKEN`, an environment secret of the `claude-review` environment, whose deployment-branch policy allows `main` only, so no workflow on another branch can read it; inside the review workflow only trusted steps see it (ADR-0012). |
+| Secrets | The extension has none: no keys, no certificates, no env files (the hooks refuse them, R2, R4). The repository holds none either: the review workflow that held one is gone (ADR-0018). |
 
 ## Enforced rules (ids printed when a rule fires)
 
@@ -65,12 +65,9 @@ review. They exist to make accidental or careless violations impossible and deli
 ## Scanners
 
 `.github/dependabot.yml` (dependency alerts and update PRs), `.github/workflows/codeql.yml` (CodeQL for C#),
-GitHub secret scanning (on by default for public repositories),
-`.github/workflows/review-claude.yml` (independent Claude review of every eligible PR, meaning one from a branch
-of this repository and not a draft; forks are skipped: workflow and settings from `main`,
-the PR's files as data in a side directory, no shell for the reviewer, trusted steps prepare its input and post
-its output, no push; ADR-0012). Codex reads the "Code Review Rules" section of `AGENTS.md` for the same rules.
-The owner-facing summary of all of this is `docs/SAFETY-CONTRACT.md`.
+GitHub secret scanning (on by default for public repositories), and CodeRabbit, the reviewer, which runs only
+when asked (`@coderabbitai review`) and reads its rules from the "Code Review Rules" section of `AGENTS.md`
+and from `.coderabbit.yaml` (ADR-0018). The owner-facing summary of all of this is `docs/SAFETY-CONTRACT.md`.
 
 ## Reporting
 

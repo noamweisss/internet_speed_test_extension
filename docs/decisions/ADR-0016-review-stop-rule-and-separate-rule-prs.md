@@ -1,6 +1,7 @@
 # ADR-0016: One fix round per review, and rule changes in their own pull request
 
-Status: accepted · Date: 2026-09-29
+Status: accepted · Date: 2026-09-29 · Point 3 (the Claude reviewer prompt) moot since ADR-0018; the stop rule and
+R14 stand
 
 ## Context
 PR #19 (a research document, its HTML explainer, and a new subsection in `AGENTS.md`) went through 15 Codex

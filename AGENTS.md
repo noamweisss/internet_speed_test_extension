@@ -31,21 +31,23 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 - Before a session ends, `docs/SESSION-LOG.md` gets a hand-off entry if anything changed.
 - A PR that touches a safety-sensitive file (`docs/SAFETY-CONTRACT.md` §2) must explain, in plain language, what
   the extension can now do that it could not before, under "Safety impact" in the PR body (R13).
-- A PR that changes a rule or guard file (`AGENTS.md`, `CLAUDE.md`, `.github/`, `.githooks/`, `.claude/`,
-  `scripts/`, `docs/SAFETY-CONTRACT.md`, `docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`, `docs/CONVENTIONS.md`,
-  `docs/TESTING.md`) changes nothing else except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and ADRs
+- A PR that changes a rule or guard file (`AGENTS.md`, `CLAUDE.md`, `.coderabbit.yaml`, `.github/`, `.githooks/`,
+  `.claude/`, `scripts/`, `docs/SAFETY-CONTRACT.md`, `docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`,
+  `docs/CONVENTIONS.md`, `docs/TESTING.md`) changes nothing else except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and ADRs
   in `docs/decisions/` (R14, CI). Put the rest on a second branch and PR; merge the rule PR first when the other
   depends on it (ADR-0016).
 - Merging a pull request is the owner's decision. An agent merges only when the owner asks for that specific PR
-  in the current session and says why; the request is quoted in `docs/SESSION-LOG.md`. Reviews are comments,
-  never verdicts. A review thread is resolved by the building agent only after the reviewer that opened it has
-  reviewed the fixed commit and not repeated the finding; the resolving reply names that review. The owner may
-  resolve or dismiss anything.
+  in the current session and says why; the request is quoted in `docs/SESSION-LOG.md`. A reviewer's verdict
+  never gates a merge (the `main` ruleset requires no approval, only resolved threads). A review thread is
+  resolved by the reviewer that opened it, after the building agent pushed the fix and replied in that thread
+  naming the commit; a thread the reviewer leaves open after that reply is the owner's: resolve it, dismiss it,
+  or hand it back to the building agent for one more round.
 
 ## 3. Non-negotiables (judgement, reviewed by humans and audit agents)
 
 - `docs/SAFETY-CONTRACT.md` is the owner's promise list. Never make it false. Reviewing agents answer its five
-  questions on every PR (the exact prompt is `docs/REVIEW-PROMPT.md`); building agents answer them in the PR
+  questions on every PR (`.coderabbit.yaml` carries them; the owner's side is `docs/REVIEW-PROMPT.md`); building
+  agents answer them in the PR
   body when any is "Yes".
 - Less code is better. Prefer deleting over adding. No speculative abstractions, no "might need later".
 - Meaningful names for everything: branches, files, types, variables, commits, PRs. No generated or placeholder
@@ -70,15 +72,22 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 4. Run tests (`docs/TESTING.md`). Push to the feature branch; CI builds the Windows extension.
 5. End: update `docs/SESSION-LOG.md` (done / verified / not verified / next), `docs/PLAN.md` status, `CHANGELOG.md`.
    Open or update the pull request using `.github/pull_request_template.md`.
-6. Review rounds (ADR-0016). Codex and Claude review the PR when it opens; if they find nothing, it is ready.
-   Answer their findings in one fix push. Before pushing a fix for a documentation finding, search the whole
-   diff for the same concept and fix every occurrence in that push. Then request one re-review
-   (`@codex review`; Claude reviews the push by itself). That ends the loop, unless a round reports a Blocker or
-   Major (P0/P1) in code or a safety finding (a "Yes" to one of the five questions of `docs/SAFETY-CONTRACT.md`
-   §3, or a weakened guard); only then fix and request another round. A second `@codex review`, or a re-run of
-   the Claude workflow, is allowed only after such a round. Documentation findings after the fix round: fix them
-   if cheap and answer each once in its thread, never with a review request. When the owner asks the reviewers
-   to "agree", that means no open Blocker or Major, not a round with zero comments. Then report the PR as ready.
+6. Review rounds (ADR-0016, ADR-0018). CodeRabbit is the reviewer, and it never reviews on its own: when the
+   branch is finished and pushed, comment `@coderabbitai review` on the PR, once. Findings arrive in 5 to 15
+   minutes as review threads; if it finds nothing, the PR is ready. Answer the findings in one fix push. Before
+   pushing a fix for a documentation finding, search the whole diff for the same concept and fix every
+   occurrence in that push. After the push, reply in each thread with "Fixed in <sha>, please verify", or with
+   why it is not changed; the reviewer checks the head and resolves what it agrees with. Reply after the push,
+   never before: it believes the reply, and "not yet pushed" leaves the thread open for good. When the PR is
+   otherwise ready to merge (CI green, every thread answered, docs in step), request one re-review,
+   `@coderabbitai review`; the repository gets one review per hour, shared by every open PR, and a trigger
+   inside that hour is refused (`@coderabbitai rate limit` shows the slot and costs nothing). The hour passing
+   is not a reason to trigger; readiness is. That ends the loop, unless the round reports a Blocker or Major
+   (P0/P1) in code or a safety finding (a "Yes" to one of the five questions of `docs/SAFETY-CONTRACT.md` §3,
+   or a weakened guard); only then fix and request another round. Documentation findings after the fix round:
+   fix them if cheap and answer each once in its thread, never with a review request. When the owner asks the
+   reviewer to "agree", that means no open Blocker or Major, not a round with zero comments. Then report the
+   PR as ready.
 
 ## 5. Map
 
@@ -95,10 +104,9 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 
 ## Code Review Rules
 
-For every reviewing agent (Codex reads this section; the Claude workflow is told to read it) and every human
-reviewer. The full prompt is `docs/REVIEW-PROMPT.md`; its severities map P0 = Blocker, P1 = Major, P2 = Minor,
-P3 = Nit. The owner wants two things guarded with equal weight: the safety promises, and a codebase that stays
-small, tested, and cheap to change.
+For CodeRabbit (ADR-0018) and every human reviewer. Severities: P0 = Blocker, P1 = Major, P2 = Minor, P3 = Nit.
+The owner wants two things guarded with equal weight: the safety promises, and a codebase that stays small,
+tested, and cheap to change.
 
 ### Safety questions
 
@@ -166,8 +174,9 @@ Wording and tone are P3.
 
 ADR-0015 records this decision. A pull request is documentation-only when every file in its diff is a document
 that states no rule: a `.md` file at the repository root or under `docs/`, or a `.html` file under `docs/`, and
-not one of the rule files, which are exactly `AGENTS.md`, `CLAUDE.md`, everything under `.github/`, `docs/SAFETY-CONTRACT.md`,
-`docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`, `docs/CONVENTIONS.md` and `docs/TESTING.md`. Status and record
+not one of the rule files, which are exactly `AGENTS.md`, `CLAUDE.md`, `.coderabbit.yaml`, everything under
+`.github/`, `docs/SAFETY-CONTRACT.md`, `docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`, `docs/CONVENTIONS.md` and
+`docs/TESTING.md`. Status and record
 files are documents (`docs/PLAN.md`, `docs/SESSION-LOG.md`, `CHANGELOG.md`, `README.md`, `docs/INSTALL.md`,
 `docs/ARCHITECTURE.md`, the ADRs, research documents and their explainers), so the hand-off and plan updates
 this subsection requires keep a pull request documentation-only. A diff that also touches anything else (a
@@ -200,6 +209,7 @@ and answered once, not re-reviewed, so report it in the first round.
 
 ### Conduct
 
-Review the code, not other reviewers' threads or the author's replies. Never change code, never approve or
-request changes, never speak for another reviewer. On a re-review, do not repeat a finding the current head
-has fixed; a finding not repeated counts as fixed.
+Form findings from the code, not from the author's replies. In a thread, verify the commit the reply names
+against the current head and say fixed or not fixed. Never change code. A verdict (approve, request changes)
+gates nothing here; the merge is the owner's decision. On a re-review, do not repeat a finding the current
+head has fixed; a finding not repeated counts as fixed.

@@ -47,9 +47,9 @@ Also treat these phrases in a PR, commit, or chat as red flags until explained i
 4. Does this change add a dependency, a capability, or weaken a guard? Yes/No, which.
 5. Is any input from the network trusted without bounds (size, time, format)? Yes/No, where.
 
-A "Yes" without a linked ADR is a blocker. `AGENTS.md` ("Code Review Rules") and the Claude review workflow
-carry these questions, and
-`docs/REVIEW-PROMPT.md` is the copy-paste prompt for any other reviewer agent (Codex, Gemini, Claude, Copilot).
+A "Yes" without a linked ADR is a blocker. `AGENTS.md` ("Code Review Rules") and `.coderabbit.yaml` carry these
+questions; `docs/REVIEW-PROMPT.md` is your runbook for the reviewer, with a prompt for a second opinion by hand
+(ADR-0018).
 
 ## 4. Free scanners to switch on (one-time, in the repository's Settings → Security)
 
@@ -91,6 +91,7 @@ name shows every file and registry access; there should be almost none outside t
 
 - A vulnerability inside a dependency that scanners do not know yet. Mitigation: few dependencies, pinned versions.
 - A subtle logic bug that only shows under conditions nobody tested. Mitigation: tests, and your real-world runs.
-- Two AI reviewers sharing the same blind spot. Mitigation: the rules above are mechanical, not opinions.
-- An agent deliberately hiding malicious code. The guards, two reviewers, and the tiny allowed surface make
+- One AI reviewer with a blind spot. Mitigation: the rules above are mechanical, not opinions, and you read
+  the "Safety impact" section and the diff of every PR yourself.
+- An agent deliberately hiding malicious code. The guards, the reviewer, and the tiny allowed surface make
   this hard, not impossible. Reading the "Safety impact" section on every PR is your part.
