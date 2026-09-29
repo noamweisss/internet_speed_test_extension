@@ -5,7 +5,9 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+- Rule R6 exempts the SVG namespace name in `GaugeSvg.cs` again, ahead of the redrawn meter (plan item 5.1,
+  ADR-0013).
 
 ## [0.1.1] - 2026-09-29
 
