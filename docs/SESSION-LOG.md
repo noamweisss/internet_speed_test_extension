@@ -36,14 +36,35 @@ verified, blocked, next.
 
 **Verified**
 - Locally on the laptop: `dotnet test tests/SpeedTest.Core.Tests` 104 passed; `scripts/check.sh all` green.
-- CI, PR and reviews: see the update below this list, written when they were in.
+- PR [#17](https://github.com/noamweisss/internet_speed_test_extension/pull/17). CI push run 36541424838 on
+  8827157 green (Windows build, Core tests, rules); the PR runs green including the safety-impact check and CodeQL.
+- Codex round 1 on 0abb5d5, 3 findings: P1 "no `Guard-Change` trailer" (false: the trailer is in the commit,
+  `git interpret-trailers --parse` and the GitHub API both show it; answered, no change), P2 "do not edit accepted
+  ADRs" (fixed: ADR-0013, ADR-0006 and ADR-0011 restored), P2 "test-count wording" (fixed: arithmetic stated).
+  Round 2 on 8827157: "no major issues", nothing repeated; the three threads resolved with a reply naming that
+  review (`AGENTS.md` §2). The Claude review workflow could not run, see the next point.
+- Draft release `v0.1.1` created on 8827157 with `internet-speed-test-extension-v0.1.1-x64.zip` (the artifact's
+  two files unchanged; the install script has the same SHA-256 as in v0.1.0) and `SHA256SUMS.txt`; package
+  0.1.1.0, 73 files, 31.0 MB unpacked. The owner publishes it, which creates the tag on 8827157. The docs commit
+  after 8827157 on this branch changes no code.
+
+**Found and fixed on a separate branch**
+- `.github/workflows/review-claude.yml` (ADR-0012) never ran: GitHub refused the file at parse time on every push
+  since bee8582 ("Unrecognized named-value: 'runner'", line 69), because `runner.temp` was used in the job's `env`.
+  Every push shows a failed 0-second run of that workflow, and no PR has a `pull_request_target` run. Fixed in PR
+  [#18](https://github.com/noamweisss/internet_speed_test_extension/pull/18) (`fix/review-workflow-runner-context`,
+  `REVIEW_DIR` per step): on that branch the push no longer produces the failed run, which is the parse check.
+  Codex on PR #18 reports the same false "no `Guard-Change` trailer" P1, twice, on a commit whose message carries
+  the trailer; answered with the API output, for the owner to dismiss. The first real Claude review lands on the
+  first PR opened or updated after #18 is on `main`.
 
 **Not verified**
 - The `v0.1.1` build on the laptop: the owner installs it. Session 4 leftovers (`Ctrl+Shift+C`, `Ctrl+Shift+M`,
   power throttling, `Ctrl+L`, `Ctrl+R`, default view) unchanged.
 
 **Next**
-- Owner: publish the draft release, install it, merge the PR (merge commit).
+- Owner: publish the draft release `v0.1.1`, install it (`docs/INSTALL.md`, "Update"), merge PR #17 with a merge
+  commit, merge PR #18 (dismiss its false Codex thread), and then watch the first real Claude review.
 - Session 5, item 5.1: restore the gauge from 6034b22 (ADR-0013) and redraw it; `v0.2.0` then.
 
 ## Session 4b — 2026-09-28 to 2026-09-29 — branch `chore/independent-reviewers` (in parallel with session 4)

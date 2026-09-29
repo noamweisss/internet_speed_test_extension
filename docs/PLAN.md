@@ -62,7 +62,7 @@ the owner wanted the fixes on the laptop before the gauge is redone, so session 
 
 | # | Item | Status |
 |---|------|--------|
-| 4a.1 | Release `v0.1.1` from `main` after PR #15: the jitter and `Server-Timing` fixes and the copy commands, with the ADR-0006 text bar. `GaugeSvg`, its tests and the R6 exemption removed (no code without a caller, ADR-0013); restore from `6034b22` in 5.1 | doing |
+| 4a.1 | Release `v0.1.1` from `main` after PR #15: the jitter and `Server-Timing` fixes and the copy commands, with the ADR-0006 text bar. `GaugeSvg`, its tests and the R6 exemption removed (no code without a caller, ADR-0013); restore from `6034b22` in 5.1 | done (PR #17 reviewed, draft release on 8827157; owner publishes, installs, merges) |
 
 ## Session 5 — gauge polish
 
