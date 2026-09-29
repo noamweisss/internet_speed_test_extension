@@ -17,7 +17,7 @@ SpeedTestExtension ─► SpeedTestCommandsProvider ─► SettingsManager (defa
                                              SpeedMeasurer  ──────────────── src/SpeedTest.Core/ (any OS, no UI)
                                              ├ CloudflareEndpoints (URLs, constants)
                                              ├ SpeedTestSnapshot (record: phase, connection, values)
-                                             └ Formatting (units, meter, easing)
+                                             └ Formatting (units, dial SVG, easing)
                                                        │ HTTPS only, hosts in scripts/allowed-hosts.txt
                                                        ▼
                                              speed.cloudflare.com
@@ -51,10 +51,11 @@ the extension, which owns its lifetime.
 
 - **Meter** (`ContentPage` + four `MarkdownContent` blocks: heading with status and latency, download, upload,
   connection line): the dashboard. The page returns the same blocks every time, so the host rebuilds only a block
-  whose text changed (`docs/CMDPAL-RENDERING.md` §5). While a test runs, a 250 ms ticker in the page moves each
-  meter toward the last measurement (`MeterEasing` in Core) and snaps it to the exact value when its phase ends.
-  Each speed is a speedometer dial (`GaugeSvg`, a base64 `data:` SVG image) with its value as an H2 under it
-  (ADR-0017). Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
+  whose text changed (`docs/CMDPAL-RENDERING.md` §5). While a test runs, a 250 ms ticker in the page asks
+  `MeterEasing.Next` in Core for each meter's next `MeterFrame`: the shown value eases toward the last measurement
+  and is exact once its phase ends, and the scale follows the measurement and never shrinks during a run. A meter
+  is redrawn only when its frame or the snapshot changed. Each speed is its value as an H2 above a speedometer dial (`GaugeSvg`,
+  a base64 `data:` SVG image) (ADR-0017). Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
   the summary (`ResultSummary.PlainText`), `Ctrl+Shift+M` copies it as a markdown table.
 - **Details** (`ListPage`): one `ListItem` per value (download, upload, latency, jitter, ISP, IP, location, server,
   test time). Each item's command copies the value. `Ctrl+L` opens Meter, `Ctrl+R` reruns, `Ctrl+Shift+C` copies

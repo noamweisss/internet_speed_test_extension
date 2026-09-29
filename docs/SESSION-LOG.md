@@ -20,32 +20,50 @@ verified, blocked, next.
     Consolas lacks the eighth blocks (`▏`–`▉`), verified on the owner's laptop, so the bar uses halves.
   - `feat/meter-arc-gauge` (B, this branch): `GaugeSvg` restored from `6034b22` (ADR-0013) and fixed: root
     `viewBox='0 0 200 110' width='200' height='110'`, no `xmlns`, five tick marks, track at `stroke-opacity`
-    0.35, only `svg path line` and stroke attributes. `MeterMarkdown.Meter` renders the title, the dial as
-    `![](data:…)` and the H2 readout, left-aligned. `SpeedFormatter.Bar` and its tests removed (no caller).
-    Tick 250 ms (4 Hz), easing time constant 500 ms. ADR-0017 supersedes ADR-0013.
+    0.35, only `svg path line` and stroke attributes. `MeterMarkdown.Meter` renders the title, the H2 readout
+    and the dial as `![](data:…)`, left-aligned (the readout was under the dial until the fix round). `SpeedFormatter.Bar` and its tests removed (no caller).
+    Tick 250 ms (4 Hz), easing time constant 500 ms. ADR-0017 (proposed until the owner chooses) supersedes
+    ADR-0013.
   - `feat/meter-svg-bars` (C): an SVG horizontal bar in `GaugeSvg.cs`, 250 ms tick.
 - No rules branch is needed: the SVG carries no `xmlns`, so the C# holds no `http://` and R6 needs no exemption
   (ADR-0017 gives the verification). A prepared branch `chore/r6-exempts-gauge-svg` with the 48baf41 exemption
   exists locally as a fallback and is not pushed.
-- A VM capture harness in the session scratchpad (`vm\Test-MeterOnVM.ps1`, `vm\Capture-MeterRun.ps1`): it installs
-  a CI build into the `SpeedTest-Win11` VM over PowerShell Direct and screenshots the run from an interactive
-  scheduled task. The owner signed in on the VM console so a new checkpoint can be taken.
+- A VM capture harness (`vm\Test-MeterOnVM.ps1`, `vm\Capture-MeterRun.ps1`). The scripts live outside the
+  repository, in the session scratchpad. It installs a CI build into the `SpeedTest-Win11` VM over PowerShell
+  Direct and screenshots the run from an interactive scheduled task. The owner signed in on the VM console so a
+  new checkpoint can be taken.
 - An HTML review artifact with mockups of the three designs and the frame captures, for the owner's choice.
+- The base fix `444d929` (from `feat/meter-live-blocks`) cherry-picked onto this branch: `MeterFrame` and
+  `MeterEasing.Next` in Core, `MeterMarkdown.Meter(title, MeterFrame, active)`, the page icon restored, the
+  ticker's re-arm in a `finally`. Conflicts resolved keeping the dial.
+- Fix round for the reviews and the VM run: `GaugeSvg` derives every number from named constants (`CenterX`,
+  `CenterY`, `Radius`, `StrokeWidth`, `TickGap`, `TickLength`, `TickWidth`; tick radii, width and height derived;
+  one `TrackColour`), output byte-identical for the tested inputs. The H2 readout moved above the dial (VM
+  finding below). ADR-0017 set to `proposed`, with the VM facts and the scale steps.
 
 **Verified**
-- This branch: `dotnet test tests/SpeedTest.Core.Tests` 132 passed, 0 failed; `bash scripts/check.sh all` exit 0.
-  `MeterPage.cs` (one comment changed) compiles against the toolkit dll in a scratch project with warnings as
-  errors. Branches A and C record their own numbers.
+- This branch: `dotnet test tests/SpeedTest.Core.Tests` 140 passed, 0 failed; `bash scripts/check.sh all` exit 0.
+  `MeterPage.cs` compiles against the toolkit dll in a scratch project with warnings as errors. The branch
+  changed two comment lines in it; after the base fix, whose code replaced one of them, one remains
+  (ADR-0006 to ADR-0017). Branches A and C record their own numbers.
+- CI run 36566799896 on the first push: green.
+- VM run of build `4215649` on `SpeedTest-Win11` (PowerToys 0.101.2652, Command Palette 0.12.12651, 1920 × 1080
+  at 100 %): 158 frames at 150 ms. The page shows and the dial renders, so the host's `SvgImageSource` path
+  accepts a root without `xmlns`. Phases: download at frame 7, upload at 56, complete at 109 (17.3 s). 2 blank
+  frames in the download phase (`frame-0034`, `frame-0039`): the dial vanished and the layout collapsed for one
+  frame. In an 800 × 480 window the download number under the dial was clipped by the footer bar, and the upload
+  meter was below the fold; hence the readout moved above the dial in this fix round.
 
 **Not verified**
-- Nothing has run on Windows yet: no CI build of this branch, no VM capture. Both come after the push.
-- Whether the blank frame of a rebuilt image is visible at 4 Hz (§16 item 1), and how the dial looks at 200 %
-  scaling (§4 rule 3; the VM runs at 100 %).
+- The fix round on Windows: a second VM run follows the fix, and CI on the fix push.
+- How the dial looks at 200 % scaling (§4 rule 3; the VM runs at 100 %).
 
 **Next**
+- Second VM run of this branch after the fix push.
 - Owner: pick a design from the review artifact.
 - The chosen branch gets its pull request; the other design branches are deleted.
-- Fill in the "Chosen by the owner on <date> after the VM comparison" sentence in ADR-0017 before its pull request.
+- If this design is chosen: fill in the "Chosen by the owner on <date> after the VM comparison" sentence and set
+  ADR-0017 to `accepted` in its pull request.
 
 ## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
 

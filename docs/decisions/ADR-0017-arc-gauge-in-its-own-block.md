@@ -1,6 +1,7 @@
 # ADR-0017: The meter is an arc gauge again, in its own block, eased at 4 Hz
 
-Status: accepted · Date: 2026-09-29 · Supersedes ADR-0013 and, with it, ADR-0006 (restores the gauge of ADR-0011, with fixes)
+Status: proposed (accepted in its pull request once the owner chooses this design) · Date: 2026-09-29 · Supersedes
+ADR-0013, and with it ADR-0006's text bar, which ADR-0013 had reinstated (restores the gauge of ADR-0011, with fixes)
 
 ## Context
 ADR-0011 drew each speed as an SVG speedometer arc in the meter's markdown. The owner's VM run on 2026-09-29
@@ -28,16 +29,20 @@ The meter view is built like this:
 - Four fixed content blocks: header (title, status, latency), download meter, upload meter, footer (connection
   line). `MeterPage` returns the same four instances every time, so a sample rebuilds only its own meter
   (§15 option 2).
-- Easing in the extension, maths in Core: a one-shot ticker in `MeterPage` moves each meter toward the last
-  measurement with `MeterEasing.Step`, an exponential approach that never overshoots and snaps to the exact
-  value when the remainder is below what the readout shows, or when the meter's phase ends (§15 option 1).
-- A scale that never shrinks during a run: it follows the measured value, not the eased one, through
-  `SpeedFormatter.ScaleFor(mbps, atLeast)`, and resets when a new run starts.
+- Easing in the extension, maths in Core: a one-shot ticker in `MeterPage` asks `MeterEasing.Next` for each
+  meter's next `MeterFrame` (shown value and scale) and redraws a meter only when its frame or the snapshot
+  changed. The shown value follows an exponential approach that never overshoots and snaps to the measurement
+  when the remainder is at most 0.1 % of it (or 1 Kbps, whichever is larger), or when the meter's phase ends
+  (§15 option 1). While a phase runs, the readout and the dial both show the eased value; the final value is
+  exact.
+- A scale that never shrinks during a run: `MeterEasing.Next` takes it from the measured value, not the eased
+  one, through `SpeedFormatter.ScaleFor(mbps, atLeast)`, and resets it when a new run starts.
 - H2 readouts (20 px semi-bold) under Latency, Download and Upload.
 - Each speed is a dial (`GaugeSvg`) in its meter's block, as plain markdown with an empty alt text
-  (`![](data:image/svg+xml;base64,…)`), with the title above it and the H2 readout below it. Everything is
-  left-aligned: centring needs `<p align="center">` (§3), which would centre the dial and leave the readout on
-  the left, so the design keeps one clean column on the left edge.
+  (`![](data:image/svg+xml;base64,…)`), under the title and the H2 readout. The readout sits above the dial
+  because of the VM run (below): in an 800 × 480 window the footer bar clipped a readout under the dial to the
+  tops of its digits. Everything is left-aligned: centring needs `<p align="center">` (§3), which would centre
+  the dial and leave the readout on the left, so the design keeps one clean column on the left edge.
 - The ticker runs at 250 ms (4 Hz, the top of §15 option 4's range for an image), because each rebuild blanks
   the image; the easing time constant is 500 ms, so a frame covers about 39 % of the remaining distance.
 - The SVG root is `<svg viewBox='0 0 200 110' width='200' height='110'>`: numeric size under the 256 DIP cap,
@@ -51,7 +56,8 @@ The meter view is built like this:
   from ADR-0013, which planned to re-add the R6 exemption of `6034b22`.
 - Geometry as in ADR-0011: a semicircle track and a progress arc, centre (100, 100), radius 80, stroke width 14,
   round caps, a sweep of at most a semicircle (large-arc flag 0). Five tick marks outside the track at 0, 25,
-  50, 75 and 100 % (radius 90 to 98, stroke width 2) make it read as a speedometer.
+  50, 75 and 100 % (radius 90 to 98, stroke width 2) make it read as a speedometer. Every number in the SVG,
+  the root's size included, is derived from named constants in `GaugeSvg`; none is repeated in a string.
 - Colours: track `#808080` at `stroke-opacity` 0.35, ticks `#808080` at 0.5, progress `#0078D4` (the Windows
   default accent; the host does not tell an extension the user's accent or theme, §3). No 8-digit hex colours:
   Direct2D draws them black (Verified on the owner's laptop). No text, filters or gradients; only `svg`,
@@ -62,10 +68,21 @@ Two other designs were built on the same base for the comparison: A, a text bar 
 block with a 100 ms tick and no image (`feat/meter-text-bars`); C, an SVG horizontal bar under the same
 constraints as this design (`feat/meter-svg-bars`). Chosen by the owner on <date> after the VM comparison.
 
+Verified in the test VM on 2026-09-29: build `4215649` of this branch on `SpeedTest-Win11` (PowerToys
+0.101.2652, Command Palette 0.12.12651, 1920 × 1080 at 100 % scaling), 158 frames captured every 150 ms. The
+page shows and the dial renders, so the host's `SvgImageSource` path accepts a root without `xmlns`. The
+download phase started at frame 7, upload at 56, and the run completed at 109 (17.3 s). With the readout under
+the dial, the footer bar clipped the download number to the tops of its digits in an 800 × 480 window, and the
+upload meter was below the fold; this fix round moves the readout above the dial, and a second VM run follows.
+
 ## Consequences
 - The dials need PowerToys 0.95 or newer for `data:` images. An older host shows nothing where the dial is
-  (the alt text is empty); the readout under it still shows.
-- The blank frame per rebuild remains; whether it is visible at 4 Hz is Inferred until the VM run (§16 item 1).
+  (the alt text is empty); the readout above it still shows.
+- A rebuild can still blank the image. Verified in the VM run: 2 blank frames in 49 download frames at 4 Hz
+  (`frame-0034`, `frame-0039`), each collapsing the layout for one frame: the readout and the next heading jump
+  up about 120 px and back (§16 item 1).
+- The scale steps up while a speed rises (10, 25, 50, 100, 250, 500 Mbps), and the arc falls back at each step.
+  A follow-up may start a run at the previous run's scale.
 - On a display scaled to 200 % (the owner's laptop) the host rasterises the image's width at scale and its
   height not (§4 rule 3). The VM runs at 100 %, so its captures cannot show that.
 - Every `docs/SAFETY-CONTRACT.md` §3 answer stays "No": the `data:` URI is content the extension generates, not
