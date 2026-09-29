@@ -16,7 +16,9 @@ namespace SpeedTest.Extension.Pages;
 /// A ticker draws every block, and the meters glide toward each measurement through <see cref="MeterEasing"/>
 /// (§15 option 1). It is a one-shot timer re-armed after each tick, so two ticks never overlap and a late frame
 /// can not overwrite a newer one. The session's Changed event only wakes it: Changed arrives on the measurement
-/// thread, and a Body set blocks for two cross-process calls (§5 step 2, §16).
+/// thread, and a Body set blocks for two cross-process calls (§5 step 2, §16). After SpeedTestSession.Dispose() mid-run
+/// the snapshot stays running and the ticker keeps re-arming until the process exits, which happens right after
+/// Dispose (Program.cs).
 /// </para>
 /// </summary>
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "The page lives as long as the extension process; the ticker is stopped between runs, not disposed.")]
@@ -34,16 +36,16 @@ internal sealed partial class MeterPage : ContentPage
     private readonly object _gate = new();
     private bool _tickScheduled;
     private SpeedTestSnapshot? _drawnSnapshot;
-    private double? _shownDownloadMbps;
-    private double? _shownUploadMbps;
-    private double _downloadScale;
-    private double _uploadScale;
+    private MeterFrame _download = MeterFrame.Empty;
+    private MeterFrame _upload = MeterFrame.Empty;
 
     public MeterPage(SpeedTestSession session)
     {
         _session = session;
         _blocks = [_header, _downloadMeter, _uploadMeter, _footer];
-        Icon = new IconInfo("");
+        // Segoe Fluent Icons U+E9D9 (Diagnostic), the icon this page has on main. Written as an escape: the
+        // raw private-use character is invisible in an editor, and one edit stripped it and left an empty icon.
+        Icon = new IconInfo("\uE9D9");
         Title = "Internet Speed Test";
         Name = "Meter dashboard";
         _ticker = new Timer(_ => Tick());
@@ -71,23 +73,41 @@ internal sealed partial class MeterPage : ContentPage
 
     private void Tick()
     {
+        try
+        {
+            Draw();
+        }
+        finally
+        {
+            // No catch: the toolkit already swallows failed calls to the host (§5 step 1), so whatever reaches here is
+            // a bug and should surface. The finally only keeps the ticker consistent on the way out.
+            lock (_gate)
+            {
+                // Tick on while the run is live. A change that arrived during this tick found it scheduled and did not
+                // wake it, so it gets one more tick: that is how the final, exact frame of a finished run is drawn.
+                var current = _session.Snapshot;
+                if (current.IsRunning || !ReferenceEquals(current, _drawnSnapshot))
+                {
+                    _ticker.Change(MeterEasing.TickMilliseconds, Timeout.Infinite);
+                }
+                else
+                {
+                    _tickScheduled = false;
+                }
+            }
+        }
+    }
+
+    private void Draw()
+    {
         SpeedTestSnapshot snapshot;
         string? header = null;
         string? footer = null;
-        string? downloadMeter = null;
-        string? uploadMeter = null;
+        string? downloadMeter;
+        string? uploadMeter;
         lock (_gate)
         {
             snapshot = _session.Snapshot;
-            var downloading = snapshot.Phase == SpeedTestPhase.Download;
-            var uploading = snapshot.Phase == SpeedTestPhase.Upload;
-            var shownDownload = MeterEasing.Step(_shownDownloadMbps, snapshot.DownloadMbps, live: downloading);
-            var shownUpload = MeterEasing.Step(_shownUploadMbps, snapshot.UploadMbps, live: uploading);
-
-            // The scale follows the measured value, not the eased one, and only grows: an eased value crossing a
-            // step made the bar drop back. A meter not measured yet has no scale, which resets it for every new run.
-            var downloadScale = snapshot.DownloadMbps is { } download ? SpeedFormatter.ScaleFor(download, _downloadScale) : 0;
-            var uploadScale = snapshot.UploadMbps is { } upload ? SpeedFormatter.ScaleFor(upload, _uploadScale) : 0;
             var snapshotChanged = !ReferenceEquals(snapshot, _drawnSnapshot);
             if (snapshotChanged)
             {
@@ -95,22 +115,9 @@ internal sealed partial class MeterPage : ContentPage
                 footer = MeterMarkdown.Footer(snapshot);
             }
 
-            // Between measurements the eased values settle; skip rendering a meter whose input did not change.
-            if (snapshotChanged || shownDownload != _shownDownloadMbps || downloadScale != _downloadScale)
-            {
-                downloadMeter = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, shownDownload, downloadScale, downloading);
-            }
-
-            if (snapshotChanged || shownUpload != _shownUploadMbps || uploadScale != _uploadScale)
-            {
-                uploadMeter = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, shownUpload, uploadScale, uploading);
-            }
-
+            downloadMeter = NextMeter(ref _download, MeterMarkdown.DownloadTitle, snapshot.DownloadMbps, snapshot.Phase == SpeedTestPhase.Download, snapshotChanged);
+            uploadMeter = NextMeter(ref _upload, MeterMarkdown.UploadTitle, snapshot.UploadMbps, snapshot.Phase == SpeedTestPhase.Upload, snapshotChanged);
             _drawnSnapshot = snapshot;
-            _shownDownloadMbps = shownDownload;
-            _shownUploadMbps = shownUpload;
-            _downloadScale = downloadScale;
-            _uploadScale = uploadScale;
         }
 
         // Outside the lock: each set raises the host's PropChanged synchronously (§5 step 1). An equal string is skipped.
@@ -130,20 +137,17 @@ internal sealed partial class MeterPage : ContentPage
         {
             _uploadMeter.Body = uploadMeter;
         }
+    }
 
-        lock (_gate)
-        {
-            // Tick on while the run is live. A change that arrived during this tick found it scheduled and did not
-            // wake it, so it gets one more tick: that is how the final, exact frame of a finished run is drawn.
-            var current = _session.Snapshot;
-            if (current.IsRunning || !ReferenceEquals(current, _drawnSnapshot))
-            {
-                _ticker.Change(MeterEasing.TickMilliseconds, Timeout.Infinite);
-            }
-            else
-            {
-                _tickScheduled = false;
-            }
-        }
+    /// <summary>
+    /// Advances one meter's frame (called under _gate) and returns its new markdown, or null when neither the frame
+    /// nor the snapshot changed: between measurements the eased value settles and the meter is not rendered again.
+    /// </summary>
+    private static string? NextMeter(ref MeterFrame frame, string title, double? measured, bool live, bool snapshotChanged)
+    {
+        var next = MeterEasing.Next(frame, measured, live);
+        var changed = snapshotChanged || next != frame;
+        frame = next;
+        return changed ? MeterMarkdown.Meter(title, next, live) : null;
     }
 }
