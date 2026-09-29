@@ -14,52 +14,59 @@ namespace SpeedTest.Core;
 /// </summary>
 public static class GaugeSvg
 {
+    // Every coordinate in the SVG comes from these constants, in SVG user units; nothing is repeated in a string.
     private const double CenterX = 100;
     private const double CenterY = 100;
     private const double Radius = 80;
+    private const double StrokeWidth = 14;
 
-    // Tick marks sit outside the track (radius 80, stroke 14, so its outer edge is at 87) at 0, 25, 50, 75 and 100 %.
-    private const double TickInnerRadius = 90;
-    private const double TickOuterRadius = 98;
+    // Tick marks sit outside the track, a small gap beyond its outer edge, at 0, 25, 50, 75 and 100 %.
+    private const double TickGap = 3;
+    private const double TickLength = 8;
+    private const double TickWidth = 2;
+    private const double TickInnerRadius = Radius + (StrokeWidth / 2) + TickGap;
+    private const double TickOuterRadius = TickInnerRadius + TickLength;
     private const int TickIntervals = 4;
 
-    // No xmlns attribute, so the string holds no namespace URL and rule R6 needs no exemption. The host does not need it:
-    // its SVG sniff looks for "<svg" and its size probe reads the root's width and height with or without a namespace
-    // (PowerToys ImageSourceFactory.cs:87-102, 137), and Direct2D's CreateSvgDocument draws an SVG with no namespace,
-    // or a wrong one (rendered on the owner's laptop, 2026-09-29). Microsoft's Performance Monitor extension emits
-    // its chart SVG without one (ChartHelper.cs). Numeric width and height of at most 256 plus a viewBox: without
-    // numbers the host's rasterisation size overflows, and a data: image is capped at 256 DIP (§4). Single quotes
-    // save escaping in the C# literal.
-    private const string Header = "<svg viewBox='0 0 200 110' width='200' height='110'>";
+    // The dial is symmetric about the centre. Below the baseline the round line caps reach half the stroke, and the
+    // same gap as the ticks keeps them off the edge.
+    private const double Width = 2 * CenterX;
+    private const double Height = CenterY + (StrokeWidth / 2) + TickGap;
 
-    private const string Arc = "M20 100 A80 80 0 ";
-    private const string Stroke = "' fill='none' stroke-width='14' stroke-linecap='round'/>";
+    // A light mid gray reads on both the light and the dark theme; the ticks and the track share it. The blue is the
+    // Windows default accent: the host does not tell an extension the user's accent.
+    private const string TrackColour = "#808080";
+    private const string ProgressColour = "#0078D4";
 
     /// <summary>The gauge for <paramref name="value"/> on a scale ending at <paramref name="max"/>, clamped to [0, 1].</summary>
     public static string Render(double value, double max)
     {
         var fraction = max > 0 ? Math.Clamp(value / max, 0, 1) : 0;
-        var svg = new StringBuilder(Header);
+
+        // No xmlns attribute, so the string holds no namespace URL and rule R6 needs no exemption. The host does not
+        // need it: its SVG sniff looks for "<svg" and its size probe reads the root's width and height with or without
+        // a namespace (PowerToys ImageSourceFactory.cs:87-102, 137), and Direct2D's CreateSvgDocument draws an SVG with
+        // no namespace, or a wrong one (rendered on the owner's laptop, 2026-09-29). Microsoft's Performance Monitor
+        // extension emits its chart SVG without one (ChartHelper.cs). Numeric width and height of at most 256 plus a
+        // viewBox: without numbers the host's rasterisation size overflows, and a data: image is capped at 256 DIP (§4).
+        // Single quotes save escaping in the C# literals.
+        var svg = new StringBuilder("<svg viewBox='0 0 ").Append(Number(Width)).Append(' ').Append(Number(Height))
+            .Append("' width='").Append(Number(Width)).Append("' height='").Append(Number(Height)).Append("'>");
         for (var tick = 0; tick <= TickIntervals; tick++)
         {
             var at = (double)tick / TickIntervals;
             svg.Append("<line x1='").Append(X(at, TickInnerRadius)).Append("' y1='").Append(Y(at, TickInnerRadius))
                 .Append("' x2='").Append(X(at, TickOuterRadius)).Append("' y2='").Append(Y(at, TickOuterRadius))
-                .Append("' stroke='#808080' stroke-opacity='0.5' stroke-width='2'/>");
+                .Append("' stroke='").Append(TrackColour).Append("' stroke-opacity='0.5' stroke-width='")
+                .Append(Number(TickWidth)).Append("'/>");
         }
 
-        // Track: a light mid gray reads on both the light and the dark theme. stroke-opacity rather than an 8-digit
-        // hex colour, which Direct2D does not understand and draws black (Verified on the owner's laptop).
-        svg.Append("<path d='").Append(Arc).Append("0 1 180 100' stroke='#808080' stroke-opacity='0.35").Append(Stroke);
+        // Track. stroke-opacity rather than an 8-digit hex colour, which Direct2D does not understand and draws black
+        // (Verified on the owner's laptop).
+        AppendArc(svg, 1, TrackColour, opacity: "0.35");
         if (fraction > 0)
         {
-            // Sweep from the left end (180°) over the top to the right end (0°), clockwise on screen. The sweep is
-            // never more than a semicircle, so the large-arc flag stays 0: with 1 the arc would take the long way
-            // round, below the baseline (CodeRabbit review). The blue is the Windows default accent: the host does
-            // not tell an extension the user's accent.
-            svg.Append("<path d='").Append(Arc).Append("0 1 ")
-                .Append(X(fraction, Radius)).Append(' ').Append(Y(fraction, Radius))
-                .Append("' stroke='#0078D4").Append(Stroke);
+            AppendArc(svg, fraction, ProgressColour, opacity: null);
         }
 
         return svg.Append("</svg>").ToString();
@@ -68,6 +75,23 @@ public static class GaugeSvg
     /// <summary><see cref="Render"/> as a markdown-embeddable image source.</summary>
     public static string DataUri(double value, double max) =>
         "data:image/svg+xml;base64," + Convert.ToBase64String(Encoding.UTF8.GetBytes(Render(value, max)));
+
+    // An arc on the dial from the left end (180°) over the top to the share `to` of the sweep, clockwise on screen.
+    // The sweep is never more than a semicircle, so the large-arc flag stays 0: with 1 the arc would take the long way
+    // round, below the baseline (CodeRabbit review).
+    private static void AppendArc(StringBuilder svg, double to, string colour, string? opacity)
+    {
+        svg.Append("<path d='M").Append(X(0, Radius)).Append(' ').Append(Y(0, Radius))
+            .Append(" A").Append(Number(Radius)).Append(' ').Append(Number(Radius)).Append(" 0 0 1 ")
+            .Append(X(to, Radius)).Append(' ').Append(Y(to, Radius))
+            .Append("' stroke='").Append(colour);
+        if (opacity is not null)
+        {
+            svg.Append("' stroke-opacity='").Append(opacity);
+        }
+
+        svg.Append("' fill='none' stroke-width='").Append(Number(StrokeWidth)).Append("' stroke-linecap='round'/>");
+    }
 
     // A point on the dial at a share of the sweep: 0 is the left end, 1 the right end, over the top.
     private static string X(double fraction, double radius) => Number(CenterX + (radius * Math.Cos(Angle(fraction))));

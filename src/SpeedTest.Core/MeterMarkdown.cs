@@ -34,16 +34,17 @@ public static class MeterMarkdown
     }
 
     /// <summary>
-    /// One speed section, drawn from <paramref name="frame"/> (<see cref="MeterEasing.Next"/>): the title, the dial
-    /// (<see cref="GaugeSvg"/>) as a data: image in its own paragraph against the frame's scale, and the shown value,
-    /// which may be eased, under it. The readout is H2, not H3, for the reason given on <see cref="Header"/>. The alt
-    /// text is empty: the host shows none, and the number is below. Left-aligned: centring the image needs raw HTML
-    /// (docs/CMDPAL-RENDERING.md §3), and the text stays left anyway.
+    /// One speed section, drawn from <paramref name="frame"/> (<see cref="MeterEasing.Next"/>): the title, the shown
+    /// value, which may be eased, and under it the dial (<see cref="GaugeSvg"/>) as a data: image in its own paragraph
+    /// against the frame's scale. The readout is H2, not H3, for the reason given on <see cref="Header"/>. It sits above
+    /// the dial because in an 800×480 window the footer bar clipped a number under the dial to the tops of its digits
+    /// (test VM, 2026-09-29, ADR-0017). The alt text is empty: the host shows none, and the number is above.
+    /// Left-aligned: centring the image needs raw HTML (docs/CMDPAL-RENDERING.md §3), and the text stays left anyway.
     /// </summary>
     public static string Meter(string title, MeterFrame frame, bool active) =>
         "## " + title + ActiveMarker(active) + "\n\n"
-        + "![](" + GaugeSvg.DataUri(frame.Shown ?? 0, frame.Scale) + ")\n\n"
-        + "## " + SpeedFormatter.Speed(frame.Shown) + "\n";
+        + "## " + SpeedFormatter.Speed(frame.Shown) + "\n\n"
+        + "![](" + GaugeSvg.DataUri(frame.Shown ?? 0, frame.Scale) + ")\n";
 
     /// <summary>The connection line. Its fields come from the server and are escaped before they touch the markdown.</summary>
     public static string Footer(SpeedTestSnapshot snapshot)

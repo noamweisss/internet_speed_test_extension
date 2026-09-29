@@ -90,12 +90,13 @@ public sealed class MeterMarkdownTests
     }
 
     [Fact]
-    public void Meter_WithValue_DrawsTitleThenDialThenReadout()
+    public void Meter_WithValue_DrawsTitleThenReadoutThenDial()
     {
         var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(245.3, 250), active: true);
 
-        // The dial is plain markdown in its own paragraph with an empty alt text, the readout an H2 under it; no raw HTML.
-        Assert.Equal("## ⬇ Download ●\n\n![](" + GaugeSvg.DataUri(245.3, 250) + ")\n\n## 245.3 Mbps\n", markdown);
+        // The readout is an H2 above the dial: under it the footer bar clipped it (ADR-0017). The dial is plain
+        // markdown in its own paragraph with an empty alt text; no raw HTML.
+        Assert.Equal("## ⬇ Download ●\n\n## 245.3 Mbps\n\n![](" + GaugeSvg.DataUri(245.3, 250) + ")\n", markdown);
         Assert.DoesNotContain("<", markdown);
     }
 
@@ -114,8 +115,7 @@ public sealed class MeterMarkdownTests
     {
         var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, MeterFrame.Empty, active: false);
 
-        Assert.EndsWith(")\n\n## —\n", markdown, StringComparison.Ordinal);
-        Assert.Contains("![](" + GaugeSvg.DataUri(0, 0) + ")", markdown);
+        Assert.Equal("## ⬆ Upload\n\n## —\n\n![](" + GaugeSvg.DataUri(0, 0) + ")\n", markdown);
     }
 
     [Fact]

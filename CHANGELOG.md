@@ -6,12 +6,13 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 ## [Unreleased]
 
 ### Changed
-- Download and upload are speedometer dials instead of text bars, each in its own section with its number under it
-  (ADR-0017). The dials need PowerToys 0.95 or newer; older versions show only the numbers.
+- Download and upload are speedometer dials instead of text bars, each in its own section with its number above it,
+  so a small window does not cut the number off (ADR-0017). The dials need PowerToys 0.95 or newer; older versions
+  show only the numbers.
 - The meter glides between measurements, redrawn four times a second, instead of jumping: while a phase runs, the
   number and the dial show the smoothed value, and the final value is exact. The numbers under Latency, Download and
-  Upload are bigger. A dial keeps its scale for the whole test, so it no longer drops back
-  when the speed crosses 10, 25, 50, 100 Mbps and so on. The meter view redraws only the section that changed.
+  Upload are bigger. A dial keeps its scale for the whole test, so it no longer drops back when the speed crosses 10,
+  25, 50, 100 Mbps and so on. The meter view redraws only the section that changed.
 
 ## [0.1.1] - 2026-09-29
 
