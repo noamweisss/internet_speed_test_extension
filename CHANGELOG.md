@@ -5,6 +5,15 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.2.0] - 2026-09-29
+
+The meter, redrawn (plan item 5.1, ADR-0017): four fixed blocks that update in place, motion eased between
+measurements, bigger readouts, and a finer text bar in half-cell steps with a scale line under it. The two drawn
+alternatives, a dial and an SVG bar, stay as backlog branches until Command Palette changes how it renders extensions.
+Install it over v0.1.1 with the same command; the old version is removed first.
+
 ### Changed
 - Each speed in the meter is a finer text bar in a code box, filling in half-cell steps, with a scale line under it
   (0 at the left, the scale's end such as 250 Mbps at the right) so you can see what a full bar means.
@@ -103,6 +112,7 @@ First usable version: install it from the GitHub release, run it daily. Tested b
 - The MSIX package identity is now `InternetSpeedTestExtension`: the template name with underscores is invalid for
   a Windows package, so no package could be built (ADR-0009).
 
-[Unreleased]: https://github.com/noamweisss/internet_speed_test_extension/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/noamweisss/internet_speed_test_extension/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/noamweisss/internet_speed_test_extension/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/noamweisss/internet_speed_test_extension/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/noamweisss/internet_speed_test_extension/releases/tag/v0.1.0
