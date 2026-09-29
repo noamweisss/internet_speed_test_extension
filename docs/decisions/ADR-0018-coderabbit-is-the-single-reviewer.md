@@ -54,6 +54,7 @@ PRs #1, #7, #11, #15 and #16:
   agent triggers once per finished branch, never per push.
 - The reviewer replies in threads, so the thread rule in `AGENTS.md` §2 changes: the reviewer resolves what it
   verifies, the owner resolves what it leaves open.
-- No secret in the repository or its environments. `docs/SECURITY.md` and `docs/SAFETY-CONTRACT.md` describe
-  one reviewer instead of two; the owner's own reading of the "Safety impact" section carries more weight.
+- No workflow reads a secret; the `claude-review` environment goes when the owner deletes it after the merge.
+  `docs/SECURITY.md` and `docs/SAFETY-CONTRACT.md` describe one reviewer instead of two; the owner's own reading
+  of the "Safety impact" section carries more weight.
 - `.github/workflows/review-claude.yml` is gone; ADR-0012 and ADR-0014 record what it was.
