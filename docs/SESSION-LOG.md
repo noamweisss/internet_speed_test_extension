@@ -49,7 +49,8 @@ verified, blocked, next.
   - Documentation, P2: ADR-0017 now says the readout and the bar show the eased value and the final value is
     exact, names the scale steps as a consequence and records the VM run; §16 gives the tick per block type and
     leaves centring to the design; §4 records the `xmlns` and `#RRGGBBAA` facts; `docs/ARCHITECTURE.md` names
-    `MeterFrame`. `docs/CMDPAL-RENDERING.html` states none of the §4 or §15 facts, so it is unchanged.
+    `MeterFrame`. `docs/CMDPAL-RENDERING.html` states none of the §4 or §15 facts; its one changed sentence (option 3
+    in its section 6) now says the bar uses the block characters Consolas has, with the Verified label and source.
 - The owner's decision, 2026-09-29, in chat: "let's go with A. but don't throw away B and C - I want them in the
   backlog for when cmdpal updates its way of rendering extensions (due in a few weeks according to their github
   milestones)". Then: ADR-0017 accepted (the chosen-by sentence filled in, B and C named as backlog branches in its
