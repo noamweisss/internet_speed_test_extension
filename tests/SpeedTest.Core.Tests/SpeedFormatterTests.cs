@@ -18,17 +18,69 @@ public sealed class SpeedFormatterTests
     public void Latency_FormatsWithOneDecimal(double? ms, string expected) => Assert.Equal(expected, SpeedFormatter.Latency(ms));
 
     [Theory]
-    [InlineData(0, 100, 10, "▱▱▱▱▱▱▱▱▱▱")]
-    [InlineData(50, 100, 10, "▰▰▰▰▰▱▱▱▱▱")]
-    [InlineData(100, 100, 10, "▰▰▰▰▰▰▰▰▰▰")]
-    [InlineData(500, 100, 10, "▰▰▰▰▰▰▰▰▰▰")]
-    [InlineData(-5, 100, 10, "▱▱▱▱▱▱▱▱▱▱")]
-    [InlineData(5, 0, 10, "▱▱▱▱▱▱▱▱▱▱")]
-    public void Bar_FillsProportionallyAndClamps(double value, double max, int width, string expected) =>
-        Assert.Equal(expected, SpeedFormatter.Bar(value, max, width));
+    [InlineData(-5, 250)]
+    [InlineData(0, 250)]
+    [InlineData(0.3, 250)]
+    [InlineData(123.4, 250)]
+    [InlineData(250, 250)]
+    [InlineData(9000, 250)]
+    [InlineData(40, 0)]
+    [InlineData(double.NaN, 250)]
+    public void Bar_AnyValue_IsAlwaysBarCellsWide(double value, double max) =>
+        Assert.Equal(SpeedFormatter.BarCells, SpeedFormatter.Bar(value, max).Length);
+
+    [Theory]
+    [InlineData(-5, 250)]
+    [InlineData(0, 250)]
+    [InlineData(40, 0)]
+    public void Bar_NothingToShow_IsEmptyCells(double value, double max) =>
+        Assert.Equal(new string('░', 24), SpeedFormatter.Bar(value, max));
+
+    [Theory]
+    [InlineData(250)]
+    [InlineData(9000)]
+    public void Bar_AtOrAboveScale_IsAllFullCells(double value) =>
+        Assert.Equal(new string('█', 24), SpeedFormatter.Bar(value, 250));
 
     [Fact]
-    public void Bar_ZeroWidth_IsEmpty() => Assert.Equal(string.Empty, SpeedFormatter.Bar(5, 10, 0));
+    public void Bar_HalfCellRemainder_EndsWithHalfBlock() =>
+        Assert.Equal("▌" + new string('░', 23), SpeedFormatter.Bar(0.5, 24));
+
+    [Fact]
+    public void Bar_QuarterCellRemainder_RoundsDownToNothing() =>
+        Assert.Equal(new string('░', 24), SpeedFormatter.Bar(0.25, 24));
+
+    [Theory]
+    [InlineData(125, "████████████░░░░░░░░░░░░")]
+    [InlineData(135, "████████████▌░░░░░░░░░░░")]
+    [InlineData(245.3, "███████████████████████▌")]
+    public void Bar_PartOfScale_FillsInHalfCells(double value, string expected) =>
+        Assert.Equal(expected, SpeedFormatter.Bar(value, 250));
+
+    [Fact]
+    public void Bar_AnyValue_UsesOnlyGlyphsConsolasHas()
+    {
+        // The eighth blocks fall back to another font on Windows and break the grid (ADR-0017).
+        for (var value = 0.0; value <= 250; value += 0.7)
+        {
+            Assert.All(SpeedFormatter.Bar(value, 250), cell => Assert.Contains(cell, "█▌░"));
+        }
+    }
+
+    [Theory]
+    [InlineData(10, "0                10 Mbps")]
+    [InlineData(250, "0               250 Mbps")]
+    [InlineData(1000, "0                 1 Gbps")]
+    [InlineData(2500, "0               2.5 Gbps")]
+    [InlineData(30_000, "0                30 Gbps")]
+    public void BarScale_RightAlignsScaleEndUnderBar(double max, string expected)
+    {
+        Assert.Equal(expected, SpeedFormatter.BarScale(max));
+        Assert.Equal(SpeedFormatter.BarCells, expected.Length);
+    }
+
+    [Fact]
+    public void BarScale_NoScaleYet_ShowsZeroAlone() => Assert.Equal("0" + new string(' ', 23), SpeedFormatter.BarScale(0));
 
     [Theory]
     [InlineData(0, 10)]

@@ -90,12 +90,19 @@ public sealed class MeterMarkdownTests
     }
 
     [Fact]
-    public void Meter_WithValue_DrawsTextBarAsCode()
+    public void Meter_WithValue_DrawsBarAndScaleInFencedCode()
     {
         var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 245.3, 250, active: true);
 
-        // 245.3 of the 250 scale fills every cell (ADR-0006). No image: the SVG gauge waits for plan item 5.1.
-        Assert.EndsWith("`▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰`\n", markdown, StringComparison.Ordinal);
+        // The readout is an H2, the bar and its scale share one fenced block (Consolas, ADR-0017). No image.
+        Assert.Equal(
+            "## ⬇ Download ●\n\n"
+            + "## 245.3 Mbps\n\n"
+            + "```\n"
+            + "███████████████████████▌\n"
+            + "0               250 Mbps\n"
+            + "```\n",
+            markdown);
         Assert.DoesNotContain("![", markdown);
         Assert.DoesNotContain("data:", markdown);
     }
@@ -103,10 +110,10 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_WithCallerScale_FillsBarAgainstThatScale()
     {
-        // 9.5 alone would pick the 10 scale and fill 19 cells; the caller's 100 keeps the bar where the run left it.
+        // 9.5 alone would pick the 10 scale and fill 22.5 cells; the caller's 100 keeps the bar where the run left it.
         var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 9.5, 100, active: true);
 
-        Assert.EndsWith("`▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
+        Assert.EndsWith("```\n██░░░░░░░░░░░░░░░░░░░░░░\n0               100 Mbps\n```\n", markdown, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -115,7 +122,7 @@ public sealed class MeterMarkdownTests
         var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, null, 0, active: false);
 
         Assert.Contains("\n## —\n", markdown);
-        Assert.EndsWith("`▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
+        Assert.EndsWith("```\n░░░░░░░░░░░░░░░░░░░░░░░░\n0                       \n```\n", markdown, StringComparison.Ordinal);
     }
 
     [Fact]

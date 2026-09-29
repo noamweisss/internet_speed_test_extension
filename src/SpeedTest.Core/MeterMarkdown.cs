@@ -3,7 +3,7 @@ using System.Text;
 namespace SpeedTest.Core;
 
 /// <summary>
-/// Renders the meter dashboard as markdown (ADR-0006, kept by ADR-0013), one string per content block of the
+/// Renders the meter dashboard as markdown (ADR-0017), one string per content block of the
 /// extension's MeterPage. The page keeps each block as its own MarkdownContent because the host rebuilds a block
 /// whole whenever its Body changes (docs/CMDPAL-RENDERING.md §5): a live value must not re-parse the static text.
 /// Pure functions, so the layout is unit-tested here.
@@ -38,11 +38,16 @@ public static class MeterMarkdown
     /// extension can pass an eased value; null means not measured yet. <paramref name="scale"/> is the bar's maximum,
     /// chosen by the caller from the measured value (<see cref="SpeedFormatter.ScaleFor(double, double)"/>), so an eased
     /// value crossing a step does not change it.
+    /// The bar and its scale line sit in a fenced code block, not inline code: the host draws fenced code in Consolas,
+    /// whose glyphs share one width, and inline code in a 10 px font that is not monospace (docs/CMDPAL-RENDERING.md §3).
     /// </summary>
     public static string Meter(string title, double? mbps, double scale, bool active) =>
         "## " + title + ActiveMarker(active) + "\n\n"
         + "## " + SpeedFormatter.Speed(mbps) + "\n\n"
-        + "`" + SpeedFormatter.Bar(mbps ?? 0, scale) + "`\n";
+        + "```\n"
+        + SpeedFormatter.Bar(mbps ?? 0, scale) + "\n"
+        + SpeedFormatter.BarScale(scale) + "\n"
+        + "```\n";
 
     /// <summary>The connection line. Its fields come from the server and are escaped before they touch the markdown.</summary>
     public static string Footer(SpeedTestSnapshot snapshot)
