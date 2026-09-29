@@ -54,4 +54,10 @@ public static class SpeedFormatter
 
         return Math.Ceiling(mbps / 10000) * 10000;
     }
+
+    /// <summary>
+    /// The gauge maximum for a value that must not fall below <paramref name="atLeast"/>, the scale already shown in
+    /// this run: a scale that shrank would make the bar jump back when the value moves down across a step.
+    /// </summary>
+    public static double ScaleFor(double mbps, double atLeast) => Math.Max(atLeast, ScaleFor(mbps));
 }

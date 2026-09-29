@@ -38,4 +38,20 @@ public sealed class SpeedFormatterTests
     [InlineData(900, 1000)]
     [InlineData(25_000, 30_000)]
     public void ScaleFor_PicksNextRoundScale(double mbps, double expected) => Assert.Equal(expected, SpeedFormatter.ScaleFor(mbps));
+
+    [Fact]
+    public void ScaleFor_ValueCrossesAStep_Grows() => Assert.Equal(250, SpeedFormatter.ScaleFor(120, atLeast: 100));
+
+    [Theory]
+    [InlineData(9.5, 100)]
+    [InlineData(0, 250)]
+    public void ScaleFor_ValueFallsBelowAStep_NeverShrinks(double mbps, double atLeast) =>
+        Assert.Equal(atLeast, SpeedFormatter.ScaleFor(mbps, atLeast));
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(40, 0)]
+    [InlineData(240, -5)]
+    public void ScaleFor_NoPreviousScale_MatchesSingleValueForm(double mbps, double atLeast) =>
+        Assert.Equal(SpeedFormatter.ScaleFor(mbps), SpeedFormatter.ScaleFor(mbps, atLeast));
 }

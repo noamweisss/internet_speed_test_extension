@@ -7,7 +7,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ### Changed
 - The meter moves smoothly between measurements instead of jumping, and the numbers under Latency, Download and
-  Upload are bigger. The meter view redraws only the section that changed.
+  Upload are bigger. A bar keeps its scale for the whole test, so it no longer drops back when the speed crosses
+  10, 25, 50, 100 Mbps and so on. The meter view redraws only the section that changed.
 
 ## [0.1.1] - 2026-09-29
 

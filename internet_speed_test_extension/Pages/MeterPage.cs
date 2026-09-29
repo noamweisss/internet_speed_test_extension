@@ -36,6 +36,8 @@ internal sealed partial class MeterPage : ContentPage
     private SpeedTestSnapshot? _drawnSnapshot;
     private double? _shownDownloadMbps;
     private double? _shownUploadMbps;
+    private double _downloadScale;
+    private double _uploadScale;
 
     public MeterPage(SpeedTestSession session)
     {
@@ -81,6 +83,11 @@ internal sealed partial class MeterPage : ContentPage
             var uploading = snapshot.Phase == SpeedTestPhase.Upload;
             var shownDownload = MeterEasing.Step(_shownDownloadMbps, snapshot.DownloadMbps, live: downloading);
             var shownUpload = MeterEasing.Step(_shownUploadMbps, snapshot.UploadMbps, live: uploading);
+
+            // The scale follows the measured value, not the eased one, and only grows: an eased value crossing a
+            // step made the bar drop back. A meter not measured yet has no scale, which resets it for every new run.
+            var downloadScale = snapshot.DownloadMbps is { } download ? SpeedFormatter.ScaleFor(download, _downloadScale) : 0;
+            var uploadScale = snapshot.UploadMbps is { } upload ? SpeedFormatter.ScaleFor(upload, _uploadScale) : 0;
             var snapshotChanged = !ReferenceEquals(snapshot, _drawnSnapshot);
             if (snapshotChanged)
             {
@@ -89,19 +96,21 @@ internal sealed partial class MeterPage : ContentPage
             }
 
             // Between measurements the eased values settle; skip rendering a meter whose input did not change.
-            if (snapshotChanged || shownDownload != _shownDownloadMbps)
+            if (snapshotChanged || shownDownload != _shownDownloadMbps || downloadScale != _downloadScale)
             {
-                downloadMeter = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, shownDownload, downloading);
+                downloadMeter = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, shownDownload, downloadScale, downloading);
             }
 
-            if (snapshotChanged || shownUpload != _shownUploadMbps)
+            if (snapshotChanged || shownUpload != _shownUploadMbps || uploadScale != _uploadScale)
             {
-                uploadMeter = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, shownUpload, uploading);
+                uploadMeter = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, shownUpload, uploadScale, uploading);
             }
 
             _drawnSnapshot = snapshot;
             _shownDownloadMbps = shownDownload;
             _shownUploadMbps = shownUpload;
+            _downloadScale = downloadScale;
+            _uploadScale = uploadScale;
         }
 
         // Outside the lock: each set raises the host's PropChanged synchronously (§5 step 1). An equal string is skipped.
