@@ -1,25 +1,23 @@
-# CodeRabbit is the only reviewer (ADR-0017). This file is the whole configuration; the dashboard is not used.
-# Below 10 stars CodeRabbit never reviews on its own: the building agent comments "@coderabbitai review"
-# once per finished pull request (AGENTS.md section 4, step 6). The two settings under auto_review keep that
-# true after the repository passes 10 stars: no review per push, pause after the first reviewed commit.
+# CodeRabbit reviewer configuration. Automatic reviews are off: every review is requested by hand with
+# "@coderabbitai review", once per finished pull request. The reviewer's rules are the "Code Review Rules"
+# section of AGENTS.md, which CodeRabbit reads on its own; the path instructions below add only the safety
+# checklist and the severity words that section uses.
 language: en-US
 reviews:
   profile: assertive
   request_changes_workflow: false
+  review_status: false
   high_level_summary: true
   poem: false
   auto_review:
     enabled: false
-    per_push: false
     drafts: false
-    auto_incremental_review: false
-  auto_pause_after_reviewed_commits: 1
   path_instructions:
     - path: "**"
       instructions: |
         Apply the "Code Review Rules" section of AGENTS.md in full: safety questions, guards, correctness,
         design and maintainability, documentation and instructions, documentation-only pull requests,
-        completeness. Severities: P0 = Critical, P1 = Major, P2 = Minor, P3 = Trivial. Report documentation
+        completeness. Severities: P0 = Blocker, P1 = Major, P2 = Minor, P3 = Nit. Report documentation
         findings as a separate list from code findings. Report everything in one review; never keep a finding
         for the next round.
     - path: "**/*.cs"
@@ -31,7 +29,7 @@ reviews:
         3. Does it store, log, or send anything about the user (IP, ISP, location, results)?
         4. Does it add a dependency, a Windows capability, or weaken a guard?
         5. Is any network input used without bounds on size, time, or format?
-        A "Yes" without a linked ADR in docs/decisions/ is Critical.
+        A "Yes" without a linked ADR in docs/decisions/ is a Blocker.
     - path: "{scripts,.githooks,.claude,.github,install}/**"
       instructions: |
         These are the project's guards. A change that makes a rule weaker, adds a bypass, or removes a check
