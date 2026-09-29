@@ -250,7 +250,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 </ul>
 
 <h2>8. How sure is all this</h2>
-<p>Five research agents read the PowerToys source at your version (tag 0.101.2362) and at today's main, the markdown control's source, the Adaptive Cards renderer's source, the Microsoft Learn pages, the release notes, and the relevant issues and pull requests. Every claim in the technical document carries a citation and a label: verified in source or documentation, inferred from it, or unknown. Nothing was run on Windows. The seven things only a Windows run can answer are listed at the end of the technical document; the first is whether the blink is visible at two to four updates a second.</p>
+<p>Five research agents read the PowerToys source at the 0.101 release tag and at the latest 0.101 build, which bracket the 0.101.2652 your VM runs (every file cited is identical across them), and at today's main, the markdown control's source, the Adaptive Cards renderer's source, the Microsoft Learn pages, the release notes, and the relevant issues and pull requests. Every claim in the technical document carries a citation and a label: verified in source or documentation, inferred from it, or unknown. Nothing was run on Windows. The seven things only a Windows run can answer are listed at the end of the technical document; the first is whether the blink is visible at two to four updates a second.</p>
 
 </main>
 
@@ -264,7 +264,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
     <dt>Blank frame</dt><dd>The moment after a rebuild when a picture exists but has not been decoded yet.</dd>
     <dt><code>data:</code> image</dt><dd>A picture embedded in the text itself, base64-encoded. Works, but takes no size hints.</dd>
     <dt>Size hints</dt><dd><code>--x-cmdpal-fit</code>, <code>-width</code>, <code>-height</code>: query parameters that only <code>file:</code> and web URLs accept.</dd>
-    <dt>Direct2D SVG</dt><dd>The Windows renderer for SVG pictures: shapes, paths, gradients; no text, no styles, no animation.</dd>
+    <dt>Direct2D SVG</dt><dd>The Windows renderer for SVG pictures: shapes, paths, gradients, and inline <code>style</code> attributes; no text, no style sheets or CSS classes, no animation.</dd>
     <dt>Adaptive Card</dt><dd>A JSON layout (text, columns, images, inputs) the host renders with Microsoft's card library.</dd>
     <dt>Image block</dt><dd><code>ImageContent</code>, since 0.99: one picture with a maximum size and a zoom button.</dd>
     <dt>Easing</dt><dd>Moving the shown value a little every tick toward the real one, instead of jumping.</dd>

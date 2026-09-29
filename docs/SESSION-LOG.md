@@ -15,7 +15,8 @@ verified, blocked, next.
 **Done**
 - Five research subagents in parallel, one per surface (markdown renderer, icons/lists/grids, Adaptive Cards,
   update and animation mechanics, official docs and precedents), each reading the PowerToys source at the
-  owner's tag `v0.101.2362.0` and at `main` (2026-09-29), the CommunityToolkit Labs `MarkdownTextBlock`
+  0.101 release tag `v0.101.2362.0`, the latest 0.101 tag `v0.101.2684.0` (the owner's VM runs 0.101.2652.0,
+  between them; the cited files are identical across all three) and `main` (2026-09-29), the CommunityToolkit Labs `MarkdownTextBlock`
   source, the Adaptive Cards WinUI3 renderer source, Microsoft Learn, release notes, issues and PRs. Their
   reports (about 1,400 lines, every claim labelled Verified / Inferred / Unknown with a citation) are merged
   into `docs/CMDPAL-RENDERING.md` (17 sections: surfaces, markdown engine and constructs, images and the

@@ -12,7 +12,7 @@ run on Windows: every statement comes from reading source and documentation, and
 
 | Source | Revision read | Why this revision |
 |---|---|---|
-| `microsoft/PowerToys`, `src/modules/cmdpal/` | tag `v0.101.2362.0` (2026-08-25, the owner's 0.101), tag `v0.101.2684.0` (latest 0.101 preview), and `main` at `353caee0` (2026-09-29) | Every file cited below was diffed between the 0.101 tag and `main`; where the text says "identical", the `main` line numbers apply to the owner's build. Post-0.101 changes are marked as such. |
+| `microsoft/PowerToys`, `src/modules/cmdpal/` | tag `v0.101.2362.0` (2026-08-25, the 0.101 release), tag `v0.101.2684.0` (2026-09-26, the latest 0.101 build), and `main` at `353caee0` (2026-09-29) | The owner's VM runs PowerToys 0.101.2652.0 (session 3 and 4 hand-offs), which lies between the two tags. Every file cited below was diffed between the release tag, the latest tag and `main`; where the text says "identical", the `main` line numbers apply to the owner's build as well. Post-0.101 changes are marked as such. |
 | `CommunityToolkit/Labs-Windows`, `components/MarkdownTextBlock` | `main` at `89328136` (last change 2026-01-15) | PowerToys 0.97 to 0.101 pin `CommunityToolkit.Labs.WinUI.Controls.MarkdownTextBlock` 0.1.260116-build.2514 (`Directory.Packages.props:32`), built the day after that last change. |
 | `microsoft/AdaptiveCards`, `source/uwp` and `source/shared` | `main` at `8b62e1d5` (2026-08-27) | PowerToys pins `AdaptiveCards.Rendering.WinUI3` 2.2.4-beta (2026-01-07), which has no git tag; `main` is the nearest source. Minor drift is possible. |
 | Microsoft Learn, Command Palette extension pages | fetched 2026-09-29 | `learn.microsoft.com/windows/powertoys/command-palette/…` |
@@ -186,7 +186,7 @@ creates a new image, re-decodes the data URI, parses the SVG twice (size probe a
 
 ## 5. The update pipeline: from `Body = …` to pixels
 
-Verified end to end (PowerToys tag `v0.101.2684.0`, identical to the 0.101 release for every file named;
+Verified end to end (PowerToys tag `v0.101.2684.0`, identical to the 0.101 release and so to the owner's 0.101.2652 for every file named;
 Labs build 2514).
 
 1. **Extension.** `MarkdownContent.Body { set => SetProperty(ref field, value); }`
