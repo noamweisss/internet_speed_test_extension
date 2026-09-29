@@ -55,6 +55,14 @@ verified, blocked, next.
   the setup in `docs/REVIEW-PROMPT.md` (install the app) becomes "no app needed". The workflow runs from `main`,
   so the fix needs its own PR; this session's harness guard refused to write a token into a workflow, so the
   change is left to the owner. Until it merges, PR #19 has only the Codex review.
+- Outcome: a local session on the owner's laptop made exactly that change in PR
+  [#20](https://github.com/noamweisss/internet_speed_test_extension/pull/20) (`fix/review-workflow-oidc-token`,
+  f4a5ef2, `Guard-Change:` trailer): `github_token: ${{ github.token }}` with a comment naming issue 713,
+  `id-token: write` removed, `docs/REVIEW-PROMPT.md` step 1 now "no GitHub App is needed" and the removal line
+  without "uninstall the app". It checked the pinned action source first (`setupGitHubToken()` returns
+  `OVERRIDE_GITHUB_TOKEN` before any OIDC request). YAML parses, `scripts/check.sh all` green. PR #20 itself
+  gets only the Codex review (the workflow runs from `main`); after it merges, editing PR #19's body or pushing
+  to it starts the first Claude review.
 
 **Not verified**
 - Nothing in the two documents was run on Windows; every runtime claim is labelled Inferred and §16 of the
@@ -62,7 +70,7 @@ verified, blocked, next.
   rebuilt markdown image is visible at 2 to 4 updates a second).
 
 **Next**
-- Owner: apply the review-workflow fix above on a branch from `main` and merge it, then push or edit PR #19 so
+- Owner: merge PR #20 (the review-workflow fix above), then push or edit PR #19 so
   the Claude review runs; read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
   says: restore `GaugeSvg` from 6034b22, redraw, and record the result in the ADR that supersedes ADR-0013.
   `docs/CMDPAL-RENDERING.md` §15 ranks the options for that redraw; options 1 to 3 (ease in the extension, one
