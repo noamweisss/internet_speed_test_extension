@@ -533,8 +533,10 @@ side-by-side content blocks; waiting for PR #50443.
 
 **Suggested experiment order on the owner's PC:** options 1 + 2 + 3 first (expected smooth and eased, no
 new capability, all testable in Core); then option 4 in the same structure at 2 to 4 Hz to see whether the
-blank frame is visible; then, only if an image is wanted, option 6 (needs an ADR for the temp-folder write)
-or option 7 after 0.102.
+blank frame is visible; then, only if an image is wanted, option 6 (a temp-folder write is a new capability)
+or option 7 after 0.102. Whatever is chosen, plan item 5.1 proceeds as ADR-0013 says: it starts by restoring
+`GaugeSvg` from `6034b22` (option 4 reuses it; the text options remove it again) and records the redrawn meter
+in the ADR that supersedes ADR-0013. This document ranks; that ADR decides.
 
 ## 16. Rules for the building agent, and what only Windows can answer
 

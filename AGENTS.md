@@ -146,15 +146,17 @@ Wording and tone are P3.
 
 ### Documentation-only pull requests
 
-A pull request whose diff touches no file under `src/`, `tests/`, or `internet_speed_test_extension/` is
-documentation-only (the diff and the changed-file list say so). Review it like this:
+A pull request is documentation-only when every file in its diff is a document: a `.md` file at the
+repository root or under `docs/`, or a `.html` file under `docs/`. A diff that also touches anything else (a
+guard file, `AGENTS.md` included, a workflow, a script, a project file, code, a test, an asset) is reviewed
+under every rule above, with the two rules for research documents below applied to its documents. Review a
+documentation-only pull request like this:
 
-- Safety questions: the five answers come from the diff as always. A `.md` or `.html` file cannot reach a
-  host, touch a file, or add a dependency, so with no code in the diff every answer is "No"; the Guards rule
-  above still applies to every guard file in the diff.
-- Correctness and design: the code rules above have nothing to check, so this list holds only findings about
-  guard files, if any. Do not ask for a unit test, a Core-layer move, or an ADR for text: a research document
-  records what was found and what could be tried, and the pull request that implements a choice carries the ADR.
+- Safety questions: the five answers come from the diff as always. A document cannot reach a host, touch a
+  file, or add a dependency, so with only documents in the diff every answer is "No".
+- Correctness and design: the code rules above have nothing to check. Do not ask for a unit test, a
+  Core-layer move, or an ADR for text: a research document records what was found and what could be tried,
+  and the pull request that implements a choice carries the ADR.
 - Documentation and instructions: the rules above apply in full, plus two for research documents. A statement
   about an external system (Command Palette, PowerToys, the SDK, a renderer) needs a source and a confidence
   label (`Verified`, `Inferred`, `Unknown`); one without either is P2, and the reviewer does not reproduce the

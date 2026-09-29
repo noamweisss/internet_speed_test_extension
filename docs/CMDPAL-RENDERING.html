@@ -145,7 +145,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 <figcaption>Figure 1. What one <code>Body</code> update costs on PowerToys 0.101. The dashed step is the blank frame. Verified in the host and toolkit source; the timing constant is 40 ms in code (the comment beside it says 30).</figcaption>
 </figure>
 
-<p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it disappears for at least a frame. And no update can be faster than the 40 ms batch, so anything above roughly 10 updates a second is wasted.</p>
+<p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it disappears for at least a frame. And no update can be faster than the 40 ms batch, so the host cannot show more than about 25 distinct frames a second; above 5 to 10 a second each extra frame is one more full rebuild for no visible gain.</p>
 
 <h2>2. See it: steps and blinks, then the fixes</h2>
 <p>The left gauge behaves like the session 4 build: it moves only when a measurement arrives and goes blank for a moment on each update. The right gauge applies the two changes that are ours to make. Both receive the same measurements.</p>
@@ -186,7 +186,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <thead><tr><th>Surface</th><th>Can hold a gauge?</th><th>How it updates</th><th>Blank frame</th><th>Size control</th><th>Follows theme</th><th>On 0.101</th></tr></thead>
   <tbody>
     <tr><td>Markdown block, text only</td><td class="y">Bars from block characters</td><td>Block rebuilt</td><td class="y">No</td><td>Font sizes only</td><td class="y">Yes</td><td class="y">Yes</td></tr>
-    <tr><td>Markdown block with a <code>data:</code> SVG</td><td class="m">Yes, no text inside the SVG</td><td>Block rebuilt, image re-decoded</td><td class="n">Yes</td><td class="n">None: capped at 256 px, hints ignored</td><td class="n">Picture no, text yes</td><td class="y">Yes</td></tr>
+    <tr><td>Markdown block with a <code>data:</code> SVG</td><td class="m">Yes, no text inside the SVG</td><td>Block rebuilt, image re-decoded</td><td class="n">Yes</td><td class="m">Root <code>width</code>/<code>height</code> only; no query hints; capped at 256 px</td><td class="n">Picture no, text yes</td><td class="y">Yes</td></tr>
     <tr><td>Markdown block with a <code>file:</code> SVG</td><td class="m">Yes</td><td>Same</td><td class="n">Yes</td><td class="y">Hints work (fit, width, height)</td><td class="n">Picture no</td><td class="y">Yes, needs a temp folder</td></tr>
     <tr><td>Image block (<code>ImageContent</code>)</td><td class="m">Yes, from a file path</td><td>Only the image swaps</td><td class="m">Probably not (unverified)</td><td class="y">Max width and height</td><td class="m">Light and dark files</td><td class="y">Since 0.99</td></tr>
     <tr><td>Adaptive Card with an SVG image</td><td class="y">Yes, Microsoft's own pattern</td><td>Whole card rebuilt</td><td class="n">Yes, until 0.102</td><td class="y">Pixel width and height</td><td class="m">Named colours for text</td><td class="y">Yes</td></tr>

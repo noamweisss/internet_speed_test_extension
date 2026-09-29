@@ -63,9 +63,11 @@ verified, blocked, next.
 
 **Next**
 - Owner: apply the review-workflow fix above on a branch from `main` and merge it, then push or edit PR #19 so
-  the Claude review runs; read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 starts from
-  `docs/CMDPAL-RENDERING.md` §15: options 1 to 3 (ease in the extension, one block per moving part, a text
-  meter) need no image, no new capability and no ADR; the SVG comes back only after they are seen on the PC.
+  the Claude review runs; read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
+  says: restore `GaugeSvg` from 6034b22, redraw, and record the result in the ADR that supersedes ADR-0013.
+  `docs/CMDPAL-RENDERING.md` §15 ranks the options for that redraw; options 1 to 3 (ease in the extension, one
+  block per moving part, a text meter) add no capability and keep every safety answer "No", option 4 keeps the
+  SVG with the fixes of §4, and whichever is chosen goes into that ADR.
 
 ## Session 4a — 2026-09-29 — branch `chore/release-v0.1.1` (unplanned, local session on the owner's laptop)
 
