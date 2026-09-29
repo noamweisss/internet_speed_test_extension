@@ -113,6 +113,11 @@ verified, blocked, next.
 
 **Not verified**
 - A complete real run of the Claude workflow (collect, review, post) on a PR after this one merges.
+  Found on 2026-09-29 (session 4a, PR #17): the workflow had never run at all. GitHub refused the file at
+  parse time on every push since bee8582 ("Invalid workflow file ... Unrecognized named-value: 'runner'",
+  line 69): `runner.temp` was used in the job's `env`, where the runner context does not exist. Fixed on
+  branch `fix/review-workflow-runner-context` by setting `REVIEW_DIR` per step. The first real review still
+  waits for the first PR opened after that fix is on `main`.
 - Whether the `env` block sets the author on the next agent session (this session set it inline per commit).
 - Whether GitHub grants the `claude-review` environment to Dependabot-triggered `pull_request_target` runs; if
   not, those PRs are left to Codex (`docs/REVIEW-PROMPT.md`, step 5).
