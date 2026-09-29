@@ -58,9 +58,9 @@ share a base branch that carries `docs/CMDPAL-RENDERING.md` §15 options 1 and 2
 - **B, arc gauge** (`feat/meter-arc-gauge`): the session 4 arc restored from `6034b22` with the same fixes
   (numeric root size, a viewBox, tick marks, no `xmlns`, its own block, 250 ms tick).
 
-What C offers over them: a drawn bar with a smooth fill at any value (A's cells cannot show less than half a
-cell), a sixth of the arc's height (20 DIP against 121), and the same left edge as the text around it. Why the owner picked C:
-<owner's reason>; chosen by the owner on <date> after the VM comparison.
+What C offers over them: a drawn bar with a smooth fill at any value (A moves in steps of half a cell, 1/48 of
+the scale), less than a fifth of the arc's height (20 DIP against 110), and the same left edge as the text around it.
+Chosen by the owner on <date> after the VM comparison.
 
 ## Consequences
 - Needs PowerToys 0.95 or newer for `data:` images. An older host shows nothing where the bar is; the readout and
