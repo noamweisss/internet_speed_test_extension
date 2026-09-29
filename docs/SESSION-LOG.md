@@ -4,6 +4,94 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 5 (continued) — 2026-09-29 — branch `feat/meter-text-bars` (option A)
+
+**Why**
+- Plan item 5.1. The owner asked for two or three visual designs of the meter, each fully built so that choosing
+  one is only a pull request, and compared on the VM before choosing.
+
+**Done**
+- A shared base branch `feat/meter-live-blocks` carries `docs/CMDPAL-RENDERING.md` §15 options 1 and 2 in four
+  commits: the meter page split into four fixed content blocks (header, download, upload, footer); the readouts
+  as H2 instead of H3; easing at a 100 ms tick with the maths in `MeterEasing` (Core) and the timer in `MeterPage`;
+  a scale that never shrinks during a run (`SpeedFormatter.ScaleFor(mbps, atLeast)`).
+- Three design branches on top of it:
+  - `feat/meter-text-bars` (A, this branch): §15 option 3. Each meter block is the title, the H2 readout and a
+    fenced code block of two 24-cell lines: a text bar in half-cell steps (`█`, `▌`, `░`) and a scale line with
+    `0` at the left and the scale's end right-aligned. Only glyphs Consolas has: the eighth blocks fall back to
+    Segoe UI Symbol and break the grid (DirectWrite cmap and `MapCharacters` check on the owner's laptop).
+    `SpeedFormatter.Bar` replaced (its `width` parameter had no caller), `SpeedFormatter.BarScale` added, the
+    `▰▱` bar is gone. Tick stays at 100 ms. ADR-0017 supersedes ADR-0013 and says why the SVG gauge is not
+    restored; its sentence on the owner's choice is left to fill in.
+  - `feat/meter-arc-gauge` (B): `GaugeSvg` restored from 6034b22 with a numeric root size and a `viewBox`, in its
+    own block, 250 ms tick.
+  - `feat/meter-svg-bars` (C): an SVG horizontal bar in `GaugeSvg.cs`, 250 ms tick.
+- B and C carry no `xmlns` on the SVG root (verified by the session 5 research and by the VM runs), so rule R6
+  needs no exemption and no rules pull request; the prepared branch `chore/r6-exempts-gauge-svg` (the 48baf41
+  exemption) stays local and unpushed as a fallback.
+- A VM capture harness (`vm\Test-MeterOnVM.ps1`, `Capture-MeterRun.ps1`). It lives outside the repository, in the
+  session scratchpad, not in it: it installs a CI build into `SpeedTest-Win11` over PowerShell Direct and
+  screenshots the run from an interactive scheduled task.
+- An HTML review artifact with mockups, for the owner's choice (outside the repository).
+- The base fix `444d929` of `feat/meter-live-blocks`, cherry-picked here: `MeterFrame` and `MeterEasing.Next` in
+  Core (the per-meter update rules moved out of `MeterPage.Tick`, with tests), the page icon restored, the tick
+  guarded with a `finally`. `MeterMarkdown.Meter` takes a `MeterFrame` and keeps this branch's fenced block.
+- The fix round (this commit set) answers the review findings, in `AGENTS.md` "Code Review Rules" terms:
+  - Code, Major (P1): per-meter maths in the extension without a test; answered by the base fix above.
+  - Code, Minor (P2): the page icon lost in the block split; the tick without a `finally`. Base fix above.
+  - VM observation: about 40 px of empty space under the scale line in the code box. `MeterMarkdown.Meter`
+    already emits exactly the fence, the bar line, the 24-cell scale line and the closing fence, with no blank
+    line inside, so the space is the host's padding; no code change.
+  - Documentation, P1: ADR-0017 said `accepted` although the owner has not chosen (now `proposed`, accepted in the
+    pull request once chosen); plan 5.1 still said to restore `GaugeSvg` from `6034b22` and was marked done;
+    `docs/CMDPAL-RENDERING.md` §15 said 5.1 starts by restoring `GaugeSvg`; this entry claimed
+    frame captures that did not exist yet.
+  - Documentation, P2: ADR-0017 now says the readout and the bar show the eased value and the final value is
+    exact, names the scale steps as a consequence and records the VM run; §16 gives the tick per block type and
+    leaves centring to the design; §4 records the `xmlns` and `#RRGGBBAA` facts; `docs/ARCHITECTURE.md` names
+    `MeterFrame`. `docs/CMDPAL-RENDERING.html` states none of the §4 or §15 facts; its one changed sentence (option 3
+    in its section 6) now says the bar uses the block characters Consolas has, with the Verified label and source.
+- The owner's decision, 2026-09-29, in chat: "let's go with A. but don't throw away B and C - I want them in the
+  backlog for when cmdpal updates its way of rendering extensions (due in a few weeks according to their github
+  milestones)". Then: ADR-0017 accepted (the chosen-by sentence filled in, B and C named as backlog branches in its
+  Consequences); plan 5.1 done and a new item 5.3 for the backlog (revisit B and C when PR #50211, milestone 0.102,
+  or PR #50443 lands); the pull request opened from this branch.
+
+**Verified**
+- This branch after the fix round: `dotnet test tests/SpeedTest.Core.Tests` passed 154 of 154; `scripts/check.sh
+  all` green. The other design branches record their own numbers.
+- First push (`f623fc5`): CI run 36566793487 green (Core tests, rules, Windows extension build).
+- VM run 2026-09-29 on `SpeedTest-Win11` (PowerToys 0.101.2652, Command Palette 0.12.12651, 1920×1080 at 100 %),
+  build `f623fc5`: 161 frames captured at 150 ms; the page shows; phases latency at frame 3, download 11, upload
+  64, complete 116 (17.9 s); 0 blank or collapsed meter frames. At 800×480 the title, status, latency, download
+  value and bar box are visible without scrolling; upload is below the fold. The bar shortened at three scale
+  steps (a 200 Mbps line). The code box shows about 40 px of empty space under the scale line (host padding, see
+  above).
+- CI run 36569917826 after the fix round: green (Core tests, rules, Windows extension build).
+- Second VM run after the fix round, 2026-09-29, build `870e8b4`, same VM `SpeedTest-Win11` (PowerToys 0.101.2652,
+  Command Palette 0.12.12651, 1920×1080 at 100 %, palette 800×480, frames every 150 ms): 160 frames; latency at
+  frame 2, download 8, upload 59, complete 111 (17.2 s); 0 blank frames. The page icon next to the back arrow is
+  back (the base fix `444d929` restored the glyph). Title, status, latency, download value and the code box are
+  visible without scrolling (box bottom at y 413, footer at 422); upload is below the fold. The speed held at
+  about 125 Mbps, so the bar stood still while the number changed; the scale stepped once, 100 to 250 Mbps. The
+  empty band under the scale line is still there: 41 px of the 84 px box. The markdown is exactly two lines inside
+  the fence, so this is the host's code-block rendering; a follow-up could look at the toolkit's `MyCodeBlock` for
+  a trailing line.
+
+**Not verified**
+- The owner's laptop at 200 % scaling: the Consolas grid and the 100 ms tick there.
+
+**Next**
+- The pull request's review rounds: answer the findings in one fix push, then one re-review (`AGENTS.md` §4
+  step 6).
+- After merge: the release.
+- The backlog branches `feat/meter-arc-gauge` (B) and `feat/meter-svg-bars` (C) stay on GitHub; they need no
+  rules branch (no `xmlns`, so no R6 exemption). Plan 5.3 says when to revisit them.
+- Follow-ups, not built: make a run start at the previous run's scale, so the bar does not shorten at each scale step
+  (today a new run publishes null speeds and `MeterEasing.Next` resets the frame, so the scale starts from 10 Mbps); a rules
+  pull request rewords the stale R6 comment in `scripts/check.sh` (the gauge exemption "returns with it, 5.1"), a
+  guard file, so on its own branch (R14).
+
 ## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
 
 **Why**

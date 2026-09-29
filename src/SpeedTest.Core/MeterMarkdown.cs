@@ -3,36 +3,60 @@ using System.Text;
 namespace SpeedTest.Core;
 
 /// <summary>
-/// Renders the meter dashboard as markdown (ADR-0006, kept by ADR-0013). Pure function of the snapshot, so the layout is unit-tested
-/// and the extension's MeterPage only has to hand the string to a MarkdownContent.
+/// Renders the meter dashboard as markdown (ADR-0017), one string per content block of the
+/// extension's MeterPage. The page keeps each block as its own MarkdownContent because the host rebuilds a block
+/// whole whenever its Body changes (docs/CMDPAL-RENDERING.md §5): a live value must not re-parse the static text.
+/// Pure functions, so the layout is unit-tested here.
 /// </summary>
 public static class MeterMarkdown
 {
-    public static string Render(SpeedTestSnapshot snapshot)
+    public const string DownloadTitle = "⬇ Download";
+
+    public const string UploadTitle = "⬆ Upload";
+
+    /// <summary>
+    /// Title, status, and latency: they change per phase, not per sample. The latency readout is H2, not H3: the host
+    /// renders H3 at 12 px normal weight, smaller than body text (docs/CMDPAL-RENDERING.md §3).
+    /// </summary>
+    public static string Header(SpeedTestSnapshot snapshot)
     {
         var text = new StringBuilder();
         text.Append("# Internet Speed Test\n\n");
         text.Append(StatusLine(snapshot)).Append("\n\n");
-        // Sections follow the order the test measures them in.
-        text.Append("## ⏱ Latency").Append(snapshot.Phase == SpeedTestPhase.Latency ? " ●" : string.Empty)
-            .Append("\n\n### ").Append(SpeedFormatter.Latency(snapshot.LatencyMs));
+        text.Append("## ⏱ Latency").Append(ActiveMarker(snapshot.Phase == SpeedTestPhase.Latency))
+            .Append("\n\n## ").Append(SpeedFormatter.Latency(snapshot.LatencyMs));
         if (snapshot.JitterMs is not null)
         {
             text.Append("  ·  jitter ").Append(SpeedFormatter.Latency(snapshot.JitterMs));
         }
 
-        text.Append("\n\n");
-        AppendMeter(text, "⬇ Download", snapshot.DownloadMbps, active: snapshot.Phase == SpeedTestPhase.Download);
-        AppendMeter(text, "⬆ Upload", snapshot.UploadMbps, active: snapshot.Phase == SpeedTestPhase.Upload);
-        text.Append("---\n\n");
-        // Connection fields come from the server and are escaped before they touch the markdown.
+        return text.Append('\n').ToString();
+    }
+
+    /// <summary>
+    /// One speed section, drawn from <paramref name="frame"/> (<see cref="MeterEasing.Next"/>): its shown value, which
+    /// may be eased, and its bar scale. The readout is H2, not H3, for the reason given on <see cref="Header"/>.
+    /// The bar and its scale line sit in a fenced code block, not inline code: the host draws fenced code in Consolas,
+    /// whose glyphs share one width, and inline code in a 10 px font that is not monospace (docs/CMDPAL-RENDERING.md §3).
+    /// </summary>
+    public static string Meter(string title, MeterFrame frame, bool active) =>
+        "## " + title + ActiveMarker(active) + "\n\n"
+        + "## " + SpeedFormatter.Speed(frame.Shown) + "\n\n"
+        + "```\n"
+        + SpeedFormatter.Bar(frame.Shown ?? 0, frame.Scale) + "\n"
+        + SpeedFormatter.BarScale(frame.Scale) + "\n"
+        + "```\n";
+
+    /// <summary>The connection line. Its fields come from the server and are escaped before they touch the markdown.</summary>
+    public static string Footer(SpeedTestSnapshot snapshot)
+    {
         var c = snapshot.Connection;
-        text.Append("**ISP** ").Append(Field(c.Isp))
-            .Append("  ·  **IP** ").Append(Field(c.Ip))
-            .Append("  ·  **Location** ").Append(Field(c.Location))
-            .Append("  ·  **Server** ").Append(Field(c.Server))
-            .Append('\n');
-        return text.ToString();
+        return "---\n\n"
+            + "**ISP** " + Field(c.Isp)
+            + "  ·  **IP** " + Field(c.Ip)
+            + "  ·  **Location** " + Field(c.Location)
+            + "  ·  **Server** " + Field(c.Server)
+            + "\n";
     }
 
     public static string StatusLine(SpeedTestSnapshot snapshot) => snapshot.Phase switch
@@ -47,14 +71,8 @@ public static class MeterMarkdown
         _ => string.Empty,
     };
 
+    private static string ActiveMarker(bool active) => active ? " ●" : string.Empty;
+
     private static string Field(string? value) =>
         string.IsNullOrEmpty(value) ? SpeedFormatter.Unknown : MarkdownText.Escape(value);
-
-    private static void AppendMeter(StringBuilder text, string title, double? mbps, bool active)
-    {
-        text.Append("## ").Append(title).Append(active ? " ●" : string.Empty).Append("\n\n");
-        text.Append("### ").Append(SpeedFormatter.Speed(mbps)).Append("\n\n");
-        var value = mbps ?? 0;
-        text.Append('`').Append(SpeedFormatter.Bar(value, SpeedFormatter.ScaleFor(value))).Append("`\n\n");
-    }
 }

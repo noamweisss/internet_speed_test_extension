@@ -17,7 +17,7 @@ SpeedTestExtension ─► SpeedTestCommandsProvider ─► SettingsManager (defa
                                              SpeedMeasurer  ──────────────── src/SpeedTest.Core/ (any OS, no UI)
                                              ├ CloudflareEndpoints (URLs, constants)
                                              ├ SpeedTestSnapshot (record: phase, connection, values)
-                                             └ Formatting (units, text meter)
+                                             └ Formatting (units, text meter in MeterMarkdown, easing in MeterEasing)
                                                        │ HTTPS only, hosts in scripts/allowed-hosts.txt
                                                        ▼
                                              speed.cloudflare.com
@@ -49,9 +49,14 @@ the extension, which owns its lifetime.
 
 ## Views
 
-- **Meter** (`ContentPage` + `MarkdownContent`): the dashboard. Each speed is a Unicode bar (`▰▰▰▱▱▱`, ADR-0006);
-  the SVG gauge of ADR-0011 rendered but did not look right, so it is out of the code until plan item 5.1 redraws
-  it (ADR-0013). Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
+- **Meter** (`ContentPage` + four `MarkdownContent` blocks: heading with status and latency, download, upload,
+  connection line): the dashboard. The page returns the same blocks every time, so the host rebuilds only a block
+  whose text changed (`docs/CMDPAL-RENDERING.md` §5). While a test runs, a 100 ms ticker in the page moves each
+  meter toward the last measurement and snaps it to the exact value when its phase ends: `MeterEasing.Next` in Core
+  returns a `MeterFrame` (shown value, scale), the scale never shrinks during a run, and the page redraws a meter
+  block when its frame changed or a new snapshot arrived (the phase marker lives in the block). Each speed is an H2 readout over a fenced code block with a 24-cell text bar in
+  half-cell steps (`███████▌░░░`) and a scale line (`0 … 250 Mbps`), drawn by `MeterMarkdown.Meter`, ADR-0017; the
+  SVG gauge of ADR-0011 is not restored. Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
   the summary (`ResultSummary.PlainText`), `Ctrl+Shift+M` copies it as a markdown table.
 - **Details** (`ListPage`): one `ListItem` per value (download, upload, latency, jitter, ISP, IP, location, server,
   test time). Each item's command copies the value. `Ctrl+L` opens Meter, `Ctrl+R` reruns, `Ctrl+Shift+C` copies

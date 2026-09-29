@@ -228,7 +228,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <li><strong>Split the page into blocks; move only one.</strong> <span class="tag rec">recommended first</span>
     <span class="why">Heading, status, latency and ISP line in a static block; the meter in its own block. The host rebuilds only the block whose text changed. Keep the same block objects and never ask the host to refetch the page.</span></li>
   <li><strong>Draw the moving part as text.</strong> <span class="tag rec">recommended first</span>
-    <span class="why">No picture means no empty-image interval. Finer bars from eighth-width block characters at a constant length; the number in a large heading or bold. Stays a pure function in Core with unit tests. Another extension (HardwareMonitor) ships its charts this way on purpose.</span></li>
+    <span class="why">No picture means no empty-image interval. Finer bars in half-cell steps from the block characters Consolas has (full, half and light shade; Verified, DirectWrite cmap and MapCharacters check on the owner's laptop, 2026-09-29, §3 of the technical document) at a constant length; the number in a large heading or bold. Stays a pure function in Core with unit tests. Another extension (HardwareMonitor) ships its charts this way on purpose.</span></li>
   <li><strong>Keep an SVG, but fix it and slow it.</strong>
     <span class="why">Numeric width and height and a viewBox on the root, width at most 256, only the supported elements, transparent background, its own block, two to four updates a second with easing. The blink per update remains; only a run on the PC shows whether it is visible.</span></li>
   <li><strong>Pre-rendered frames as files with size hints.</strong>

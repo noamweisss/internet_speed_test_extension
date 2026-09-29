@@ -5,94 +5,144 @@ namespace SpeedTest.Core.Tests;
 
 public sealed class MeterMarkdownTests
 {
-    [Fact]
-    public void Render_Idle_ShowsPlaceholdersAndNoActiveMarker()
+    private static readonly SpeedTestSnapshot Completed = new()
     {
-        var markdown = MeterMarkdown.Render(SpeedTestSnapshot.Idle);
+        Phase = SpeedTestPhase.Complete,
+        Connection = new ConnectionInfo("Example ISP", "203.0.113.7", "Tel Aviv", "IL", "TLV"),
+        LatencyMs = 12.3,
+        JitterMs = 1.5,
+        DownloadMbps = 245.3,
+        UploadMbps = 40.1,
+        CompletedAt = new DateTimeOffset(2026, 9, 24, 14, 5, 0, TimeSpan.Zero),
+    };
+
+    [Fact]
+    public void Header_Idle_ShowsPlaceholderAndNoActiveMarker()
+    {
+        var markdown = MeterMarkdown.Header(SpeedTestSnapshot.Idle);
 
         Assert.Contains("Ready.", markdown);
-        Assert.Contains("### —", markdown);
+        Assert.Contains("\n## —\n", markdown);
         Assert.DoesNotContain("●", markdown);
     }
 
     [Fact]
-    public void Render_DuringDownload_MarksDownloadActiveWithLiveValue()
+    public void Header_Any_ListsTitleStatusThenLatency()
     {
-        var snapshot = new SpeedTestSnapshot { Phase = SpeedTestPhase.Download, DownloadMbps = 245.3, LatencyMs = 12 };
+        var markdown = MeterMarkdown.Header(SpeedTestSnapshot.Idle);
 
-        var markdown = MeterMarkdown.Render(snapshot);
-
-        Assert.Contains("Measuring download…", markdown);
-        Assert.Contains("## ⬇ Download ●", markdown);
-        Assert.Contains("### 245.3 Mbps", markdown);
-        Assert.Contains("## ⬆ Upload\n", markdown);
+        var title = markdown.IndexOf("# Internet Speed Test", StringComparison.Ordinal);
+        var status = markdown.IndexOf("Ready.", StringComparison.Ordinal);
+        var latency = markdown.IndexOf("## ⏱ Latency", StringComparison.Ordinal);
+        Assert.True(title == 0 && title < status && status < latency, "expected title, status, Latency");
     }
 
     [Fact]
-    public void Render_WithValue_DrawsTextBarAsCode()
+    public void Header_DuringLatency_MarksLatencyActive()
     {
-        var snapshot = new SpeedTestSnapshot { Phase = SpeedTestPhase.Download, DownloadMbps = 245.3 };
+        var markdown = MeterMarkdown.Header(new SpeedTestSnapshot { Phase = SpeedTestPhase.Latency });
 
-        var markdown = MeterMarkdown.Render(snapshot);
+        Assert.Contains("## ⏱ Latency ●", markdown);
+    }
 
-        // 245.3 of the 250 scale fills every cell (ADR-0006). No image: the SVG gauge waits for plan item 5.1.
-        Assert.Contains("`▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰`\n\n", markdown);
+    [Fact]
+    public void Header_DuringDownload_ShowsPhaseAndLeavesLatencyUnmarked()
+    {
+        var markdown = MeterMarkdown.Header(new SpeedTestSnapshot { Phase = SpeedTestPhase.Download, LatencyMs = 12 });
+
+        Assert.Contains("Measuring download…", markdown);
+        Assert.Contains("## ⏱ Latency\n", markdown);
+    }
+
+    [Fact]
+    public void Header_Complete_ShowsTimeLatencyAndJitter()
+    {
+        var markdown = MeterMarkdown.Header(Completed);
+
+        Assert.Contains("Complete at 14:05.", markdown);
+        Assert.Contains("\n## 12.3 ms  ·  jitter 1.5 ms\n", markdown);
+    }
+
+    [Fact]
+    public void Header_Failed_ShowsError()
+    {
+        var markdown = MeterMarkdown.Header(new SpeedTestSnapshot { Phase = SpeedTestPhase.Failed, Error = "No network" });
+
+        Assert.Contains("**Failed:** No network", markdown);
+    }
+
+    [Fact]
+    public void Meter_Active_MarksTitleAndShowsValue()
+    {
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(245.3, 250), active: true);
+
+        Assert.Contains("## ⬇ Download ●", markdown);
+        Assert.Contains("\n## 245.3 Mbps\n", markdown);
+    }
+
+    [Fact]
+    public void Meter_Inactive_HasNoActiveMarker()
+    {
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, new MeterFrame(40.1, 50), active: false);
+
+        Assert.StartsWith("## ⬆ Upload\n", markdown, StringComparison.Ordinal);
+        Assert.Contains("\n## 40.1 Mbps\n", markdown);
+    }
+
+    [Fact]
+    public void Meter_WithValue_DrawsBarAndScaleInFencedCode()
+    {
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(245.3, 250), active: true);
+
+        // The readout is an H2, the bar and its scale share one fenced block (Consolas, ADR-0017). No image.
+        Assert.Equal(
+            "## ⬇ Download ●\n\n"
+            + "## 245.3 Mbps\n\n"
+            + "```\n"
+            + "███████████████████████▌\n"
+            + "0               250 Mbps\n"
+            + "```\n",
+            markdown);
         Assert.DoesNotContain("![", markdown);
         Assert.DoesNotContain("data:", markdown);
     }
 
     [Fact]
-    public void Render_Idle_DrawsEmptyBars()
+    public void Meter_WithCallerScale_FillsBarAgainstThatScale()
     {
-        var markdown = MeterMarkdown.Render(SpeedTestSnapshot.Idle);
+        // 9.5 alone would pick the 10 scale and fill 22.5 cells; the frame's 100 keeps the bar where the run left it.
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(9.5, 100), active: true);
 
-        Assert.Equal(2, markdown.Split("`▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`").Length - 1);
+        Assert.EndsWith("```\n██░░░░░░░░░░░░░░░░░░░░░░\n0               100 Mbps\n```\n", markdown, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Render_Any_ListsSectionsInMeasurementOrder()
+    public void Meter_NotMeasured_ShowsPlaceholderAndEmptyBar()
     {
-        var markdown = MeterMarkdown.Render(SpeedTestSnapshot.Idle);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, MeterFrame.Empty, active: false);
 
-        var latency = markdown.IndexOf("## ⏱ Latency", StringComparison.Ordinal);
-        var download = markdown.IndexOf("## ⬇ Download", StringComparison.Ordinal);
-        var upload = markdown.IndexOf("## ⬆ Upload", StringComparison.Ordinal);
-        Assert.True(latency >= 0 && latency < download && download < upload, "expected Latency, Download, Upload");
+        Assert.Contains("\n## —\n", markdown);
+        Assert.EndsWith("```\n░░░░░░░░░░░░░░░░░░░░░░░░\n0                       \n```\n", markdown, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Render_DuringLatency_MarksLatencyActive()
+    public void Footer_Complete_ShowsConnection()
     {
-        var markdown = MeterMarkdown.Render(new SpeedTestSnapshot { Phase = SpeedTestPhase.Latency });
+        var markdown = MeterMarkdown.Footer(Completed);
 
-        Assert.Contains("## ⏱ Latency ●", markdown);
-        Assert.Contains("## ⬇ Download\n", markdown);
-    }
-
-    [Fact]
-    public void Render_Complete_ShowsEveryValueAndConnection()
-    {
-        var snapshot = new SpeedTestSnapshot
-        {
-            Phase = SpeedTestPhase.Complete,
-            Connection = new ConnectionInfo("Example ISP", "203.0.113.7", "Tel Aviv", "IL", "TLV"),
-            LatencyMs = 12.3,
-            JitterMs = 1.5,
-            DownloadMbps = 245.3,
-            UploadMbps = 40.1,
-            CompletedAt = new DateTimeOffset(2026, 9, 24, 14, 5, 0, TimeSpan.Zero),
-        };
-
-        var markdown = MeterMarkdown.Render(snapshot);
-
-        Assert.Contains("Complete at 14:05.", markdown);
-        Assert.Contains("### 40.1 Mbps", markdown);
-        Assert.Contains("### 12.3 ms  ·  jitter 1.5 ms", markdown);
         Assert.Contains("**ISP** Example ISP  ·  **IP** 203.0.113.7  ·  **Location** Tel Aviv, IL  ·  **Server** TLV", markdown);
     }
 
     [Fact]
-    public void Render_EscapesServerSuppliedConnectionFields()
+    public void Footer_Idle_ShowsPlaceholders()
+    {
+        var markdown = MeterMarkdown.Footer(SpeedTestSnapshot.Idle);
+
+        Assert.Contains("**ISP** —  ·  **IP** —  ·  **Location** —  ·  **Server** —", markdown);
+    }
+
+    [Fact]
+    public void Footer_EscapesServerSuppliedConnectionFields()
     {
         var snapshot = new SpeedTestSnapshot
         {
@@ -100,19 +150,11 @@ public sealed class MeterMarkdownTests
             Connection = new ConnectionInfo("![x](//tracker.example/p.png)", "1.2.3.4", "<b>City</b>", "IL", "`code`"),
         };
 
-        var markdown = MeterMarkdown.Render(snapshot);
+        var markdown = MeterMarkdown.Footer(snapshot);
 
         Assert.DoesNotContain("![x](", markdown);
         Assert.DoesNotContain("<b>", markdown);
         Assert.DoesNotContain("`code`", markdown);
         Assert.Contains("1.2.3.4", markdown);
-    }
-
-    [Fact]
-    public void Render_Failed_ShowsError()
-    {
-        var markdown = MeterMarkdown.Render(new SpeedTestSnapshot { Phase = SpeedTestPhase.Failed, Error = "No network" });
-
-        Assert.Contains("**Failed:** No network", markdown);
     }
 }
