@@ -49,10 +49,19 @@ Expected state at the end of session 3: a usable v0.1.0 you can install and run 
 
 | # | Item | Status |
 |---|------|--------|
-| 4.1 | Meter view as an image gauge if the markdown renderer supports it (ADR-0006 revisit) | todo |
-| 4.2 | Copy full summary; optional "result as markdown" | todo |
-| 4.3 | Measurement tuning (parallel streams, durations) against real connections | todo |
-| 4.4 | Optional: publish to WinGet / Store (template skill `publish-extension`) | todo |
+| 4.1 | Meter view as an image gauge if the markdown renderer supports it (ADR-0006 revisit) | verified (ADR-0011: SVG speedometer as a `data:` image; owner's VM run 2026-09-29 on PowerToys 0.101: the arcs render and follow the test). Layout and animation still need work: item 5.1 |
+| 4.2 | Copy full summary; optional "result as markdown" | done (`Ctrl+Shift+C` plain text, `Ctrl+Shift+M` markdown table, both views) |
+| 4.3 | Measurement tuning (parallel streams, durations) against real connections | verified for jitter (ADR-0010: median of consecutive differences, 20 samples; `Server-Timing` durations summed; owner's run 2026-09-29: jitter plausible). Streams and durations unchanged: the VM and laptop numbers were plausible, nothing asked for it |
+| 4.4 | Optional: publish to WinGet / Store (template skill `publish-extension`) | deferred, owner decision. Microsoft's WinGet path for Command Palette extensions replaces the MSIX with an Inno Setup `.exe` that installs to Program Files (administrator rights) and writes the COM class to the registry: against `docs/SAFETY-CONTRACT.md` §1 and ADR-0008. The Store path keeps the MSIX, is free for individuals and Microsoft signs it, but needs the owner's Partner Center account and its identity values in `Package.appxmanifest` (safety-sensitive, ADR when done). Sources: learn.microsoft.com, "Publish Command Palette extensions" and its WinGet and Store pages (read 2026-09-28) |
+
+Expected state at the end of session 4: PR #15 merged, `v0.2.0` released.
+
+## Session 5 — gauge polish
+
+| # | Item | Status |
+|---|------|--------|
+| 5.1 | Gauge layout and animation in the meter view: the owner's first run (2026-09-29) found both "not very good". Ask what looked wrong first (size, placement, the arc jumping between progress reports, colours per theme); `GaugeSvg` is a pure function, so layout is unit-testable, but only a Windows run shows the result | todo |
+| 5.2 | Optional: `dotnet` on `PATH` in the SessionStart hook for cloud sessions (`/root/.dotnet`) | todo |
 
 ## Out of scope (unless asked)
 

@@ -19,7 +19,12 @@ public static class Statistics
         return sorted.Length % 2 == 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2.0;
     }
 
-    /// <summary>Mean absolute difference between consecutive samples (the definition Ookla uses). 0 for fewer than two samples.</summary>
+    /// <summary>
+    /// Median of the absolute differences between consecutive samples. 0 for fewer than two samples.
+    /// Median rather than mean (the Ookla definition, used until ADR-0010): one isolated slow sample, for example from
+    /// process scheduling in the extension's windowless host, moves two consecutive differences. The mean reported
+    /// those as network jitter; the median ignores them.
+    /// </summary>
     public static double Jitter(IReadOnlyList<double> values)
     {
         if (values.Count < 2)
@@ -27,13 +32,13 @@ public static class Statistics
             return 0;
         }
 
-        double sum = 0;
+        var differences = new double[values.Count - 1];
         for (var i = 1; i < values.Count; i++)
         {
-            sum += Math.Abs(values[i] - values[i - 1]);
+            differences[i - 1] = Math.Abs(values[i] - values[i - 1]);
         }
 
-        return sum / (values.Count - 1);
+        return Median(differences);
     }
 
     /// <summary>Megabits per second (decimal, as ISPs advertise). 0 when no time has elapsed.</summary>

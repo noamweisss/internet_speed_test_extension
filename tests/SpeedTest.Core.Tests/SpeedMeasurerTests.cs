@@ -250,6 +250,22 @@ public sealed class SpeedMeasurerTests
     }
 
     [Fact]
+    public async Task MeasureAsync_OneSlowProbeAmongMany_DoesNotInflateJitter()
+    {
+        // The extension's process (a windowless COM server, power-throttled on a laptop) delays a few probes by
+        // scheduling alone; the same code in a console process does not. One 300 ms sample out of six moves two
+        // consecutive differences: the mean would report about 120 ms, the median stays near zero.
+        var (measurer, handler) = Create(FastOptions with { LatencySamples = 6 });
+        handler.SlowProbeIndex = 2;
+        handler.SlowProbeDelay = TimeSpan.FromMilliseconds(300);
+
+        var result = await measurer.MeasureAsync(null, CancellationToken.None);
+
+        Assert.NotNull(result.JitterMs);
+        Assert.InRange(result.JitterMs.Value, 0, 50);
+    }
+
+    [Fact]
     public async Task MeasureAsync_ProbeAnswersWithABody_DoesNotReadIt()
     {
         // A zero-byte probe only needs the headers. A body, however large, must never be buffered.

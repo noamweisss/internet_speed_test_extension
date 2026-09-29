@@ -25,7 +25,9 @@
 4. `Ctrl+L` switches view without restarting; `Ctrl+R` restarts. Esc leaves the page; the test keeps running in
    the background (owner decision, session 2) and reopening the page shows it.
 5. Details: Enter on an item copies its value (toast appears).
-6. Disconnect the network and rerun: a clear error, no crash, no hang beyond the timeout.
-7. Change the default view in settings, reopen: the other view is the default.
+6. `Ctrl+Shift+C` copies the summary (paste into Notepad: seven lines, no IP); `Ctrl+Shift+M` pastes as a markdown
+   table.
+7. Disconnect the network and rerun: a clear error, no crash, no hang beyond the timeout.
+8. Change the default view in settings, reopen: the other view is the default.
 
 Record the outcome in `docs/SESSION-LOG.md` and the PR body.
