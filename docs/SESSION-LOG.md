@@ -15,7 +15,8 @@ verified, blocked, next.
 **Done**
 - `.github/workflows/review-claude.yml`: the action step passes `github_token: ${{ github.token }}`, which makes the
   action skip the exchange; `id-token: write` removed. `docs/REVIEW-PROMPT.md`: setup step 1 says no GitHub App is
-  needed; the removal line drops "uninstall the app". ADR-0012 not edited (`docs/CONVENTIONS.md`).
+  needed; the removal line drops "uninstall the app". ADR-0014 supersedes the token and permission points of
+  ADR-0012, which is not edited (`docs/CONVENTIONS.md`; Codex round 1 asked for the superseding ADR).
 - Checked first at the pinned commit 756cc22e: `setupGitHubToken()` in `src/github/token.ts` returns
   `OVERRIDE_GITHUB_TOKEN` before any OIDC request; `action.yml` already passes `github.token` as
   `DEFAULT_WORKFLOW_TOKEN`, so the action process gets nothing new.
@@ -26,6 +27,10 @@ verified, blocked, next.
 **Verified**
 - The workflow parses (PyYAML); job permissions `contents: read`, `pull-requests: write`, `issues: read`.
   `scripts/check.sh all` green.
+- Codex round 1 on f4a5ef2, 3 findings: P1 "no `Guard-Change` trailer" on a commit `bb90775` that is not in this
+  branch (false: f4a5ef2 carries the trailer, `git interpret-trailers --parse` shows it; answered once, no change),
+  P1 "superseding ADR" (fixed: ADR-0014), P1 "hand-off not updated" (already fixed by a1d2a25, pushed after the
+  review started). One round by the owner's instruction: no re-review requested.
 
 **Not verified**
 - A real run of the reviewer with the workflow's own token: the workflow runs from `main`, so PR #20 gets only the
