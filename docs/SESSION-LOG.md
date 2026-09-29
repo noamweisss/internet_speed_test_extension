@@ -4,6 +4,38 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 5 (release) — 2026-09-29 — branch `chore/release-v0.2.0`
+
+**Why**
+- The owner, in chat after merging PR #23: "merged. release it as v0.2.0".
+
+**Done**
+- Branch from `main` at c96acce (the merge of PR #23). Package version `0.2.0.0`; `CHANGELOG.md` gets
+  `[0.2.0] - 2026-09-29` with a short intro, a fresh `[Unreleased]` and the compare links; `README.md` and
+  `docs/INSTALL.md` name v0.2.0 as the current release; `docs/PLAN.md` item 5.1 verified, item 5.4 added.
+- Release, the same way as `v0.1.1` (session 4a): CI's push run on this branch head builds the artifact; it is
+  re-zipped as `internet-speed-test-extension-v0.2.0-x64.zip` with `SHA256SUMS.txt`, and a **draft** release
+  `v0.2.0` is created on this commit with the changelog section, the install steps, the run id and the hashes.
+  The owner publishes the draft (that creates the tag) and merges this branch with a merge commit, so the tagged
+  commit is on `main`.
+
+**Verified**
+- Review round on PR #24 (Codex, one P2): plan 5.4 was `done` before the draft was published; now `doing`, and 5.1
+  says v0.2.0 is drafted. The CI safety-impact check (R13) failed on the first body because the manifest is a
+  safety-sensitive file and the section said "None"; the body now states the version-only change in plain words.
+- `scripts/check.sh all` green on this commit. CI on the branch: see the pull request (it runs after the push).
+
+**Not verified**
+- Nothing installed on the laptop. The VM runs in the entry below tested the pre-release commits (`f623fc5`,
+  `870e8b4`), not this build; the code is the same, only the version number changed.
+
+**Next**
+- Owner: publish the draft release `v0.2.0`, install it from the Releases page (`docs/INSTALL.md`, "Update"),
+  merge this branch with a merge commit.
+- The backlog branches B (`feat/meter-arc-gauge`) and C (`feat/meter-svg-bars`): plan item 5.3.
+- The follow-ups from the PR #23 hand-off below: a run that starts at the previous run's scale, and the rules
+  pull request for the stale R6 comment in `scripts/check.sh`.
+
 ## Session 5 (continued) — 2026-09-29 — branch `feat/meter-text-bars` (option A)
 
 **Why**
