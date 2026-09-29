@@ -21,7 +21,8 @@ desktop app. The code rules above are what keep that power unused.
 ## 2. Red flags: when a PR needs your attention
 
 The **safety-impact** CI check turns red if a PR touches any of these files and the PR body still says
-"None" under "Safety impact". That is your signal to read the explanation and decide.
+"None" under "Safety impact". That is your signal to read the explanation and decide. It also turns red when a
+PR changes a rule or guard file together with anything else (R14, ADR-0016); its log names the files to move.
 
 | File | Why it matters |
 |------|---------------|

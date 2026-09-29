@@ -37,6 +37,7 @@ Git hooks, `.githooks/` (any git user, installed by `scripts/setup.sh`):
 | R11 | Changes to `Program.cs` carry a `Protected-Change:` trailer (commit-msg hook). |
 | R12 | Manifest capabilities are exactly `internetClient` and `runFullTrust`. |
 | R13 | A PR touching a safety-sensitive file declares its impact in the PR body (`scripts/safety-impact.sh`, CI on PRs). |
+| R14 | A PR that changes a rule or guard file changes nothing else except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and `docs/decisions/` (`scripts/safety-impact.sh`, CI on PRs, ADR-0016). |
 | C1 | Conventional Commits first line. |
 | P1 | No pushes to `main`. |
 | P2 | No non-fast-forward pushes. |

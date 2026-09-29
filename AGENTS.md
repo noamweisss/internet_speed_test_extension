@@ -29,6 +29,11 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 - Before a session ends, `docs/SESSION-LOG.md` gets a hand-off entry if anything changed.
 - A PR that touches a safety-sensitive file (`docs/SAFETY-CONTRACT.md` §2) must explain, in plain language, what
   the extension can now do that it could not before, under "Safety impact" in the PR body (R13).
+- A PR that changes a rule or guard file (`AGENTS.md`, `CLAUDE.md`, `.github/`, `.githooks/`, `.claude/`,
+  `scripts/`, `docs/SAFETY-CONTRACT.md`, `docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`, `docs/CONVENTIONS.md`,
+  `docs/TESTING.md`) changes nothing else except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and ADRs
+  in `docs/decisions/` (R14, CI). Put the rest on a second branch and PR; merge the rule PR first when the other
+  depends on it (ADR-0016).
 - Merging a pull request is the owner's decision. An agent merges only when the owner asks for that specific PR
   in the current session and says why; the request is quoted in `docs/SESSION-LOG.md`. Reviews are comments,
   never verdicts. A review thread is resolved by the building agent only after the reviewer that opened it has
@@ -63,6 +68,15 @@ Every rule has an id (`R1`, `G2`, `W1`, `C1`, `P1`, `S1`) printed when it fires,
 4. Run tests (`docs/TESTING.md`). Push to the feature branch; CI builds the Windows extension.
 5. End: update `docs/SESSION-LOG.md` (done / verified / not verified / next), `docs/PLAN.md` status, `CHANGELOG.md`.
    Open or update the pull request using `.github/pull_request_template.md`.
+6. Review rounds (ADR-0016). Codex and Claude review the PR when it opens; if they find nothing, it is ready.
+   Answer their findings in one fix push. Before pushing a fix for a documentation finding, search the whole
+   diff for the same concept and fix every occurrence in that push. Then request one re-review
+   (`@codex review`; Claude reviews the push by itself). That ends the loop, unless a round reports a Blocker or
+   Major (P0/P1) in code or a safety finding (a "Yes" to one of the five questions of `docs/SAFETY-CONTRACT.md`
+   §3, or a weakened guard); only then fix and request another round. A second `@codex review`, or a re-run of
+   the Claude workflow, is allowed only after such a round. Documentation findings after the fix round: fix them
+   if cheap and answer each once in its thread, never with a review request. When the owner asks the reviewers
+   to "agree", that means no open Blocker or Major, not a round with zero comments. Then report the PR as ready.
 
 ## 5. Map
 
@@ -98,6 +112,10 @@ A change under `.githooks/`, `.claude/`, `scripts/`, `.github/workflows/`, `AGEN
 makes a rule weaker, adds a bypass, or removes a check is P1 unless the pull request's "Safety impact" section
 justifies it and names an ADR. A workflow that holds a secret and executes anything a pull request controls
 is P0.
+
+A pull request that changes a rule or guard file changes nothing else except `docs/SESSION-LOG.md`,
+`docs/PLAN.md`, `CHANGELOG.md` and ADRs (R14, `AGENTS.md` §2, checked in CI). When a rule change needs a
+matching change in another document, name it as a follow-up for its own pull request, not as a finding here.
 
 ### Correctness
 
@@ -145,8 +163,10 @@ Wording and tone are P3.
 ### Completeness
 
 Report in one review everything you can verify, across every group above; never keep a finding for the next
-round. A pull request should need one fix round, not a dozen. If a fix would open a new hole, say so in the
-same finding.
+round. If a fix would open a new hole, say so in the same finding. A pull request gets one fix round and one
+re-review; only a Blocker or Major in code, or a safety finding (a Yes to a safety question, or a weakened
+guard), opens another (`AGENTS.md` §4). A documentation finding raised after the fix round is fixed if cheap
+and answered once, not re-reviewed, so report it in the first round.
 
 ### Conduct
 

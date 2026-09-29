@@ -4,6 +4,37 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
+
+**Why**
+- PR #19 took 15 Codex rounds with no finding in code. The owner decided two fixes (ADR-0016): a stop rule that
+  agents follow, and rule changes in their own pull requests.
+
+**Done**
+- Stop rule: `AGENTS.md` §4 step 6 (building agent: one fix push, one re-review, another round only after a
+  Blocker or Major in code or a safety finding; sweep the diff for the same concept before a documentation fix;
+  "agree" means no open Blocker or Major), "Code Review Rules" / Completeness (reviewers), `docs/REVIEW-PROMPT.md`
+  "Reading the results" (owner).
+- R14 in `scripts/safety-impact.sh`: a pull request that changes a rule or guard file changes nothing else
+  except `docs/SESSION-LOG.md`, `docs/PLAN.md`, `CHANGELOG.md` and `docs/decisions/`. Written in `AGENTS.md` §2,
+  the Guards group of "Code Review Rules", `docs/SECURITY.md`, `docs/SAFETY-CONTRACT.md` §2, `docs/CONVENTIONS.md`.
+  ADRs are allowed because the Guards rule asks a guard change to name one. The CI job keeps its name.
+- ADR-0016 (0015 is taken by PR #19's branch).
+
+**Verified**
+- `scripts/check.sh all` green. R14 replayed on every merge commit of `main` from PR #4 on: PRs #18, #20, #21,
+  the Dependabot PRs and the code-only PRs pass; #15, #16, #17 would have failed (listed in ADR-0016). PR #19's
+  branch fails with its two research documents named.
+
+**Not verified**
+- The check on a real Dependabot run after this merges (replayed on #2, #3, #4, #6 only).
+
+**Next**
+- Owner: merge this PR with a merge commit. Then PR #19 fails R14: either merge it before this one, or split its
+  `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/REVIEW-PROMPT.md` changes and ADR-0015 into their own PR.
+- Deferred, for the owner (discussed in the PR body): option 3 (research-document inconsistencies at P2 at most)
+  and option 4 (a thinner HTML explainer that links to the `.md`).
+
 ## Review workflow Edit permission — 2026-09-29 — branch `fix/review-workflow-edit-permission` (cloud session)
 
 **Why**

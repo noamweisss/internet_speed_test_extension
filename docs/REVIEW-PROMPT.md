@@ -43,8 +43,8 @@ reviewer.
 
 | Reviewer | Identity on GitHub | Trigger | Where its rules live |
 |----------|-------------------|---------|----------------------|
-| Codex (owner's ChatGPT plan) | `chatgpt-codex-connector` | automatic on every PR; `@codex review` to repeat | `AGENTS.md` "Code Review Rules" |
-| Claude (owner's Claude plan) | `github-actions[bot]`, comment headed "Independent review (Claude)" | automatic on open, push, ready-for-review; re-run the workflow to repeat | `.github/workflows/review-claude.yml` (same questions, input as files) |
+| Codex (owner's ChatGPT plan) | `chatgpt-codex-connector` | automatic on every PR; `@codex review` to repeat (when: `AGENTS.md` §4) | `AGENTS.md` "Code Review Rules" |
+| Claude (owner's Claude plan) | `github-actions[bot]`, comment headed "Independent review (Claude)" | automatic on open, push, ready-for-review; re-run the workflow to repeat (when: `AGENTS.md` §4) | `.github/workflows/review-claude.yml` (same questions, input as files) |
 
 The Claude workflow reviews pull requests into `main` only (its token lives in an environment restricted to
 `main`). Neither reviewer shares context with the agent that wrote the change or with the other (ADR-0012). Codex posts P0 and
@@ -83,12 +83,20 @@ file and the secret.
 - Two different models answering the five questions the same way is the signal to look for. Their agreement
   means "no known problem", not "correct".
 - Hand Blockers and Majors to the building agent: "address the review by <reviewer> on PR <PR>". Nits are optional.
-- When to stop: a review round with no Blocker or Major in code ends the loop. The building agent fixes what
-  is cheap from that round, does not request another review, and reports the PR as ready; you merge. A
-  reviewer that reads prose will always find a sentence that lags a change; that is not a reason for a round.
-- How a reviewer confirms a fix: neither replies in threads. Request a fresh review after the fix
-  (`@codex review`, or a push for Claude). The Claude workflow opens its re-review with Fixed / Not fixed per
-  earlier finding (it gets its own earlier comments as a file); Codex simply does not repeat what is fixed.
+- When to stop (`AGENTS.md` §4, ADR-0016): the first review, one fix push, one re-review. That ends the loop,
+  unless a round reports a Blocker or Major in code or a safety finding (a Yes to one of the five questions, or
+  a weakened guard). Documentation findings after the fix round are fixed if cheap and answered once; the
+  building agent does not request another review for them and reports the PR as ready; you merge. A reviewer
+  that reads prose will always find a sentence that lags a change; that is not a reason for a round. Asking the
+  reviewers to "agree" means no open Blocker or Major, not a round with zero comments. Threads left open after
+  the stop are yours to resolve or dismiss.
+- Rule changes come alone: a PR that changes a rule or guard file changes nothing else except the session log,
+  the plan, the changelog and ADRs (R14; the "Safety impact declared" CI check fails and names the files to
+  move). Your merges of `main` into a branch and Dependabot PRs pass it.
+- How a reviewer confirms a fix: neither replies in threads. The one re-review after the fix push does it
+  (`@codex review`, and the push itself for Claude). The Claude workflow opens its re-review with Fixed /
+  Not fixed per earlier finding (it gets its own earlier comments as a file); Codex simply does not repeat what
+  is fixed.
   A review of the fixed commit that does not repeat the finding is agreement, and then the building agent
   resolves the thread, naming that review (`AGENTS.md` §2).
 - Every reviewer posts comments, never "Request changes" (the Claude prompt forbids it; Codex only
