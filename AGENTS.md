@@ -147,13 +147,14 @@ Wording and tone are P3.
 ### Documentation-only pull requests
 
 A pull request is documentation-only when every file in its diff is a document that states no rule: a `.md`
-file at the repository root or under `docs/`, or a `.html` file under `docs/`, and none of the files that
-agents or reviewers follow, which are `AGENTS.md`, `CLAUDE.md`, everything under `.github/`,
-`docs/SAFETY-CONTRACT.md`, `docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`, `docs/CONVENTIONS.md`,
-`docs/TESTING.md`, and any other document that tells an agent or a reviewer what to do. A diff that also
-touches anything else (one of those rule files, a guard file, a workflow, a script, a project file, code, a
-test, an asset) is reviewed under every rule above, with the two rules for research documents below applied
-to its documents. Review a
+file at the repository root or under `docs/`, or a `.html` file under `docs/`, and none of the rule files,
+which are exactly `AGENTS.md`, `CLAUDE.md`, everything under `.github/`, `docs/SAFETY-CONTRACT.md`,
+`docs/SECURITY.md`, `docs/REVIEW-PROMPT.md`, `docs/CONVENTIONS.md` and `docs/TESTING.md`. Status and record
+files are documents (`docs/PLAN.md`, `docs/SESSION-LOG.md`, `CHANGELOG.md`, `README.md`, `docs/INSTALL.md`,
+`docs/ARCHITECTURE.md`, the ADRs, research documents and their explainers), so the hand-off and plan updates
+this subsection requires keep a pull request documentation-only. A diff that also touches anything else (a
+rule file, a guard file, a workflow, a script, a project file, code, a test, an asset) is reviewed under every
+rule above, with the two rules for research documents below applied to its documents. Review a
 documentation-only pull request like this:
 
 - Safety questions: the five answers come from the diff as always. A document cannot reach a host, touch a

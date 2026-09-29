@@ -40,12 +40,13 @@ reviewer.
 ```
 
 A pull request whose diff holds only documents that state no rule (`.md` files at the repository root or
-under `docs/`, and `.html` files under `docs/`, none of them a file agents or reviewers follow: `AGENTS.md`,
+under `docs/`, and `.html` files under `docs/`, none of them a rule file, which are exactly `AGENTS.md`,
 `CLAUDE.md`, anything under `.github/`, `docs/SAFETY-CONTRACT.md`, `docs/SECURITY.md`, this file,
-`docs/CONVENTIONS.md`, `docs/TESTING.md`) is reviewed with the same prompt; the "Documentation-only pull
-requests" rules in `AGENTS.md` say what Parts 1 to 3 then contain, so a reviewer does not ask for tests or ADRs
-for a document. A diff with anything else in it (a rule file, a workflow, a script, a guard file, a project
-file, code) is reviewed under every rule, whatever else it contains.
+`docs/CONVENTIONS.md` and `docs/TESTING.md`; the plan, the hand-off log, the changelog, the ADRs and research
+documents are documents) is reviewed with the same prompt; the "Documentation-only pull requests" rules in
+`AGENTS.md` say what Parts 1 to 3 then contain, so a reviewer does not ask for tests or ADRs for a document. A
+diff with anything else in it (a rule file, a workflow, a script, a guard file, a project file, code) is
+reviewed under every rule, whatever else it contains.
 
 ## Who reviews, and when
 
