@@ -14,6 +14,9 @@ public static class MeterMarkdown
 
     public const string UploadTitle = "⬆ Upload";
 
+    // Readouts are H2, not H3: the host renders H3 at 12 px normal weight, smaller than body text
+    // (docs/CMDPAL-RENDERING.md §3).
+
     /// <summary>Title, status, and latency: they change per phase, not per sample.</summary>
     public static string Header(SpeedTestSnapshot snapshot)
     {
@@ -21,7 +24,7 @@ public static class MeterMarkdown
         text.Append("# Internet Speed Test\n\n");
         text.Append(StatusLine(snapshot)).Append("\n\n");
         text.Append("## ⏱ Latency").Append(ActiveMarker(snapshot.Phase == SpeedTestPhase.Latency))
-            .Append("\n\n### ").Append(SpeedFormatter.Latency(snapshot.LatencyMs));
+            .Append("\n\n## ").Append(SpeedFormatter.Latency(snapshot.LatencyMs));
         if (snapshot.JitterMs is not null)
         {
             text.Append("  ·  jitter ").Append(SpeedFormatter.Latency(snapshot.JitterMs));
@@ -38,7 +41,7 @@ public static class MeterMarkdown
     {
         var value = mbps ?? 0;
         return "## " + title + ActiveMarker(active) + "\n\n"
-            + "### " + SpeedFormatter.Speed(mbps) + "\n\n"
+            + "## " + SpeedFormatter.Speed(mbps) + "\n\n"
             + "`" + SpeedFormatter.Bar(value, SpeedFormatter.ScaleFor(value)) + "`\n";
     }
 

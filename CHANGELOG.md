@@ -6,7 +6,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 ## [Unreleased]
 
 ### Changed
-- The meter view redraws only the section whose value changed (download, upload, or the text around them).
+- The meter view redraws only the section whose value changed (download, upload, or the text around them), and the
+  numbers under Latency, Download and Upload are bigger.
 
 ## [0.1.1] - 2026-09-29
 

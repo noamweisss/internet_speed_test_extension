@@ -22,7 +22,7 @@ public sealed class MeterMarkdownTests
         var markdown = MeterMarkdown.Header(SpeedTestSnapshot.Idle);
 
         Assert.Contains("Ready.", markdown);
-        Assert.Contains("### —", markdown);
+        Assert.Contains("\n## —\n", markdown);
         Assert.DoesNotContain("●", markdown);
     }
 
@@ -60,7 +60,7 @@ public sealed class MeterMarkdownTests
         var markdown = MeterMarkdown.Header(Completed);
 
         Assert.Contains("Complete at 14:05.", markdown);
-        Assert.Contains("### 12.3 ms  ·  jitter 1.5 ms", markdown);
+        Assert.Contains("\n## 12.3 ms  ·  jitter 1.5 ms\n", markdown);
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class MeterMarkdownTests
         var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 245.3, active: true);
 
         Assert.Contains("## ⬇ Download ●", markdown);
-        Assert.Contains("### 245.3 Mbps", markdown);
+        Assert.Contains("\n## 245.3 Mbps\n", markdown);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class MeterMarkdownTests
         var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, 40.1, active: false);
 
         Assert.StartsWith("## ⬆ Upload\n", markdown, StringComparison.Ordinal);
-        Assert.Contains("### 40.1 Mbps", markdown);
+        Assert.Contains("\n## 40.1 Mbps\n", markdown);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public sealed class MeterMarkdownTests
     {
         var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, null, active: false);
 
-        Assert.Contains("### —", markdown);
+        Assert.Contains("\n## —\n", markdown);
         Assert.EndsWith("`▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
     }
 
