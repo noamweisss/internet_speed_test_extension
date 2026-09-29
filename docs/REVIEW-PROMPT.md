@@ -67,8 +67,9 @@ when the PR body is edited, since the "Safety impact" section lives there.
 
 ### Setting up the Claude review workflow (owner, once)
 
-1. Install the Claude GitHub App on this repository: <https://github.com/apps/claude>. Choose "Only select
-   repositories" and pick this one.
+1. No GitHub App is needed. The workflow hands the action its own token (`github_token`), so the exchange of the
+   runner's OIDC token for a Claude GitHub App token never happens; that exchange rejects `pull_request_target`
+   runs (anthropics/claude-code-action issue 713), the event this workflow uses. An installed app is unused (ADR-0014).
 2. On a machine with Claude Code logged in to the subscription, run `claude setup-token` and copy the token.
 3. Repository Settings → Environments → New environment, name `claude-review`. Under "Deployment branches and
    tags" choose "Selected branches and tags" and add `main`. Then, in that environment, "Add environment
@@ -81,7 +82,7 @@ when the PR body is edited, since the "Safety impact" section lives there.
    the environment from that run; leave those PRs to Codex.
 
 To pause it, delete the environment secret: the job then logs "not set" and exits green. To remove it, delete the workflow
-file, the secret, and uninstall the app.
+file and the secret.
 
 ## Reading the results (owner)
 

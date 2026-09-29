@@ -45,7 +45,7 @@ verified, blocked, next.
   container already has (`~/.claude/skills/synced/…/html-artifacts`), so nothing had to be installed and
   future cloud sessions on this account have it from the start.
 
-**Found, not fixed (the owner's call, queued as a task with the diff)**
+**Found; fixed in PR #20 (queued as a task with the diff, done from the owner's laptop, merged 2026-09-29)**
 - The Claude review workflow ran for the first time on PR #19 and failed before reviewing: the action's exchange
   of the runner's OIDC token for a Claude GitHub App token answers "401 Invalid OIDC token" three times.
   Anthropic's exchange rejects `pull_request_target` runs (anthropics/claude-code-action issue 713, open since
@@ -71,12 +71,48 @@ verified, blocked, next.
   rebuilt markdown image is visible at 2 to 4 updates a second).
 
 **Next**
-- Owner: merge PR #20 (the review-workflow fix above), then push or edit PR #19 so
-  the Claude review runs; read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
+- Owner: PR #20 is merged (ADR-0014); this branch merged `main` afterwards, which starts the first Claude
+  review on PR #19. Read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
   says: restore `GaugeSvg` from 6034b22, redraw, and record the result in the ADR that supersedes ADR-0013.
   `docs/CMDPAL-RENDERING.md` §15 ranks the options for that redraw; options 1 to 3 (ease in the extension, one
   block per moving part, a text meter) add no capability and keep every safety answer "No", option 4 keeps the
   SVG with the fixes of §4, and whichever is chosen goes into that ADR.
+## Review workflow OIDC fix — 2026-09-29 — branch `fix/review-workflow-oidc-token` (local session on the owner's laptop)
+
+**Why**
+- The first run of "Review (Claude)" (PR #19) failed with "App token exchange failed: 401 Unauthorized - Invalid
+  OIDC token". The action's OIDC-to-app-token exchange rejects `pull_request_target` runs (anthropics/claude-code-action
+  issue 713), the event this workflow uses on purpose (ADR-0012). Session 5 (branch `docs/cmdpal-rendering-research`)
+  found the cause and left the change to the owner; the owner asked for it in this session.
+
+**Done**
+- `.github/workflows/review-claude.yml`: the action step passes `github_token: ${{ github.token }}`, which makes the
+  action skip the exchange; `id-token: write` removed. `docs/REVIEW-PROMPT.md`: setup step 1 says no GitHub App is
+  needed; the removal line drops "uninstall the app". ADR-0014 supersedes the token and permission points of
+  ADR-0012, which is not edited (`docs/CONVENTIONS.md`; Codex round 1 asked for the superseding ADR).
+- Checked first at the pinned commit 756cc22e: `setupGitHubToken()` in `src/github/token.ts` returns
+  `OVERRIDE_GITHUB_TOKEN` before any OIDC request; `action.yml` already passes `github.token` as
+  `DEFAULT_WORKFLOW_TOKEN`, so the action process gets nothing new.
+- PR [#20](https://github.com/noamweisss/internet_speed_test_extension/pull/20). Session 5's entry on PR #19 records
+  the outcome too (ca28624). The commit message of f4a5ef2 calls the function `setGitHubToken()`; the real name is
+  `setupGitHubToken()`.
+
+**Verified**
+- The workflow parses (PyYAML); job permissions `contents: read`, `pull-requests: write`, `issues: read`.
+  `scripts/check.sh all` green.
+- Codex round 1 on f4a5ef2, 3 findings: P1 "no `Guard-Change` trailer" on a commit `bb90775` that is not in this
+  branch (false: f4a5ef2 carries the trailer, `git interpret-trailers --parse` shows it; answered once, no change),
+  P1 "superseding ADR" (fixed: ADR-0014), P1 "hand-off not updated" (already fixed by a1d2a25, pushed after the
+  review started). One round by the owner's instruction: no re-review requested.
+
+**Not verified**
+- A real run of the reviewer with the workflow's own token: the workflow runs from `main`, so PR #20 gets only the
+  Codex review.
+
+**Next**
+- Owner: merge PR #20 with a merge commit, then edit PR #19's body or push to it; done when a comment headed
+  "Independent review (Claude)" appears there. PR #19 and PR #20 both add an entry at the top of this file, so the
+  second one to merge needs a small conflict resolution (keep both entries, newest first).
 
 ## Session 4a — 2026-09-29 — branch `chore/release-v0.1.1` (unplanned, local session on the owner's laptop)
 
