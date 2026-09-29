@@ -10,23 +10,49 @@ verified, blocked, next.
 - The owner, before plan item 5.1: find out exactly how Command Palette renders extension content (markdown,
   images and SVG, icons, grid layouts, Adaptive Cards, live updates), with sources, so the gauge can be redrawn
   against facts instead of the "lists and markdown" summary of session 4. Two deliverables: a technical document
-  for building agents and an HTML explainer for the owner.
+  for building agents and an HTML explainer for the owner, in one PR that both reviewers accept.
 
-**Done (in progress; this entry is completed at the end of the session)**
-- `AGENTS.md` Code Review Rules gain "Documentation-only pull requests" (2da315d, `Guard-Change:` trailer), so
-  both reviewers apply the documentation rules to a PR with no code instead of asking for tests and ADRs;
-  `docs/CONVENTIONS.md` names the owner-facing HTML explainer (`docs/UPPERCASE.html`), `docs/REVIEW-PROMPT.md`
-  points at the subsection.
-- Five research subagents in parallel (markdown renderer, icons and grids, Adaptive Cards, update and animation
-  mechanics, official docs and precedents); their reports are merged into `docs/CMDPAL-RENDERING.md` and
-  `docs/CMDPAL-RENDERING.html`.
+**Done**
+- Five research subagents in parallel, one per surface (markdown renderer, icons/lists/grids, Adaptive Cards,
+  update and animation mechanics, official docs and precedents), each reading the PowerToys source at the
+  owner's tag `v0.101.2362.0` and at `main` (2026-09-29), the CommunityToolkit Labs `MarkdownTextBlock`
+  source, the Adaptive Cards WinUI3 renderer source, Microsoft Learn, release notes, issues and PRs. Their
+  reports (about 1,400 lines, every claim labelled Verified / Inferred / Unknown with a citation) are merged
+  into `docs/CMDPAL-RENDERING.md` (17 sections: surfaces, markdown engine and constructs, images and the
+  Direct2D SVG subset, the `Body`-to-pixels pipeline with the 40 ms batch and the full rebuild, icons and
+  caches, lists/tags/details/grids, `ImageContent`, Adaptive Cards, native animation, window, precedents,
+  version history, the diagnosis of the session 4 gauge, eight ranked options for 5.1, rules and the list of
+  things only a Windows run can answer, sources). The raw reports stay in the session scratchpad.
+- `docs/CMDPAL-RENDERING.html`: the owner's explainer, one self-contained file that loads nothing from the
+  network: TL;DR, a pipeline diagram, an interactive simulation of the steps-and-blink problem against the
+  fixes, a surface comparison table, the diagnosis, what cannot work, the ranked options, what 0.102 brings,
+  and a margin glossary. Written with the `html-artifacts` skill.
+- Review rules for a PR with no code (2da315d, `Guard-Change:` trailer): `AGENTS.md` Code Review Rules gain
+  "Documentation-only pull requests" (safety answers from the diff; no tests or ADRs asked for text; a source
+  and confidence label per external claim; an HTML explainer checked against its `.md`, its markup not
+  reviewed as code, network loads P1; no changelog line for agent- or owner-facing documents).
+  `docs/CONVENTIONS.md` names `docs/UPPERCASE.html`; `docs/REVIEW-PROMPT.md` points at the subsection;
+  `AGENTS.md` §1 read order gains the rendering document. `docs/PLAN.md` gets item 5.0 (done) and a pointer
+  from 5.1 to §14–16 of the document.
+- Facts checked twice where the reports disagreed: PR #50151 (re-theme Adaptive Cards) is closed unmerged,
+  PR #50211 (in-place card updates) is open with auto-merge for 0.102, PR #50443 (graph content) is a draft.
 
 **Verified**
-- The `html-artifacts` skill the owner uploaded is byte-identical to the account-synced copy the cloud container
-  already has (`~/.claude/skills/synced/…/html-artifacts`), so nothing had to be installed for future sessions.
+- `scripts/check.sh all` green. The HTML page rendered headless with Playwright at 1280 px light, 1280 px
+  dark, and 400 px: no console errors, no horizontal overflow, the simulation runs; screenshots inspected.
+- The `html-artifacts` skill the owner uploaded is byte-identical to the account-synced copy the cloud
+  container already has (`~/.claude/skills/synced/…/html-artifacts`), so nothing had to be installed and
+  future cloud sessions on this account have it from the start.
+
+**Not verified**
+- Nothing in the two documents was run on Windows; every runtime claim is labelled Inferred and §16 of the
+  technical document lists the seven questions for the owner's PC (first: whether the blank frame of a
+  rebuilt markdown image is visible at 2 to 4 updates a second).
 
 **Next**
-- Finish the two documents, screenshot-check the HTML page, open the PR, get both reviewers to agree.
+- Owner: read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 starts from
+  `docs/CMDPAL-RENDERING.md` §15: options 1 to 3 (ease in the extension, one block per moving part, a text
+  meter) need no image, no new capability and no ADR; the SVG comes back only after they are seen on the PC.
 
 ## Session 4a — 2026-09-29 — branch `chore/release-v0.1.1` (unplanned, local session on the owner's laptop)
 

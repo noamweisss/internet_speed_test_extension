@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command Palette rendering</title>
+<meta name="description" content="What PowerToys Command Palette can draw for an extension, why the session 4 gauge blinked and jumped, and the options for redrawing it.">
+<style>
+:root {
+  --bg: #fafaf7; --surface: #ffffff; --ink: #1a1a1f; --ink-soft: #555560; --rule: #e7e5df;
+  --accent: #0b6bcb; --warn: #b45309; --danger: #b91c1c; --ok: #15803d; --soft: #f1efe8;
+  --serif: Charter, "Iowan Old Style", "Source Serif 4", ui-serif, Georgia, serif;
+  --sans: "Segoe UI", Inter, ui-sans-serif, system-ui, sans-serif;
+  --mono: ui-monospace, Consolas, "Cascadia Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e0e12; --surface: #16161c; --ink: #f1f1f4; --ink-soft: #a8a8b3; --rule: #2a2a32;
+    --accent: #6cb0f5; --warn: #f0a24a; --danger: #f07171; --ok: #5cc985; --soft: #1d1d25;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e0e12; --surface: #16161c; --ink: #f1f1f4; --ink-soft: #a8a8b3; --rule: #2a2a32;
+  --accent: #6cb0f5; --warn: #f0a24a; --danger: #f07171; --ok: #5cc985; --soft: #1d1d25;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); color: var(--ink); }
+body { margin: 0; padding: 0 1.25rem 4rem; font: 17px/1.55 var(--serif); background: var(--bg); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.page { max-width: 1080px; margin: 0 auto; }
+header { max-width: 70ch; margin: 3rem auto 2rem; }
+h1 { font-size: 2.1rem; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 .5rem; }
+.sub { color: var(--ink-soft); margin: 0 0 1.2rem; font-family: var(--sans); font-size: .95rem; }
+.tldr { border-left: 4px solid var(--accent); padding: .6rem 1rem; background: var(--surface); margin: 0; }
+h2 { font-size: 1.4rem; margin: 2.6em 0 .6em; }
+h3 { font-size: 1.05rem; margin: 1.6em 0 .4em; font-family: var(--sans); }
+p, li { max-width: 70ch; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 2.5rem; align-items: start; }
+main { min-width: 0; }
+aside.glossary { position: sticky; top: 1.5rem; font-family: var(--sans); font-size: .85rem; line-height: 1.45; border-left: 1px solid var(--rule); padding-left: 1rem; }
+aside.glossary h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 .6rem; color: var(--ink-soft); }
+aside.glossary dt { font-weight: 600; margin-top: .6rem; }
+aside.glossary dd { margin: 0; color: var(--ink-soft); }
+.tip { font-family: var(--sans); font-size: .9rem; color: var(--ink-soft); }
+code, pre { font-family: var(--mono); font-size: .9em; }
+code { background: var(--soft); padding: .05em .3em; border-radius: 3px; }
+figure { margin: 1.5rem 0; }
+figcaption { font-family: var(--sans); font-size: .85rem; color: var(--ink-soft); margin-top: .4rem; max-width: 70ch; }
+svg { max-width: 100%; height: auto; }
+.wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: .88rem; }
+th, td { padding: .5rem .6rem; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+th { font-weight: 600; }
+td.y { color: var(--ok); } td.n { color: var(--danger); } td.m { color: var(--warn); }
+.demo { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem; font-family: var(--sans); }
+.demo .gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.demo .gauge { text-align: center; }
+.demo .gauge h3 { margin: 0 0 .3rem; font-size: .95rem; }
+.demo .gauge .val { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.demo .gauge .val small { font-size: .8rem; color: var(--ink-soft); font-weight: 400; }
+.demo .controls { display: flex; flex-wrap: wrap; gap: 1rem 1.6rem; margin-top: .8rem; font-size: .9rem; align-items: center; }
+.demo label { display: inline-flex; gap: .4rem; align-items: center; }
+.demo input[type=range] { width: 160px; }
+.demo .readout { font-size: .85rem; color: var(--ink-soft); margin: .6rem 0 0; }
+.demo button { font: inherit; padding: .3rem .8rem; border: 1px solid var(--rule); background: var(--soft); color: var(--ink); border-radius: 4px; cursor: pointer; }
+ol.options { padding-left: 1.3rem; }
+ol.options > li { margin-bottom: .9rem; }
+ol.options .why { display: block; font-family: var(--sans); font-size: .88rem; color: var(--ink-soft); }
+.tag { font-family: var(--sans); font-size: .75rem; padding: .1em .5em; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-soft); vertical-align: middle; }
+.tag.rec { color: var(--ok); border-color: var(--ok); }
+.tag.later { color: var(--warn); border-color: var(--warn); }
+ul.no li::marker { color: var(--danger); }
+footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: var(--ink-soft); max-width: 70ch; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+  aside.glossary { position: static; border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 1rem; }
+  .demo .gauges { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <h1>What Command Palette can draw, and why the gauge blinked</h1>
+  <p class="sub">Research for plan item 5.1 · PowerToys 0.101 · 29 September 2026 · the agents' version with every citation is <code>docs/CMDPAL-RENDERING.md</code></p>
+  <p class="tldr"><strong>Short version.</strong> Command Palette never animates anything for an extension. Each frame is the extension replacing a value, the host reading it back over COM, waiting up to 40 ms, and rebuilding the whole markdown block on its UI thread. Images inside markdown are recreated empty and filled a moment later, and a <code>data:</code> image cannot be given a size. That is why the arc jumped between measurements and flashed on every update. The fix is on our side: ease the value in the extension, put the moving part in its own small block, and prefer text or a fixed-size picture over a regenerated one. Details and options below.</p>
+</header>
+
+<div class="layout">
+<main>
+
+<h2>1. The one mechanism behind every pixel</h2>
+<p>There is no drawing API. An extension hands the host <em>data</em> (markdown text, an Adaptive Card, an icon name, a list item) and the host draws it with its own native controls. When the data changes, the host redraws. The path for the meter view looks like this:</p>
+
+<figure>
+<svg viewBox="0 0 960 250" role="img" aria-labelledby="pipe-title">
+  <title id="pipe-title">The path from setting MarkdownContent.Body to pixels on screen</title>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="currentColor">
+    <!-- lane labels -->
+    <text x="10" y="42" font-weight="600">Extension process</text>
+    <text x="10" y="132" font-weight="600">Host, background</text>
+    <text x="10" y="212" font-weight="600">Host, UI thread</text>
+    <line x1="0" y1="90" x2="960" y2="90" stroke="currentColor" stroke-opacity=".2"/>
+    <line x1="0" y1="170" x2="960" y2="170" stroke="currentColor" stroke-opacity=".2"/>
+    <!-- extension lane -->
+    <g>
+      <rect x="170" y="20" width="150" height="44" rx="6" fill="none" stroke="currentColor"/>
+      <text x="245" y="38" text-anchor="middle">Body = markdown</text>
+      <text x="245" y="55" text-anchor="middle" font-size="11" fill-opacity=".7">every progress report</text>
+    </g>
+    <!-- host background lane -->
+    <g>
+      <rect x="360" y="110" width="170" height="44" rx="6" fill="none" stroke="currentColor"/>
+      <text x="445" y="128" text-anchor="middle">PropChanged event</text>
+      <text x="445" y="145" text-anchor="middle" font-size="11" fill-opacity=".7">then reads Body back: 2 COM hops</text>
+      <rect x="570" y="110" width="130" height="44" rx="6" fill="none" stroke="currentColor"/>
+      <text x="635" y="128" text-anchor="middle">40 ms batch</text>
+      <text x="635" y="145" text-anchor="middle" font-size="11" fill-opacity=".7">merges anything closer</text>
+    </g>
+    <!-- UI lane -->
+    <g>
+      <rect x="360" y="190" width="170" height="44" rx="6" fill="none" stroke="currentColor"/>
+      <text x="445" y="208" text-anchor="middle">Clear + re-parse + rebuild</text>
+      <text x="445" y="225" text-anchor="middle" font-size="11" fill-opacity=".7">the whole block, no diffing</text>
+      <rect x="570" y="190" width="160" height="44" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/>
+      <text x="650" y="208" text-anchor="middle">Image created empty</text>
+      <text x="650" y="225" text-anchor="middle" font-size="11" fill-opacity=".7">block collapses for a frame</text>
+      <rect x="770" y="190" width="170" height="44" rx="6" fill="none" stroke="currentColor"/>
+      <text x="855" y="208" text-anchor="middle">Decode + swap in</text>
+      <text x="855" y="225" text-anchor="middle" font-size="11" fill-opacity=".7">base64, XML, Direct2D; no cache</text>
+    </g>
+    <!-- arrows -->
+    <path d="M320 42 C 340 42, 340 132, 360 132" fill="none" stroke="currentColor" marker-end="url(#arr)"/>
+    <line x1="530" y1="132" x2="570" y2="132" stroke="currentColor" marker-end="url(#arr)"/>
+    <path d="M700 132 C 720 132, 330 160, 360 212" fill="none" stroke="currentColor" marker-end="url(#arr)"/>
+    <line x1="530" y1="212" x2="570" y2="212" stroke="currentColor" marker-end="url(#arr)"/>
+    <line x1="730" y1="212" x2="770" y2="212" stroke="currentColor" marker-end="url(#arr)"/>
+  </g>
+</svg>
+<figcaption>Figure 1. What one <code>Body</code> update costs on PowerToys 0.101. The dashed step is the blank frame. Verified in the host and toolkit source; the timing constant is 40 ms in code (the comment beside it says 30).</figcaption>
+</figure>
+
+<p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it disappears for at least a frame. And no update can be faster than the 40 ms batch, so anything above roughly 10 updates a second is wasted.</p>
+
+<h2>2. See it: steps and blinks, then the fixes</h2>
+<p>The left gauge behaves like the session 4 build: it moves only when a measurement arrives and goes blank for a moment on each update. The right gauge applies the two changes that are ours to make. Both receive the same measurements.</p>
+
+<figure class="demo" id="demo">
+  <div class="gauges">
+    <div class="gauge">
+      <h3>Session 4 build</h3>
+      <svg viewBox="0 0 200 120" width="220" height="132" role="img" aria-label="Gauge that jumps and blinks">
+        <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="14" stroke-linecap="round"/>
+        <path id="arcA" d="M20 100 A80 80 0 0 1 20 100" fill="none" stroke="var(--accent)" stroke-width="14" stroke-linecap="round"/>
+      </svg>
+      <div class="val"><span id="valA">0</span> <small>Mbps</small></div>
+    </div>
+    <div class="gauge">
+      <h3>With the fixes</h3>
+      <svg viewBox="0 0 200 120" width="220" height="132" role="img" aria-label="Gauge that eases and does not blink">
+        <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="14" stroke-linecap="round"/>
+        <path id="arcB" d="M20 100 A80 80 0 0 1 20 100" fill="none" stroke="var(--accent)" stroke-width="14" stroke-linecap="round"/>
+      </svg>
+      <div class="val"><span id="valB">0</span> <small>Mbps</small></div>
+    </div>
+  </div>
+  <div class="controls">
+    <label>Measurement every <input type="range" id="interval" min="100" max="1000" step="50" value="200"> <span id="intervalOut">200 ms</span></label>
+    <label><input type="checkbox" id="ease" checked> ease between measurements</label>
+    <label><input type="checkbox" id="noblank" checked> moving part in its own block, no picture</label>
+    <button type="button" id="restart">Restart test</button>
+  </div>
+  <p class="readout" id="readout">Simulated download ramping up to about 480 Mbps.</p>
+  <figcaption>Figure 2. A simulation in this page, not the real host: the blink is drawn as 80 ms of missing arc after each update, the eased gauge ticks every 100 ms. Untick the boxes to see each fix on its own.</figcaption>
+</figure>
+
+<h2>3. Where an extension can draw</h2>
+<p>Every surface the host offers, and what each one means for a live meter. "Blank frame" is the empty picture between rebuild and decode from Figure 1.</p>
+<div class="wrap">
+<table>
+  <thead><tr><th>Surface</th><th>Can hold a gauge?</th><th>How it updates</th><th>Blank frame</th><th>Size control</th><th>Follows theme</th><th>On 0.101</th></tr></thead>
+  <tbody>
+    <tr><td>Markdown block, text only</td><td class="y">Bars from block characters</td><td>Block rebuilt</td><td class="y">No</td><td>Font sizes only</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+    <tr><td>Markdown block with a <code>data:</code> SVG</td><td class="m">Yes, no text inside the SVG</td><td>Block rebuilt, image re-decoded</td><td class="n">Yes</td><td class="n">None: capped at 256 px, hints ignored</td><td class="n">Picture no, text yes</td><td class="y">Yes</td></tr>
+    <tr><td>Markdown block with a <code>file:</code> SVG</td><td class="m">Yes</td><td>Same</td><td class="n">Yes</td><td class="y">Hints work (fit, width, height)</td><td class="n">Picture no</td><td class="y">Yes, needs a temp folder</td></tr>
+    <tr><td>Image block (<code>ImageContent</code>)</td><td class="m">Yes, from a file path</td><td>Only the image swaps</td><td class="m">Probably not (unverified)</td><td class="y">Max width and height</td><td class="m">Light and dark files</td><td class="y">Since 0.99</td></tr>
+    <tr><td>Adaptive Card with an SVG image</td><td class="y">Yes, Microsoft's own pattern</td><td>Whole card rebuilt</td><td class="n">Yes, until 0.102</td><td class="y">Pixel width and height</td><td class="m">Named colours for text</td><td class="y">Yes</td></tr>
+    <tr><td>List row icon, grid tile, details hero</td><td class="m">Pre-rendered frames by file name</td><td>Icon swaps in place, cached</td><td class="y">No</td><td>Fixed slots (20 to 160 px)</td><td class="y">Light and dark variants</td><td class="y">Yes</td></tr>
+    <tr><td>Tag pills with colour</td><td class="m">Numbers and phase, not a shape</td><td>In place</td><td class="y">No</td><td>Fixed</td><td class="n">Your colours, both themes</td><td class="y">Yes</td></tr>
+    <tr><td>Status message with a percentage</td><td class="n">Not drawn at all</td><td>n/a</td><td>n/a</td><td>n/a</td><td>n/a</td><td class="n">The bar is hidden in the host's XAML</td></tr>
+    <tr><td>Adaptive Card gauge or progress element</td><td class="n">Does not exist in this renderer</td><td>n/a</td><td>n/a</td><td>n/a</td><td>n/a</td><td class="n">Dropped silently</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="tip">The Adaptive Card designer on the web shows "1.6 preview" elements such as ProgressBar and Chart.Gauge. The renderer inside Command Palette does not implement them; a card that uses them renders with a hole where they were.</p>
+
+<h2>4. Why the session 4 gauge looked wrong</h2>
+<ul>
+  <li><strong>Steps.</strong> The arc changed only when a measurement arrived, every 200 ms. Nothing in the host eases values.</li>
+  <li><strong>Blink.</strong> Each update rebuilt the block and recreated the picture empty; it came back after decoding. Five times a second.</li>
+  <li><strong>Size.</strong> A <code>data:</code> picture gets no size hints, is capped at 256 pixels wide, and is rasterised with the width scaled to the monitor's DPI but the height not. What you saw depends on the display scaling.</li>
+  <li><strong>Small numbers.</strong> The value sat under a third-level heading, which the host renders at 12 px in normal weight, smaller than body text.</li>
+  <li><strong>One big block.</strong> The heading, status, latency, both meters and the ISP line were re-parsed for every arc movement.</li>
+</ul>
+<p>None of this is the arc geometry, which the unit tests cover. It is how the host works, and every point has a counter-measure.</p>
+
+<h2>5. What cannot work on 0.101</h2>
+<ul class="no">
+  <li>Animated SVG (SMIL or CSS): the renderer is Direct2D in static mode and drops every animation element.</li>
+  <li>Text inside an SVG: dropped. Numbers must be markdown text next to the picture.</li>
+  <li>Size hints on a <code>data:</code> image, and any width above 256 px for one.</li>
+  <li>A <code>data:</code> string as an icon (list rows, tiles, image block): icons want a file path, a glyph, one emoji, or a bitmap stream.</li>
+  <li>A percentage in a status message: the progress bar exists in the host's XAML and is permanently collapsed.</li>
+  <li>Colours that follow the theme inside any picture: the host never tells the extension which theme is active.</li>
+  <li>Two content blocks side by side: blocks only stack vertically.</li>
+  <li>Waiting for native graph content: the pull request is a draft with no milestone and an unanswered request for API sign-off.</li>
+</ul>
+
+<h2>6. Options for redrawing the meter, ranked</h2>
+<ol class="options">
+  <li><strong>Ease in the extension, render on a fixed tick.</strong> <span class="tag rec">recommended first</span>
+    <span class="why">Keep measuring every 200 ms; a display timer at 100 to 200 ms moves the shown value toward the latest measurement and only sends a new string when it changed. Removes the steps whatever the drawing is.</span></li>
+  <li><strong>Split the page into blocks; move only one.</strong> <span class="tag rec">recommended first</span>
+    <span class="why">Heading, status, latency and ISP line in a static block; the meter in its own block. The host rebuilds only the block whose text changed. Keep the same block objects and never ask the host to refetch the page.</span></li>
+  <li><strong>Draw the moving part as text.</strong> <span class="tag rec">recommended first</span>
+    <span class="why">No picture means no blank frame. Finer bars from eighth-width block characters at a constant length; the number in a large heading or bold. Stays a pure function in Core with unit tests. Another extension (HardwareMonitor) ships its charts this way on purpose.</span></li>
+  <li><strong>Keep an SVG, but fix it and slow it.</strong>
+    <span class="why">Numeric width and height and a viewBox on the root, width at most 256, only the supported elements, transparent background, its own block, two to four updates a second with easing. The blink per update remains; only a run on the PC shows whether it is visible.</span></li>
+  <li><strong>Pre-rendered frames as files with size hints.</strong>
+    <span class="why">Fifty-one SVG files written once to the extension's temp folder, referenced by path with fit and height hints. Gains size control, keeps the blink, and writing files is a new capability that needs an ADR and a "Yes" in the safety questions.</span></li>
+  <li><strong>An image block with pre-rendered frames.</strong>
+    <span class="why">The same files, shown through the image block, which swaps only the picture and probably keeps the old one until the new one is ready. Same file-write question; a zoom button appears on the image and cannot be removed.</span></li>
+  <li><strong>An Adaptive Card with a raw-SVG image.</strong> <span class="tag later">after 0.102</span>
+    <span class="why">Exactly how the built-in Performance Monitor draws its charts. It flickers on 0.101, and the in-place update that fixes it is approved for 0.102. The right second step if you upgrade.</span></li>
+  <li><strong>Tiles or the details pane as the dashboard.</strong>
+    <span class="why">Gallery tiles or the details pane with frame icons by file name (cached after the first decode) and coloured tag pills for the numbers. A different layout for you to judge, not a smaller change.</span></li>
+</ol>
+<p>Suggested order on your PC: options 1 to 3 together first (no new capability, all unit-testable). Then option 4 in the same structure, to see whether the blink shows at two to four updates a second. Only then a file-based option, or option 7 after 0.102.</p>
+
+<h2>7. What is coming in PowerToys</h2>
+<ul>
+  <li><strong>0.102:</strong> in-place Adaptive Card updates that patch text and an inline SVG image without rebuilding the card (pull request 50211, approved, auto-merge armed on 28 September).</li>
+  <li><strong>On main, not yet released:</strong> generated icons (colour swatches, one-to-three-letter initials) merged on 29 September; inline and theme-aware SVG icons still in review.</li>
+  <li><strong>Draft, no date:</strong> native line, doughnut and bar graph content for extensions ("SVG, you're fired!"), waiting for an API decision.</li>
+</ul>
+
+<h2>8. How sure is all this</h2>
+<p>Five research agents read the PowerToys source at your version (tag 0.101.2362) and at today's main, the markdown control's source, the Adaptive Cards renderer's source, the Microsoft Learn pages, the release notes, and the relevant issues and pull requests. Every claim in the technical document carries a citation and a label: verified in source or documentation, inferred from it, or unknown. Nothing was run on Windows. The seven things only a Windows run can answer are listed at the end of the technical document; the first is whether the blink is visible at two to four updates a second.</p>
+
+</main>
+
+<aside class="glossary">
+  <h2>Glossary</h2>
+  <dl>
+    <dt>Host</dt><dd>The Command Palette window in PowerToys. It draws everything; the extension only sends data.</dd>
+    <dt>COM hop</dt><dd>A call across the two processes. Setting a property costs two: the event out, the read back.</dd>
+    <dt>40 ms batch</dt><dd>The host waits 40 ms after a change and applies everything that arrived, once.</dd>
+    <dt>Markdown block</dt><dd>One <code>MarkdownContent</code> on a content page; each is rebuilt on its own.</dd>
+    <dt>Blank frame</dt><dd>The moment after a rebuild when a picture exists but has not been decoded yet.</dd>
+    <dt><code>data:</code> image</dt><dd>A picture embedded in the text itself, base64-encoded. Works, but takes no size hints.</dd>
+    <dt>Size hints</dt><dd><code>--x-cmdpal-fit</code>, <code>-width</code>, <code>-height</code>: query parameters that only <code>file:</code> and web URLs accept.</dd>
+    <dt>Direct2D SVG</dt><dd>The Windows renderer for SVG pictures: shapes, paths, gradients; no text, no styles, no animation.</dd>
+    <dt>Adaptive Card</dt><dd>A JSON layout (text, columns, images, inputs) the host renders with Microsoft's card library.</dd>
+    <dt>Image block</dt><dd><code>ImageContent</code>, since 0.99: one picture with a maximum size and a zoom button.</dd>
+    <dt>Easing</dt><dd>Moving the shown value a little every tick toward the real one, instead of jumping.</dd>
+  </dl>
+</aside>
+</div>
+
+<footer>
+  <p>Paired with <code>docs/CMDPAL-RENDERING.md</code>, the technical document with citations. The two must not disagree; the technical document is the source of truth. This page loads nothing from the network. Checked by rendering it headless at desktop and phone width in both themes.</p>
+</footer>
+</div>
+
+<script>
+(function () {
+  var arcA = document.getElementById('arcA'), arcB = document.getElementById('arcB');
+  var valA = document.getElementById('valA'), valB = document.getElementById('valB');
+  var intervalIn = document.getElementById('interval'), intervalOut = document.getElementById('intervalOut');
+  var easeIn = document.getElementById('ease'), noblankIn = document.getElementById('noblank');
+  var restart = document.getElementById('restart'), readout = document.getElementById('readout');
+  var MAX = 500, target = 0, measured = 0, shownB = 0, t0 = 0, lastMeasure = 0, blankUntil = 0, done = false;
+
+  function arcPath(frac) {
+    frac = Math.max(0.004, Math.min(1, frac));
+    var a = Math.PI * (1 - frac);
+    var x = 100 + 80 * Math.cos(a), y = 100 - 80 * Math.sin(a);
+    return 'M20 100 A80 80 0 0 1 ' + x.toFixed(1) + ' ' + y.toFixed(1);
+  }
+  function fmt(v) { return v < 10 ? v.toFixed(1) : Math.round(v).toString(); }
+  function reset() {
+    t0 = performance.now(); lastMeasure = t0; measured = 0; shownB = 0; target = 0; done = false; blankUntil = 0;
+    readout.textContent = 'Simulated download ramping up to about 480 Mbps.';
+  }
+  function trueSpeed(t) {
+    // ramp over ~4 s to ~480, then wander a little
+    var s = t / 1000;
+    var base = 480 * (1 - Math.exp(-s / 1.3));
+    return base + 25 * Math.sin(s * 2.1) + 12 * Math.sin(s * 5.3);
+  }
+  function frame(now) {
+    var t = now - t0;
+    if (t > 12000) { reset(); t = 0; }
+    target = trueSpeed(t);
+    var interval = +intervalIn.value;
+    if (now - lastMeasure >= interval) {
+      lastMeasure = now; measured = target;
+      if (!noblankIn.checked) blankUntil = now + 80;
+    }
+    // Left: jumps, blinks
+    var blank = now < blankUntil;
+    arcA.style.visibility = blank ? 'hidden' : 'visible';
+    arcA.setAttribute('d', arcPath(measured / MAX));
+    valA.style.visibility = blank ? 'hidden' : 'visible';
+    valA.textContent = fmt(measured);
+    // Right: eased (or not), never blank
+    if (easeIn.checked) shownB += (measured - shownB) * 0.18; else shownB = measured;
+    arcB.setAttribute('d', arcPath(shownB / MAX));
+    valB.textContent = fmt(shownB);
+    requestAnimationFrame(frame);
+  }
+  intervalIn.addEventListener('input', function () { intervalOut.textContent = intervalIn.value + ' ms'; });
+  restart.addEventListener('click', reset);
+  reset();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
