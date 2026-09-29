@@ -186,7 +186,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <thead><tr><th>Surface</th><th>Can hold a gauge?</th><th>How it updates</th><th>Blank frame</th><th>Size control</th><th>Follows theme</th><th>On 0.101</th></tr></thead>
   <tbody>
     <tr><td>Markdown block, text only</td><td class="y">Bars from block characters</td><td>Block rebuilt</td><td class="y">No</td><td>Font sizes only</td><td class="y">Yes</td><td class="y">Yes</td></tr>
-    <tr><td>Markdown block with a <code>data:</code> SVG</td><td class="m">Yes, no text inside the SVG</td><td>Block rebuilt, image re-decoded</td><td class="n">Yes</td><td class="m">Root <code>width</code>/<code>height</code> only; no query hints; capped at 256 px</td><td class="n">Picture no, text yes</td><td class="y">Yes</td></tr>
+    <tr><td>Markdown block with a <code>data:</code> SVG</td><td class="m">Yes, no text inside the SVG</td><td>Block rebuilt, image re-decoded</td><td class="n">Yes</td><td class="m">Root <code>width</code>/<code>height</code> only; no query hints; capped at 256 DIP</td><td class="n">Picture no, text yes</td><td class="y">Yes</td></tr>
     <tr><td>Markdown block with a <code>file:</code> SVG</td><td class="m">Yes</td><td>Same</td><td class="n">Yes</td><td class="y">Hints work (fit, width, height)</td><td class="n">Picture no</td><td class="y">Yes, needs a temp folder</td></tr>
     <tr><td>Image block (<code>ImageContent</code>)</td><td class="m">Yes, from a file path</td><td>Only the image swaps</td><td class="m">Probably not (unverified)</td><td class="y">Max width and height</td><td class="m">Light and dark files</td><td class="y">Since 0.99</td></tr>
     <tr><td>Adaptive Card with an SVG image</td><td class="y">Yes, Microsoft's own pattern</td><td>Whole card rebuilt</td><td class="n">Yes, until pull request 50211 ships</td><td class="y">Pixel width and height</td><td class="m">Named colours for text</td><td class="y">Yes</td></tr>
@@ -213,7 +213,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 <ul class="no">
   <li>Animated SVG (SMIL or CSS): the renderer is Direct2D in static mode and drops every animation element.</li>
   <li>Text inside an SVG: dropped. Numbers must be markdown text next to the picture.</li>
-  <li>Size hints on a <code>data:</code> image, and any width above 256 px for one.</li>
+  <li>Size hints on a <code>data:</code> image, and any width above 256 DIP for one.</li>
   <li>A <code>data:</code> string as an icon (list rows, tiles, image block): icons want a file path, a glyph, one emoji, or a bitmap stream.</li>
   <li>A percentage in a status message: the progress bar exists in the host's XAML and is permanently collapsed.</li>
   <li>Colours that follow the theme inside a generated picture (markdown or card): the host never tells the extension which theme is active. Icons and the image block can carry a light file and a dark file, which the host picks.</li>
@@ -250,7 +250,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 </ul>
 
 <h2>8. How sure is all this</h2>
-<p>Five research agents read the PowerToys source at the 0.101 release tag and at the latest 0.101 build, which bracket the 0.101.2652 your VM runs (the rendering files cited are identical across them; the one toolkit file that changed in 0.101.2652 is cited at the later tag), and at today's main, the markdown control's source, the Adaptive Cards renderer's source, the Microsoft Learn pages, the release notes, and the relevant issues and pull requests. Every claim in the technical document carries a citation and a label: verified in source or documentation, inferred from it, or unknown. Nothing was run on Windows. The seven things only a Windows run can answer are listed at the end of the technical document; the first is whether the blink is visible at two to four updates a second.</p>
+<p>Five research agents read the PowerToys source at the 0.101 release tag and at the latest 0.101 build, which bracket the 0.101.2652 your VM runs (the rendering files cited are identical across them, apart from two small changes the technical document names where it cites them), and at today's main, the markdown control's source, the Adaptive Cards renderer's source, the Microsoft Learn pages, the release notes, and the relevant issues and pull requests. Every claim in the technical document carries a citation and a label: verified in source or documentation, inferred from it, or unknown. Nothing was run on Windows. The seven things only a Windows run can answer are listed at the end of the technical document; the first is whether the blink is visible at two to four updates a second.</p>
 
 </main>
 
@@ -259,7 +259,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <dl>
     <dt>Host</dt><dd>The Command Palette window in PowerToys. It draws everything; the extension only sends data.</dd>
     <dt>COM hop</dt><dd>A call across the two processes. Setting a property costs two: the event out, the read back.</dd>
-    <dt>40 ms batch</dt><dd>The host waits 40 ms after a change and hands everything that arrived to the UI thread in one go; each change still costs its own rebuild.</dd>
+    <dt>40 ms batch</dt><dd>The host waits 40 ms after a change and hands everything that arrived to the UI thread in one go; only the last value shows, and whether each change still costs its own rebuild is untested.</dd>
     <dt>Markdown block</dt><dd>One <code>MarkdownContent</code> on a content page; each is rebuilt on its own.</dd>
     <dt>Blank frame</dt><dd>The moment after a rebuild when a picture exists but has not been decoded yet.</dd>
     <dt><code>data:</code> image</dt><dd>A picture embedded in the text itself, base64-encoded. Works, but takes no size hints.</dd>
@@ -267,6 +267,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
     <dt>Direct2D SVG</dt><dd>The Windows renderer for SVG pictures: shapes, paths, gradients, and inline <code>style</code> attributes; no text, no style sheets or CSS classes, no animation.</dd>
     <dt>Adaptive Card</dt><dd>A JSON layout (text, columns, images, inputs) the host renders with Microsoft's card library.</dd>
     <dt>Image block</dt><dd><code>ImageContent</code>, since 0.99: one picture with a maximum size and a zoom button.</dd>
+    <dt>DIP</dt><dd>Device-independent pixel: 1 px at 100 % display scaling, 1.5 px at 150 %. Layout sizes in the host are DIPs.</dd>
     <dt>Easing</dt><dd>Moving the shown value a little every tick toward the real one, instead of jumping.</dd>
   </dl>
 </aside>

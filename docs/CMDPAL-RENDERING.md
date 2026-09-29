@@ -12,7 +12,7 @@ run on Windows: every statement comes from reading source and documentation, and
 
 | Source | Revision read | Why this revision |
 |---|---|---|
-| `microsoft/PowerToys`, `src/modules/cmdpal/` | tag `v0.101.2362.0` (2026-08-25, the 0.101 release), tag `v0.101.2684.0` (2026-09-26, the latest 0.101 build), and `main` at `353caee0` (2026-09-29) | The owner's VM runs PowerToys 0.101.2652.0 (session 3 and 4 hand-offs), which lies between the two tags. The files cited for the markdown, image, icon, list, details, grid and card paths were diffed between the release tag, the latest tag and `main` and are identical, so their `main` line numbers apply to the owner's build; files that changed inside the 0.101 line are cited at the later tag and say so (the toolkit's `EventHelpers.cs`, PR #50485, in 0.101.2652). Post-0.101 changes are marked as such. |
+| `microsoft/PowerToys`, `src/modules/cmdpal/` | tag `v0.101.2362.0` (2026-08-25, the 0.101 release), tag `v0.101.2684.0` (2026-09-26, the latest 0.101 build), and `main` at `353caee0` (2026-09-29) | The owner's VM runs PowerToys 0.101.2652.0 (session 3 and 4 hand-offs), which lies between the two tags. The files cited for the markdown, image, icon, list, details, grid and card paths were diffed between the release tag, the latest tag and `main` and are identical, with two exceptions the text names where it cites them: `Controls/IconBox.cs` (a 14-line auto-size guard on `main`, §6) and the toolkit's `EventHelpers.cs` (PR #50485, changed in 0.101.2652, cited at the later tag, §5). For every other cited file the `main` line numbers apply to the owner's build. Post-0.101 changes are marked as such. |
 | `CommunityToolkit/Labs-Windows`, `components/MarkdownTextBlock` | `main` at `89328136` (last change 2026-01-15) | PowerToys 0.97 to 0.101 pin `CommunityToolkit.Labs.WinUI.Controls.MarkdownTextBlock` 0.1.260116-build.2514 (`Directory.Packages.props:32`), built the day after that last change. |
 | `microsoft/AdaptiveCards`, `source/uwp` and `source/shared` | `main` at `8b62e1d5` (2026-08-27) | PowerToys pins `AdaptiveCards.Rendering.WinUI3` 2.2.4-beta (2026-01-07), which has no git tag; `main` is the nearest source. Minor drift is possible. |
 | Microsoft Learn, Command Palette extension pages | fetched 2026-09-29 | `learn.microsoft.com/windows/powertoys/command-palette/…` |
@@ -229,9 +229,10 @@ Labs build 2514).
    none of the generation guards `ListViewModel` has.
 
 **Cadence (Inferred from the above; no benchmark exists anywhere).** Two sets within 40 ms share one
-dispatcher task, but the names are queued without de-duplication (step 3), so each set can still cost a full
-rebuild while only the last value is seen: the visible-frame ceiling is about 25 per second, the rebuild count
-follows the set count. Each frame is a full rebuild; nobody in the PowerToys repository drives a `MarkdownContent` faster than 1 Hz (the samples update
+dispatcher task and only the last value is seen, so the visible-frame ceiling is about 25 per second. The
+names are queued without de-duplication (step 3), so the UI thread receives one notification per set; whether
+each of them re-renders when the bound string is the same is Unknown (§16 item 2), so do not assume the extra
+sets are free. Each visible frame is a full rebuild; nobody in the PowerToys repository drives a `MarkdownContent` faster than 1 Hz (the samples update
 list titles at 500 ms and a details body at 1 s; the Performance Monitor updates its card at 1 s). For a
 few-hundred-byte block with one small SVG the CPU cost is plausibly milliseconds, so 5 to 10 Hz is not
 CPU-bound; what limits perceived quality is the discrete steps between measurements and the empty-image
@@ -494,7 +495,7 @@ code. "Smooth" means no blank frame; "eased" means the value moves between measu
    drive the display from a timer (100 to 200 ms) that eases the shown value toward the last measurement,
    and set `Body` only when the rendered string changes (`SetProperty` already skips equal strings).
    Mechanism: §5 steps 1 to 3. Removes the jumping regardless of how the meter is drawn. Risk: none
-   beyond one more timer; sets closer than 40 ms still each rebuild while only the last one shows, so keep 100 ms as the floor for headroom.
+   beyond one more timer; sets closer than 40 ms show only the last one and may each rebuild (Unknown, §16 item 2), so keep 100 ms as the floor for headroom.
 2. **Split the page into blocks; churn only the moving one.** Return the same `MarkdownContent` instances
    from `GetContent()`: a static block (heading, status, latency, ISP line) and one block per meter, or one
    block for both meters. Only a block whose `Body` changed is rebuilt (§5 step 4, one `MarkdownTextBlock`
