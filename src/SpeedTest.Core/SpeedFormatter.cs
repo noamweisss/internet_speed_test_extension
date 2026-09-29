@@ -29,17 +29,16 @@ public static class SpeedFormatter
     public static string Latency(double? ms) =>
         ms is null ? Unknown : ms.Value.ToString("0.0", CultureInfo.InvariantCulture) + " ms";
 
-    /// <summary>A text gauge: "▰▰▰▱▱▱▱▱▱▱". Filled cells = value / max, clamped to [0, width].</summary>
-    public static string Bar(double value, double max, int width = 20)
+    /// <summary>
+    /// A gauge scale as the meter labels it: "250 Mbps", "1 Gbps", "2.5 Gbps". Scales are round numbers
+    /// (<see cref="ScaleFor(double)"/>), so the fixed decimals of <see cref="Speed"/> would only add noise.
+    /// </summary>
+    public static string ScaleLabel(double mbps) => mbps switch
     {
-        if (width <= 0)
-        {
-            return string.Empty;
-        }
-
-        var filled = max <= 0 ? 0 : (int)Math.Round(Math.Clamp(value / max, 0, 1) * width);
-        return new string('▰', filled) + new string('▱', width - filled);
-    }
+        <= 0 => Unknown,
+        >= 1000 => (mbps / 1000).ToString("0.##", CultureInfo.InvariantCulture) + " Gbps",
+        _ => mbps.ToString("0.##", CultureInfo.InvariantCulture) + " Mbps",
+    };
 
     /// <summary>The gauge maximum for a value: the next "round" scale above it, so the bar is always readable.</summary>
     public static double ScaleFor(double mbps)

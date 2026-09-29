@@ -90,32 +90,32 @@ public sealed class MeterMarkdownTests
     }
 
     [Fact]
-    public void Meter_WithValue_DrawsTextBarAsCode()
+    public void Meter_WithValue_EndsWithBarImageThenScaleLine()
     {
         var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 245.3, 250, active: true);
 
-        // 245.3 of the 250 scale fills every cell (ADR-0006). No image: the SVG gauge waits for plan item 5.1.
-        Assert.EndsWith("`▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰`\n", markdown, StringComparison.Ordinal);
-        Assert.DoesNotContain("![", markdown);
-        Assert.DoesNotContain("data:", markdown);
+        // The bar is an image on its own paragraph and the scale is body text under it (ADR-0017).
+        Assert.EndsWith("\n\n![](" + GaugeSvg.DataUri(245.3, 250) + ")\n\nscale 250 Mbps\n", markdown, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Meter_WithCallerScale_FillsBarAgainstThatScale()
+    public void Meter_WithCallerScale_DrawsBarAgainstThatScale()
     {
-        // 9.5 alone would pick the 10 scale and fill 19 cells; the caller's 100 keeps the bar where the run left it.
+        // 9.5 alone would pick the 10 scale and nearly fill the bar; the caller's 100 keeps it where the run left it.
         var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 9.5, 100, active: true);
 
-        Assert.EndsWith("`▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
+        Assert.Contains("![](" + GaugeSvg.DataUri(9.5, 100) + ")", markdown);
+        Assert.EndsWith("scale 100 Mbps\n", markdown, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Meter_NotMeasured_ShowsPlaceholderAndEmptyBar()
+    public void Meter_NotMeasured_ShowsPlaceholderEmptyBarAndNoScale()
     {
         var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, null, 0, active: false);
 
         Assert.Contains("\n## —\n", markdown);
-        Assert.EndsWith("`▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱`\n", markdown, StringComparison.Ordinal);
+        Assert.Contains("![](" + GaugeSvg.DataUri(0, 0) + ")", markdown);
+        Assert.EndsWith("scale —\n", markdown, StringComparison.Ordinal);
     }
 
     [Fact]

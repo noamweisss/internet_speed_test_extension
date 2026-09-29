@@ -6,6 +6,8 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 ## [Unreleased]
 
 ### Changed
+- Download and upload are drawn bars (a rounded track, a blue fill, ticks at the quarters) with the scale
+  written under each bar. They need PowerToys 0.95 or newer; an older version shows the numbers without the bars.
 - The meter moves smoothly between measurements instead of jumping, and the numbers under Latency, Download and
   Upload are bigger. A bar keeps its scale for the whole test, so it no longer drops back when the speed crosses
   10, 25, 50, 100 Mbps and so on. The meter view redraws only the section that changed.
