@@ -87,12 +87,48 @@ verified, blocked, next.
   rebuilt markdown image is visible at 2 to 4 updates a second).
 
 **Next**
-- Owner: PR #20 is merged (ADR-0014). Apply the `Edit(...)` rule fix above in its own PR so the Claude review
-  can post; a body edit on PR #19 then starts it. Read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
+- Owner: PR #20 (ADR-0014) and PR #21 (the `Edit(...)` rule) are merged; this branch merged `main` after
+  PR #21, which starts the Claude review on PR #19. Read the PR and `docs/CMDPAL-RENDERING.html`, merge. Then plan item 5.1 as ADR-0013
   says: restore `GaugeSvg` from 6034b22, redraw, and record the result in the ADR that supersedes ADR-0013.
   `docs/CMDPAL-RENDERING.md` §15 ranks the options for that redraw; options 1 to 3 (ease in the extension, one
   block per moving part, a text meter) add no capability and keep every safety answer "No", option 4 keeps the
   SVG with the fixes of §4, and whichever is chosen goes into that ADR.
+## Review workflow Edit permission — 2026-09-29 — branch `fix/review-workflow-edit-permission` (cloud session)
+
+**Why**
+- After PR #20 the reviewer runs (23 turns, about 5 minutes, result "success"), but every run on PR #19
+  (36551903240, 36552637124) ends with "review.md is missing or empty; nothing posted." and
+  `permission_denials_count: 2`.
+- Cause: Claude Code checks file paths against `Edit(path)` and `Read(path)` rules only; a `Write(path)` rule is
+  accepted and never consulted (https://code.claude.com/docs/en/permissions, "Working with paths"). The allow rule
+  `Write(.../review/review.md)` was ignored, the Write tool asked for approval, and the headless run refused it
+  twice. The two `Write(...)` denies for the runner's command files were never consulted either.
+
+**Done**
+- `.github/workflows/review-claude.yml`: allow rule `Edit(/${{ runner.temp }}/review/review.md)` instead of
+  `Write(...)`; bare `Edit` removed from `--disallowedTools` (it would match that path, and a deny always wins);
+  `MultiEdit` and `NotebookEdit` stay disallowed; no bare `Write` added. The two command-file denies are `Edit(...)`.
+  The comment block at the top explains the rule form.
+- Correction to ADR-0012 (not edited, `docs/CONVENTIONS.md`): its decision point 1 says the settings deny writing
+  the runner's per-step command files. Until this commit that deny was a `Write(...)` rule and had no effect; the
+  write allow rule had none either, so nothing was writable at all. The decision stands; only its implementation
+  was wrong. ADR-0014's "Read, Glob, Write to one file" names the tools and stays true. `docs/REVIEW-PROMPT.md`
+  does not name the rule form and is unchanged.
+
+**Verified**
+- The workflow parses (PyYAML). `scripts/check.sh all` green.
+- The two denials in the failed runs show the action does not run in an auto-accept-edits mode (the review
+  directory is an `--add-dir`, so such a mode would have accepted the write), so dropping the bare `Edit` deny
+  leaves every path except `review.md` refused.
+
+**Not verified**
+- A real run: the workflow runs from `main`, so this PR gets only the Codex review.
+
+**Next**
+- Owner: merge this PR with a merge commit, then edit PR #19's body or push to it; done when a comment headed
+  "Independent review (Claude)" appears there. If it still does not post, set `show_full_output: true` on the
+  action step for one run to see the tool calls, then remove it.
+
 ## Review workflow OIDC fix — 2026-09-29 — branch `fix/review-workflow-oidc-token` (local session on the owner's laptop)
 
 **Why**
