@@ -4,6 +4,49 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Session 5 (continued) — 2026-09-29 — branch `feat/meter-text-bars` (option A)
+
+**Why**
+- Plan item 5.1. The owner asked for two or three visual designs of the meter, each fully built so that choosing
+  one is only a pull request, and compared on the VM before choosing.
+
+**Done**
+- A shared base branch `feat/meter-live-blocks` carries `docs/CMDPAL-RENDERING.md` §15 options 1 and 2 in four
+  commits: the meter page split into four fixed content blocks (header, download, upload, footer); the readouts
+  as H2 instead of H3; easing at a 100 ms tick with the maths in `MeterEasing` (Core) and the timer in `MeterPage`;
+  a scale that never shrinks during a run (`SpeedFormatter.ScaleFor(mbps, atLeast)`).
+- Three design branches on top of it:
+  - `feat/meter-text-bars` (A, this branch): §15 option 3. Each meter block is the title, the H2 readout and a
+    fenced code block of two 24-cell lines: a text bar in half-cell steps (`█`, `▌`, `░`) and a scale line with
+    `0` at the left and the scale's end right-aligned. Only glyphs Consolas has: the eighth blocks fall back to
+    Segoe UI Symbol and break the grid (DirectWrite cmap and `MapCharacters` check on the owner's laptop).
+    `SpeedFormatter.Bar` replaced (its `width` parameter had no caller), `SpeedFormatter.BarScale` added, the
+    `▰▱` bar is gone. Tick stays at 100 ms. ADR-0017 supersedes ADR-0013 and says why the SVG gauge is not
+    restored; its sentence on the owner's choice is left to fill in.
+  - `feat/meter-arc-gauge` (B): `GaugeSvg` restored from 6034b22 with a numeric root size and a `viewBox`, in its
+    own block, 250 ms tick.
+  - `feat/meter-svg-bars` (C): an SVG horizontal bar in `GaugeSvg.cs`, 250 ms tick.
+- B and C need the rules branch `chore/r6-exempts-gauge-svg` (one commit: the R6 exemption of 48baf41, scoped to
+  `GaugeSvg.cs`) merged first, because of R14.
+- A VM capture harness in the session scratchpad (`vm\Test-MeterOnVM.ps1`, `Capture-MeterRun.ps1`): installs a CI
+  build into `SpeedTest-Win11` over PowerShell Direct and screenshots the run from an interactive scheduled task.
+  Blocked until the owner signs in on the VM console once (the checkpoint holds a disconnected Enhanced Session)
+  and a new checkpoint is taken.
+- An HTML review artifact with mockups and the frame captures, for the owner's choice.
+
+**Verified**
+- This branch: `dotnet test tests/SpeedTest.Core.Tests` passed 146 of 146; `scripts/check.sh all` green. The
+  extension's `MeterPage.cs` (doc comment only here) compiles with warnings as errors in a scratch project outside
+  the repository against the toolkit dll from the NuGet cache. The other design branches record their own numbers.
+
+**Not verified**
+- The extension has not run in Command Palette yet: not the Consolas grid in the host, not the 100 ms tick on the owner's laptop.
+  CI and the VM captures come after the push.
+
+**Next**
+- Owner: pick a design. The chosen branch gets its pull request (for B or C, the rules pull request first); the
+  other branches are deleted; ADR-0017's "chosen by the owner" sentence is filled in.
+
 ## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
 
 **Why**
