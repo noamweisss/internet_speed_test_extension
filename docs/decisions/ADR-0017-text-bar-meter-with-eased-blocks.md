@@ -1,6 +1,6 @@
 # ADR-0017: A text bar meter in fixed content blocks, eased between measurements
 
-Status: proposed · Date: 2026-09-29 · Supersedes ADR-0013 (and ADR-0006's bar; ADR-0011's gauge is not restored)
+Status: accepted · Date: 2026-09-29 · Supersedes ADR-0013 (and ADR-0006's bar; ADR-0011's gauge is not restored)
 
 ## Context
 The session 4 meter (ADR-0011) drew each speed as an SVG arc in a `data:` image inside one markdown block,
@@ -64,7 +64,8 @@ Two alternatives were built on the same base, on their own branches, for the own
 - **C, SVG horizontal bar** (`feat/meter-svg-bars`): a bar drawn by `GaugeSvg`, same block and tick, same
   constraints as B.
 
-Chosen by the owner on <date> after the VM comparison.
+Chosen by the owner on 2026-09-29 after the VM comparison: it never blinks, follows the theme, fits above the
+fold at 800×480, and needs one pull request.
 
 ## Consequences
 - No image in the meter, so nothing depends on PowerToys 0.95 or later (`data:` images) or on image loading: the
@@ -76,6 +77,12 @@ Chosen by the owner on <date> after the VM comparison.
   decision.
 - The scale steps up while a speed rises (10, 25, 50, 100, 250, 500 Mbps), and the bar shortens at each step:
   the VM run saw it three times on a 200 Mbps line. A follow-up may start a run at the previous run's scale.
+- The two alternatives stay on GitHub as backlog branches, `feat/meter-arc-gauge` (B) and `feat/meter-svg-bars`
+  (C), built, reviewed and run in the test VM on 2026-09-29. B, the dial: 2 then 6 blank frames per download, with
+  a layout jump, and the dial's bottom clipped at 480 px. C, the drawn bar: about one blank frame in four, no jump.
+  They are to be revisited when the host changes how it renders extension content (PR #50211, in-place Adaptive
+  Card updates, milestone 0.102; PR #50443, graph content), plan item 5.3. Each carries its own ADR-0017 draft,
+  to be renumbered when picked up.
 - What only Windows can show: whether the Consolas grid holds in the host at every scaling, and how the 100 ms
   tick looks on the owner's laptop (`docs/CMDPAL-RENDERING.md` §16).
 

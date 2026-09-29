@@ -26,8 +26,9 @@ verified, blocked, next.
   - `feat/meter-arc-gauge` (B): `GaugeSvg` restored from 6034b22 with a numeric root size and a `viewBox`, in its
     own block, 250 ms tick.
   - `feat/meter-svg-bars` (C): an SVG horizontal bar in `GaugeSvg.cs`, 250 ms tick.
-- B and C need the rules branch `chore/r6-exempts-gauge-svg` (one commit: the R6 exemption of 48baf41, scoped to
-  `GaugeSvg.cs`) merged first, because of R14.
+- B and C carry no `xmlns` on the SVG root (verified by the session 5 research and by the VM runs), so rule R6
+  needs no exemption and no rules pull request; the prepared branch `chore/r6-exempts-gauge-svg` (the 48baf41
+  exemption) stays local and unpushed as a fallback.
 - A VM capture harness (`vm\Test-MeterOnVM.ps1`, `Capture-MeterRun.ps1`). It lives outside the repository, in the
   session scratchpad, not in it: it installs a CI build into `SpeedTest-Win11` over PowerShell Direct and
   screenshots the run from an interactive scheduled task.
@@ -49,6 +50,11 @@ verified, blocked, next.
     exact, names the scale steps as a consequence and records the VM run; §16 gives the tick per block type and
     leaves centring to the design; §4 records the `xmlns` and `#RRGGBBAA` facts; `docs/ARCHITECTURE.md` names
     `MeterFrame`. `docs/CMDPAL-RENDERING.html` states none of the §4 or §15 facts, so it is unchanged.
+- The owner's decision, 2026-09-29, in chat: "let's go with A. but don't throw away B and C - I want them in the
+  backlog for when cmdpal updates its way of rendering extensions (due in a few weeks according to their github
+  milestones)". Then: ADR-0017 accepted (the chosen-by sentence filled in, B and C named as backlog branches in its
+  Consequences); plan 5.1 done and a new item 5.3 for the backlog (revisit B and C when PR #50211, milestone 0.102,
+  or PR #50443 lands); the pull request opened from this branch.
 
 **Verified**
 - This branch after the fix round: `dotnet test tests/SpeedTest.Core.Tests` passed 154 of 154; `scripts/check.sh
@@ -75,11 +81,14 @@ verified, blocked, next.
 - The owner's laptop at 200 % scaling: the Consolas grid and the 100 ms tick there.
 
 **Next**
-- Owner: pick a design. The chosen branch gets its pull request (for B or C, the rules pull request first); the
-  other branches are deleted; ADR-0017's "chosen by the owner" sentence is filled in and its status becomes
-  `accepted` in that pull request.
-- If A is chosen, the R6 comment in `scripts/check.sh` (the gauge exemption "returns with it, 5.1") is stale. A
-  guard file, so that fix is a follow-up in its own rules pull request (R14).
+- The pull request's review rounds: answer the findings in one fix push, then one re-review (`AGENTS.md` §4
+  step 6).
+- After merge: the release.
+- The backlog branches `feat/meter-arc-gauge` (B) and `feat/meter-svg-bars` (C) stay on GitHub; they need no
+  rules branch (no `xmlns`, so no R6 exemption). Plan 5.3 says when to revisit them.
+- Follow-ups: a run starts at the previous run's scale, so the bar does not shorten at each scale step; a rules
+  pull request rewords the stale R6 comment in `scripts/check.sh` (the gauge exemption "returns with it, 5.1"), a
+  guard file, so on its own branch (R14).
 
 ## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
 
