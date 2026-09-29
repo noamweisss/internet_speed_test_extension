@@ -18,6 +18,10 @@ run on Windows: every statement comes from reading source and documentation, and
 | Microsoft Learn, Command Palette extension pages | fetched 2026-09-29 | `learn.microsoft.com/windows/powertoys/command-palette/…` |
 | PowerToys release notes, issues and pull requests | fetched 2026-09-29 | Cited by number. |
 
+Units: DIP (device-independent pixel) is a layout size, 1 px at 100 % display scaling and 1.5 px at 150 %.
+Font sizes and Adaptive Card sizes written as "px" below are XAML sizes and therefore DIPs too. Physical pixels
+appear only for decode and rasterisation sizes (icon cache buckets, `RasterizePixelWidth`) and image file limits.
+
 Paths without a prefix are relative to `src/modules/cmdpal/` in PowerToys. `Labs/…` is relative to
 `components/MarkdownTextBlock/src/` in the toolkit repository. `AC/…` is relative to `source/` in AdaptiveCards.
 Line numbers are from the `main` revisions above unless the text names a tag.
@@ -47,9 +51,9 @@ holds nothing but the moving part (§15).
 | Plain text | `IPlainTextContent { Text; FontFamily; WrapWords }` | 0.99 | selectable `TextBlock` with monospace and wrap toggles | `Text` set → in place |
 | Image | `IImageContent { IIconInfo Image; MaxWidth; MaxHeight }` | 0.99 | `Viewbox` → `IconBox` (the icon pipeline, §6) | `Image` set → icon reloaded in place |
 | Tree | `ITreeContent { RootContent; GetChildren() }` | 0.90 | nested repeater | `RaiseItemsChanged` |
-| List row | `IListItem { Title; Subtitle; Icon; Tags; Details; … }` | 0.90 | fixed 44-DIP row, 20-px icon, up to three tag pills | property set → in place, no `RaiseItemsChanged` needed (§7) |
-| Grid tile | `IListPage.GridProperties` = Small / Medium / Gallery | 0.95 | 32-px icon / 100×100 cell / 160×160 tile | as list rows |
-| Details pane | `IDetails { HeroImage; Title; Body (markdown); Metadata }` | 0.90; live since 0.101 | card beside the list, 64-px hero, markdown body | property set → in place (0.101) |
+| List row | `IListItem { Title; Subtitle; Icon; Tags; Details; … }` | 0.90 | fixed 44-DIP row, 20-DIP icon, up to three tag pills | property set → in place, no `RaiseItemsChanged` needed (§7) |
+| Grid tile | `IListPage.GridProperties` = Small / Medium / Gallery | 0.95 | 32-DIP icon / 100×100-DIP cell / 160×160-DIP tile | as list rows |
+| Details pane | `IDetails { HeroImage; Title; Body (markdown); Metadata }` | 0.90; live since 0.101 | card beside the list, 64-DIP hero, markdown body | property set → in place (0.101) |
 | Status / progress | `IStatusMessage { State; Progress; Message }`, `IPage.IsLoading` | 0.90 | `IsLoading`: indeterminate bar. `Progress`: **not rendered** (§10) | property set |
 
 Verified: `extensionsdk/Microsoft.CommandPalette.Extensions/Microsoft.CommandPalette.Extensions.idl` lines

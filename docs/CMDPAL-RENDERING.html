@@ -204,7 +204,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <li><strong>Steps.</strong> The arc changed only when a measurement arrived, every 200 ms. Nothing in the host eases values.</li>
   <li><strong>Blank interval (inferred).</strong> Each update rebuilt the block and recreated the picture empty; it came back after decoding, five times a second. Whether that showed as a visible blink is untested.</li>
   <li><strong>Size.</strong> A <code>data:</code> picture gets no size hints, is capped at 256 DIP wide, and is rasterised with the width scaled to the monitor's DPI but the height not. What you saw depends on the display scaling.</li>
-  <li><strong>Small numbers.</strong> The value sat under a third-level heading, which the host renders at 12 px in normal weight, smaller than body text.</li>
+  <li><strong>Small numbers.</strong> The value sat under a third-level heading, which the host renders at size 12 in normal weight, smaller than body text.</li>
   <li><strong>One big block.</strong> The heading, status, latency, both meters and the ISP line were re-parsed for every arc movement.</li>
 </ul>
 <p>None of this is the arc geometry, which the unit tests cover. It is how the host works, and every point has a counter-measure.</p>
