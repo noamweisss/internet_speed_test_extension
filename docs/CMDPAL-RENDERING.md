@@ -180,6 +180,9 @@ clip-path transform visibility display`, and the per-element `style="…"` attri
 supports secure static mode … and does not support animations or interactions"), `em`/`ex` units, and remote
 `<image>` references. Eight-digit `#RRGGBBAA` colours are not in SVG 1.1; use `stroke-opacity` (session 4
 found this the hard way). Numbers on a gauge must be markdown text next to the image, or outlined paths.
+`Verified` (session 5, 2026-09-29): Direct2D renders a root `<svg>` without `xmlns` (laptop test, and the VM run of
+the dial and bar branches confirmed it in the host), and an 8-digit `#RRGGBBAA` colour draws black rather than being
+ignored.
 
 **Animated formats.** `BitmapImage` plays animated GIF with `AutoPlay` on by default (Learn, `BitmapImage`
 "Animated images"); nothing in the host turns it off, so a GIF should animate in markdown (Inferred, not
@@ -554,9 +557,8 @@ side-by-side content blocks; waiting for PR #50443.
 **Suggested experiment order on the owner's PC:** options 1 + 2 + 3 first (expected smooth and eased, no
 new capability, all testable in Core); then option 4 in the same structure at 2 to 4 Hz to see whether the
 blank frame is visible; then, only if an image is wanted, option 6 (a temp-folder write needs the owner's
-decision and a contract change) or option 7 once PR #50211 ships. Whatever is chosen, plan item 5.1 proceeds as ADR-0013 says: it starts by restoring
-`GaugeSvg` from `6034b22` (option 4 reuses it; the text options remove it again) and records the redrawn meter
-in the ADR that supersedes ADR-0013. This document ranks; that ADR decides.
+decision and a contract change) or option 7 once PR #50211 ships. ADR-0017 supersedes ADR-0013; the text option does not restore `GaugeSvg`. This document ranks; that ADR
+decides.
 
 ## 16. Rules for the building agent, and what only Windows can answer
 
@@ -565,10 +567,11 @@ Rules that follow from the evidence:
 - Return the same content instances from `GetContent()`; update by setting properties; never
   `RaiseItemsChanged` from the meter path or from inside `GetContent()`.
 - One block for the moving part; static text in its own block.
-- Ease in the extension; tick at 100 to 200 ms; skip a tick when the string is unchanged.
+- Ease in the extension; tick at 100 to 200 ms for a text block, 250 ms or slower for a block with an image; skip a
+  tick when the string is unchanged.
 - If an SVG is embedded: numeric `width`/`height` and `viewBox` on the root; width ≤ 256; only §4's elements
-  and attributes; `stroke-opacity` rather than 8-digit hex; no text; transparent background; centre with
-  `<p align="center">`.
+  and attributes; `stroke-opacity` rather than 8-digit hex; no text; transparent background; centring with
+  `<p align="center">` is the design's choice.
 - Big numbers in H1/H2 or bold; never H3.
 - Do not add a file write, a temp folder, or a network fetch for images: each breaks a promise in
   `docs/SAFETY-CONTRACT.md` §1 and needs the owner's decision, a change to that contract and to

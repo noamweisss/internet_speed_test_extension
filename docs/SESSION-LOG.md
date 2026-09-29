@@ -28,24 +28,49 @@ verified, blocked, next.
   - `feat/meter-svg-bars` (C): an SVG horizontal bar in `GaugeSvg.cs`, 250 ms tick.
 - B and C need the rules branch `chore/r6-exempts-gauge-svg` (one commit: the R6 exemption of 48baf41, scoped to
   `GaugeSvg.cs`) merged first, because of R14.
-- A VM capture harness in the session scratchpad (`vm\Test-MeterOnVM.ps1`, `Capture-MeterRun.ps1`): installs a CI
-  build into `SpeedTest-Win11` over PowerShell Direct and screenshots the run from an interactive scheduled task.
-  Blocked until the owner signs in on the VM console once (the checkpoint holds a disconnected Enhanced Session)
-  and a new checkpoint is taken.
-- An HTML review artifact with mockups and the frame captures, for the owner's choice.
+- A VM capture harness (`vm\Test-MeterOnVM.ps1`, `Capture-MeterRun.ps1`). It lives outside the repository, in the
+  session scratchpad, not in it: it installs a CI build into `SpeedTest-Win11` over PowerShell Direct and
+  screenshots the run from an interactive scheduled task.
+- An HTML review artifact with mockups, for the owner's choice (outside the repository).
+- The base fix `444d929` of `feat/meter-live-blocks`, cherry-picked here: `MeterFrame` and `MeterEasing.Next` in
+  Core (the per-meter update rules moved out of `MeterPage.Tick`, with tests), the page icon restored, the tick
+  guarded with a `finally`. `MeterMarkdown.Meter` takes a `MeterFrame` and keeps this branch's fenced block.
+- The fix round (this commit set) answers the review findings, in `AGENTS.md` "Code Review Rules" terms:
+  - Code, Major (P1): per-meter maths in the extension without a test; answered by the base fix above.
+  - Code, Minor (P2): the page icon lost in the block split; the tick without a `finally`. Base fix above.
+  - VM observation: about 40 px of empty space under the scale line in the code box. `MeterMarkdown.Meter`
+    already emits exactly the fence, the bar line, the 24-cell scale line and the closing fence, with no blank
+    line inside, so the space is the host's padding; no code change.
+  - Documentation, P1: ADR-0017 said `accepted` although the owner has not chosen (now `proposed`, accepted in the
+    pull request once chosen); plan 5.1 still said to restore `GaugeSvg` from `6034b22` and was marked done;
+    `docs/CMDPAL-RENDERING.md` §15 said 5.1 starts by restoring `GaugeSvg`; this entry claimed
+    frame captures that did not exist yet.
+  - Documentation, P2: ADR-0017 now says the readout and the bar show the eased value and the final value is
+    exact, names the scale steps as a consequence and records the VM run; §16 gives the tick per block type and
+    leaves centring to the design; §4 records the `xmlns` and `#RRGGBBAA` facts; `docs/ARCHITECTURE.md` names
+    `MeterFrame`. `docs/CMDPAL-RENDERING.html` states none of the §4 or §15 facts, so it is unchanged.
 
 **Verified**
-- This branch: `dotnet test tests/SpeedTest.Core.Tests` passed 146 of 146; `scripts/check.sh all` green. The
-  extension's `MeterPage.cs` (doc comment only here) compiles with warnings as errors in a scratch project outside
-  the repository against the toolkit dll from the NuGet cache. The other design branches record their own numbers.
+- This branch after the fix round: `dotnet test tests/SpeedTest.Core.Tests` passed 154 of 154; `scripts/check.sh
+  all` green. The other design branches record their own numbers.
+- First push (`f623fc5`): CI run 36566793487 green (Core tests, rules, Windows extension build).
+- VM run 2026-09-29 on `SpeedTest-Win11` (PowerToys 0.101.2652, Command Palette 0.12.12651, 1920×1080 at 100 %),
+  build `f623fc5`: 161 frames captured at 150 ms; the page shows; phases latency at frame 3, download 11, upload
+  64, complete 116 (17.9 s); 0 blank or collapsed meter frames. At 800×480 the title, status, latency, download
+  value and bar box are visible without scrolling; upload is below the fold. The bar shortened at three scale
+  steps (a 200 Mbps line). The code box shows about 40 px of empty space under the scale line (host padding, see
+  above).
 
 **Not verified**
-- The extension has not run in Command Palette yet: not the Consolas grid in the host, not the 100 ms tick on the owner's laptop.
-  CI and the VM captures come after the push.
+- The fix round has not run in the VM yet; a second VM run follows the fix. CI for the fix push comes after it.
+- The owner's laptop at 200 % scaling: the Consolas grid and the 100 ms tick there.
 
 **Next**
 - Owner: pick a design. The chosen branch gets its pull request (for B or C, the rules pull request first); the
-  other branches are deleted; ADR-0017's "chosen by the owner" sentence is filled in.
+  other branches are deleted; ADR-0017's "chosen by the owner" sentence is filled in and its status becomes
+  `accepted` in that pull request.
+- If A is chosen, the R6 comment in `scripts/check.sh` (the gauge exemption "returns with it, 5.1") is stale. A
+  guard file, so that fix is a follow-up in its own rules pull request (R14).
 
 ## Review stop rule and separate rule PRs — 2026-09-29 — branch `chore/review-stop-rule` (local session on the owner's laptop)
 

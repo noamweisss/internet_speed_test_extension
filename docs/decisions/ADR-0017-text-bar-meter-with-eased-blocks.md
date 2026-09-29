@@ -1,6 +1,6 @@
 # ADR-0017: A text bar meter in fixed content blocks, eased between measurements
 
-Status: accepted · Date: 2026-09-29 · Supersedes ADR-0013 (and ADR-0006's bar; ADR-0011's gauge is not restored)
+Status: proposed · Date: 2026-09-29 · Supersedes ADR-0013 (and ADR-0006's bar; ADR-0011's gauge is not restored)
 
 ## Context
 The session 4 meter (ADR-0011) drew each speed as an SVG arc in a `data:` image inside one markdown block,
@@ -28,12 +28,15 @@ All three share a base branch with options 1 and 2 and differ in how a speed is 
    rebuilds only a block whose text changed. `RaiseItemsChanged` is never called on the meter path.
 2. **Easing in the extension, maths in Core** (§15 option 1). A one-shot `System.Threading.Timer` in `MeterPage`,
    re-armed every `MeterEasing.TickMilliseconds` (100 ms), moves the shown value toward the last measurement
-   through `MeterEasing.Step` (exponential approach, time constant 250 ms, no overshoot, snaps within the readout's
-   precision). A meter whose phase is not live shows its value exactly. A block is set only when its string
-   changes. 100 ms is enough here: a text block has no image stage (§5 step 5), and it is the floor §15 gives.
-3. **A scale that never shrinks during a run.** `SpeedFormatter.ScaleFor(mbps, atLeast)` picks the scale from the
-   measured value, not the eased one, and only grows, so the bar does not drop back at 10, 25, 50, 100 Mbps and
-   so on. A meter with no value yet has no scale, which resets it for every run.
+   through `MeterEasing.Next`, which returns an immutable `MeterFrame(Shown, Scale)` (exponential approach, time
+   constant 250 ms, no overshoot; the last remainder snaps once it is invisible on the bar). A meter whose phase is
+   not live shows its value exactly. The readout and the bar both show the eased value while a phase runs; the
+   final value is exact. A meter block is set only when its frame changes (record equality). 100 ms is enough
+   here: a text block has no image stage (§5 step 5), and it is the floor §15 gives.
+3. **A scale that never shrinks during a run.** `MeterEasing.Next` picks the scale from the measured value, not the
+   eased one, through `SpeedFormatter.ScaleFor(mbps, atLeast)`, and it only grows, so the bar does not drop back at
+   10, 25, 50, 100 Mbps and so on. A meter with no value yet gets `MeterFrame.Empty` (no scale), which resets it
+   for every run.
 4. **H2 readouts.** The values under Latency, Download and Upload are H2 (20 px semi-bold), not H3 (§3, §16).
 5. **A text bar in a fenced code block** (§15 option 3). Each meter block is the title (with the active marker),
    the H2 readout, and a fenced code block of two lines, each exactly `SpeedFormatter.BarCells` (24) cells wide:
@@ -71,5 +74,15 @@ Chosen by the owner on <date> after the VM comparison.
 - `GaugeSvg` and its R6 exemption stay out of the code; R6 keeps no exception.
 - ADR-0006's `▰▱` bar is replaced by this one. ADR-0013's plan to restore the gauge in 5.1 is replaced by this
   decision.
+- The scale steps up while a speed rises (10, 25, 50, 100, 250, 500 Mbps), and the bar shortens at each step:
+  the VM run saw it three times on a 200 Mbps line. A follow-up may start a run at the previous run's scale.
 - What only Windows can show: whether the Consolas grid holds in the host at every scaling, and how the 100 ms
   tick looks on the owner's laptop (`docs/CMDPAL-RENDERING.md` §16).
+
+## Verified in the test VM
+Run on 2026-09-29 on `SpeedTest-Win11` (PowerToys 0.101.2652, Command Palette 0.12.12651, 1920×1080 at 100 %),
+build `f623fc5`: 161 frames captured at 150 ms; phases latency at frame 3, download 11, upload 64, complete 116
+(17.9 s); no blank or collapsed meter frame. At 800×480 the title, status, latency, download value and bar box are
+visible without scrolling; upload is below the fold. The code box shows about 40 px of empty space under the scale
+line; the markdown has no blank line in the fence, so that space is the host's padding. The 200 % scaling of the
+owner's laptop is not covered.
