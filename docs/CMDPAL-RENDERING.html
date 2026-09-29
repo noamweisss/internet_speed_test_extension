@@ -148,7 +148,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 <p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it disappears for at least a frame. And no update can be faster than the 40 ms batch, so the host cannot show more than about 25 distinct frames a second. The technical document suggests 5 to 10 a second as the range to try; whether the eye gains anything above that is untested, since every extra frame is one more full rebuild.</p>
 
 <h2>2. See it: steps and blank frames, then the fixes</h2>
-<p>The left gauge behaves as the source says the session 4 build should: it moves only when a measurement arrives and goes blank for a moment on each update (the blank is inferred; whether it was visible on your PC is untested). The right gauge applies the two changes that are ours to make. Both receive the same measurements.</p>
+<p>The left gauge behaves as the source says the session 4 build should: it moves only when a measurement arrives and its arc is empty for a moment after each update while the number stays (the empty interval is inferred; whether it was visible on your PC is untested). The right gauge applies the two changes that are ours to make, each switchable. Both receive the same measurements.</p>
 
 <figure class="demo" id="demo">
   <div class="gauges">
@@ -176,7 +176,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
     <button type="button" id="restart">Restart test</button>
   </div>
   <p class="readout" id="readout">Simulated download ramping up to about 480 Mbps.</p>
-  <figcaption>Figure 2. A simulation in this page, not the real host: the blink is drawn as 80 ms of missing arc after each update, the eased gauge ticks every 100 ms. Untick the boxes to see each fix on its own.</figcaption>
+  <figcaption>Figure 2. A simulation in this page, not the real host: the empty-image interval is drawn as 80 ms of missing arc after each update (the number is markdown text and stays), the eased gauge ticks every 100 ms. The left gauge never changes; the boxes switch each fix on and off in the right one.</figcaption>
 </figure>
 
 <h2>3. Where an extension can draw</h2>
@@ -284,7 +284,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   var intervalIn = document.getElementById('interval'), intervalOut = document.getElementById('intervalOut');
   var easeIn = document.getElementById('ease'), noblankIn = document.getElementById('noblank');
   var restart = document.getElementById('restart'), readout = document.getElementById('readout');
-  var MAX = 500, target = 0, measured = 0, shownB = 0, t0 = 0, lastMeasure = 0, blankUntil = 0, done = false;
+  var MAX = 500, target = 0, measured = 0, shownB = 0, t0 = 0, lastMeasure = 0, blankUntil = 0;
 
   function arcPath(frac) {
     frac = Math.max(0.004, Math.min(1, frac));
@@ -294,7 +294,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   }
   function fmt(v) { return v < 10 ? v.toFixed(1) : Math.round(v).toString(); }
   function reset() {
-    t0 = performance.now(); lastMeasure = t0; measured = 0; shownB = 0; target = 0; done = false; blankUntil = 0;
+    t0 = performance.now(); lastMeasure = t0; measured = 0; shownB = 0; target = 0; blankUntil = 0;
     readout.textContent = 'Simulated download ramping up to about 480 Mbps.';
   }
   function trueSpeed(t) {
@@ -310,16 +310,17 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
     var interval = +intervalIn.value;
     if (now - lastMeasure >= interval) {
       lastMeasure = now; measured = target;
-      if (!noblankIn.checked) blankUntil = now + 80;
+      blankUntil = now + 80; // the rebuilt image is empty until it is decoded; the text is not
     }
-    // Left: jumps, blinks
     var blank = now < blankUntil;
+    // Left, the session 4 build as the source describes it: steps, and an empty arc after each update.
     arcA.style.visibility = blank ? 'hidden' : 'visible';
     arcA.setAttribute('d', arcPath(measured / MAX));
-    valA.style.visibility = blank ? 'hidden' : 'visible';
     valA.textContent = fmt(measured);
-    // Right: eased (or not), never blank
+    // Right, with the fixes the toggles control: eased or not, and blank after each update only while
+    // the moving part is still a picture (second box unticked).
     if (easeIn.checked) shownB += (measured - shownB) * 0.18; else shownB = measured;
+    arcB.style.visibility = (blank && !noblankIn.checked) ? 'hidden' : 'visible';
     arcB.setAttribute('d', arcPath(shownB / MAX));
     valB.textContent = fmt(shownB);
     requestAnimationFrame(frame);
