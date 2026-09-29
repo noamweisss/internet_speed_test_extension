@@ -105,9 +105,13 @@ are honoured. Every other inline tag (`b i span font code u sup`) loses its form
 parsing (`Labs/Renderers/ObjectRenderers/HtmlBlockRenderer.cs:31–32`), so `<pre>` loses its lines. Inline
 `<svg>`, `<style>`, `<script>` text renders as plain text (Inferred).
 
-**Unicode (Inferred).** Block elements (`█▓▒░▁▂▃▄▅▆▇`, braille) are plain `Run` text in the UI font, or
-Consolas inside a code block; font fallback on Windows 11 covers them, but equal glyph widths in the inline-code
-font are not verified.
+**Unicode (Verified, Inferred).** Block elements and braille are plain `Run` text in the UI font, or Consolas
+inside a code block. Verified (owner's laptop, 2026-09-29, DirectWrite cmap and MapCharacters check, session 5):
+Consolas and Segoe UI Variable contain only `▀ ▄ █ ▌ ▐ ░ ▒ ▓` from Block Elements. The eighth blocks
+`▏▎▍▋▊▉` and `▰▱` are missing there and fall back to Segoe UI Symbol, whose glyphs are narrower and shorter.
+Inferred: a bar that mixes fallback glyphs with Consolas glyphs misaligns visibly. The safe glyph set for a
+text bar is `█ ▌ ░` (plus `▀ ▄ ▐ ▒ ▓`); use no eighth blocks. Equal glyph widths of the safe set in the
+inline-code font are not verified.
 
 **Theme (Verified).** Text, headings, links, code and table brushes come from the host theme
 (`Labs/MarkdownThemes.cs:37–128`, `ContentPage.xaml:25–33`). Markdown cannot set a colour, and nothing tells
@@ -506,9 +510,11 @@ code. "Smooth" means no blank frame; "eased" means the value moves between measu
    per block). Never call `RaiseItemsChanged` on the meter path (§5 step 7). Risk: 8 DIP of extra spacing
    between blocks. Cost: small, in `MeterPage` and `MeterMarkdown`.
 3. **A text-only meter in the moving block.** No image means no asynchronous stage and no blank frame (§5
-   step 5). Raise the bar's resolution with fractional block glyphs (`▏▎▍▌▋▊▉█`) at a constant string length
+   step 5). Raise the bar's resolution with half-cell steps from `█ ▌ ░` at a constant string length
    so nothing re-wraps; put the number in an H2 or bold text, not H3. HardwareMonitor ships this way.
-   Risk: glyph widths in the inline-code font are Unverified; Consolas in a fenced block is the safe fallback.
+   Risk: the eighth blocks (`▏▎▍▋▊▉`) are not in Consolas and their fallback glyphs differ in width (Verified,
+   §3), so only halves are safe; the width of `█ ▌ ░` in the inline-code font is Unverified, and Consolas in a
+   fenced block is the safe fallback.
    With options 1 and 2 this is the cheapest path to "smooth and eased", and it stays testable in Core.
 4. **Keep an SVG gauge, but fix it and slow it.** Root `<svg>` with numeric `width`/`height` ≤ 256 and a
    `viewBox`; only §4's element subset; numbers as markdown text; transparent background; in its own block
@@ -575,7 +581,8 @@ Unknown until a Windows run (all Inferred above):
 1. Whether the blank frame of a rebuilt markdown image is visible at 2 to 5 Hz, and whether a constant
    image box turns it into a blink rather than a jump.
 2. Whether `IsTextSelectionEnabled` and identical-string `Text` sets trigger a re-render.
-3. Glyph width uniformity of block characters in the inline-code and Consolas fonts.
+3. Glyph width uniformity of `█ ▌ ░` in the inline-code font (Consolas has them; the eighth blocks are not
+   uniform, §3).
 4. Whether `ImageContent` keeps the previous image visible until the next one is decoded.
 5. Whether animated GIF plays in markdown and inside a card, and whether `ImageIcon` plays it at all.
 6. The real cost of a full card or markdown rebuild on the owner's laptop (no benchmark exists).
