@@ -17,7 +17,7 @@ SpeedTestExtension ─► SpeedTestCommandsProvider ─► SettingsManager (defa
                                              SpeedMeasurer  ──────────────── src/SpeedTest.Core/ (any OS, no UI)
                                              ├ CloudflareEndpoints (URLs, constants)
                                              ├ SpeedTestSnapshot (record: phase, connection, values)
-                                             └ Formatting (units, text meter)
+                                             └ Formatting (units, meter, easing)
                                                        │ HTTPS only, hosts in scripts/allowed-hosts.txt
                                                        ▼
                                              speed.cloudflare.com

@@ -28,26 +28,48 @@ public static class MeterEasing
     /// <summary>Below this remainder the readout cannot show the difference: 1 Kbps is its finest unit.</summary>
     private const double SnapAbsoluteMbps = 0.001;
 
-    /// <summary>Below this share of the value the remainder is less than the readout's last digit.</summary>
+    /// <summary>
+    /// Below this share of the value the remainder is invisible on the dial (under 0.1 % of it). The readout may still
+    /// see it: between 100 and 999 Mbps the last frame can move the readout's last two digits, up to 1 Mbps.
+    /// </summary>
     private const double SnapRelative = 0.001;
 
     private static readonly double ShareOfDistancePerTick = 1 - Math.Exp(-TickMilliseconds / TimeConstantMilliseconds);
 
     /// <summary>
-    /// The value to show after one more tick. <paramref name="live"/> is true while <paramref name="target"/> is
-    /// still being measured; otherwise the meter shows the target exactly, so a finished or new phase never lags.
-    /// A null target (not measured yet) shows null; a null <paramref name="shown"/> starts from 0.
+    /// The frame to show after one more tick. <paramref name="measured"/> is the meter's last measurement, null when
+    /// not measured yet; <paramref name="live"/> is true while it is still being measured.
+    /// <para>
+    /// A null measurement gives <see cref="MeterFrame.Empty"/>. Every run starts with both values null, and a value
+    /// never goes back to null within a run, so this is the reset between runs without tracking phases.
+    /// </para>
+    /// <para>
+    /// Otherwise the shown value eases toward the measurement while live and equals it exactly when not, so a
+    /// finished phase never lags. The scale comes from the measured value, not the eased one, and never shrinks
+    /// (<see cref="SpeedFormatter.ScaleFor(double, double)"/>): an eased value crossing a step does not move it.
+    /// </para>
     /// </summary>
-    public static double? Step(double? shown, double? target, bool live)
+    public static MeterFrame Next(MeterFrame previous, double? measured, bool live)
     {
-        if (target is not { } goal || !live)
+        if (measured is not { } value)
+        {
+            return MeterFrame.Empty;
+        }
+
+        return new MeterFrame(Step(previous.Shown, value, live), SpeedFormatter.ScaleFor(value, previous.Scale));
+    }
+
+    /// <summary>The value to show after one more tick. A null <paramref name="shown"/> starts from 0.</summary>
+    private static double Step(double? shown, double target, bool live)
+    {
+        if (!live)
         {
             return target;
         }
 
         var from = shown ?? 0;
-        var next = from + ((goal - from) * ShareOfDistancePerTick);
-        var snapDistance = Math.Max(SnapAbsoluteMbps, SnapRelative * Math.Abs(goal));
-        return Math.Abs(goal - next) <= snapDistance ? goal : next;
+        var next = from + ((target - from) * ShareOfDistancePerTick);
+        var snapDistance = Math.Max(SnapAbsoluteMbps, SnapRelative * Math.Abs(target));
+        return Math.Abs(target - next) <= snapDistance ? target : next;
     }
 }

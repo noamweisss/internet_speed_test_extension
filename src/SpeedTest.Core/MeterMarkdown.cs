@@ -14,10 +14,10 @@ public static class MeterMarkdown
 
     public const string UploadTitle = "⬆ Upload";
 
-    // Readouts are H2, not H3: the host renders H3 at 12 px normal weight, smaller than body text
-    // (docs/CMDPAL-RENDERING.md §3).
-
-    /// <summary>Title, status, and latency: they change per phase, not per sample.</summary>
+    /// <summary>
+    /// Title, status, and latency: they change per phase, not per sample. The latency readout is H2, not H3: the host
+    /// renders H3 at 12 px normal weight, smaller than body text (docs/CMDPAL-RENDERING.md §3).
+    /// </summary>
     public static string Header(SpeedTestSnapshot snapshot)
     {
         var text = new StringBuilder();
@@ -34,17 +34,16 @@ public static class MeterMarkdown
     }
 
     /// <summary>
-    /// One speed section: the title, the dial (<see cref="GaugeSvg"/>) as a data: image in its own paragraph, and the
-    /// value under it. <paramref name="mbps"/> is the value to show, not necessarily the last measurement, so the
-    /// extension can pass an eased value; null means not measured yet. <paramref name="scale"/> is the dial's maximum,
-    /// chosen by the caller from the measured value (<see cref="SpeedFormatter.ScaleFor(double, double)"/>), so an eased
-    /// value crossing a step does not change it. The alt text is empty: the host shows none, and the number is below.
-    /// Left-aligned: centring the image needs raw HTML (docs/CMDPAL-RENDERING.md §3), and the text stays left anyway.
+    /// One speed section, drawn from <paramref name="frame"/> (<see cref="MeterEasing.Next"/>): the title, the dial
+    /// (<see cref="GaugeSvg"/>) as a data: image in its own paragraph against the frame's scale, and the shown value,
+    /// which may be eased, under it. The readout is H2, not H3, for the reason given on <see cref="Header"/>. The alt
+    /// text is empty: the host shows none, and the number is below. Left-aligned: centring the image needs raw HTML
+    /// (docs/CMDPAL-RENDERING.md §3), and the text stays left anyway.
     /// </summary>
-    public static string Meter(string title, double? mbps, double scale, bool active) =>
+    public static string Meter(string title, MeterFrame frame, bool active) =>
         "## " + title + ActiveMarker(active) + "\n\n"
-        + "![](" + GaugeSvg.DataUri(mbps ?? 0, scale) + ")\n\n"
-        + "## " + SpeedFormatter.Speed(mbps) + "\n";
+        + "![](" + GaugeSvg.DataUri(frame.Shown ?? 0, frame.Scale) + ")\n\n"
+        + "## " + SpeedFormatter.Speed(frame.Shown) + "\n";
 
     /// <summary>The connection line. Its fields come from the server and are escaped before they touch the markdown.</summary>
     public static string Footer(SpeedTestSnapshot snapshot)

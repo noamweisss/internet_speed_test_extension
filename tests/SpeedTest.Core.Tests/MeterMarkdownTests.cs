@@ -74,7 +74,7 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_Active_MarksTitleAndShowsValue()
     {
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 245.3, 250, active: true);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(245.3, 250), active: true);
 
         Assert.Contains("## ⬇ Download ●", markdown);
         Assert.Contains("\n## 245.3 Mbps\n", markdown);
@@ -83,7 +83,7 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_Inactive_HasNoActiveMarker()
     {
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, 40.1, 50, active: false);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, new MeterFrame(40.1, 50), active: false);
 
         Assert.StartsWith("## ⬆ Upload\n", markdown, StringComparison.Ordinal);
         Assert.Contains("\n## 40.1 Mbps\n", markdown);
@@ -92,7 +92,7 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_WithValue_DrawsTitleThenDialThenReadout()
     {
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 245.3, 250, active: true);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(245.3, 250), active: true);
 
         // The dial is plain markdown in its own paragraph with an empty alt text, the readout an H2 under it; no raw HTML.
         Assert.Equal("## ⬇ Download ●\n\n![](" + GaugeSvg.DataUri(245.3, 250) + ")\n\n## 245.3 Mbps\n", markdown);
@@ -103,7 +103,7 @@ public sealed class MeterMarkdownTests
     public void Meter_WithCallerScale_DrawsDialAgainstThatScale()
     {
         // 9.5 alone would pick the 10 scale and nearly fill the dial; the caller's 100 keeps it where the run left it.
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, 9.5, 100, active: true);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.DownloadTitle, new MeterFrame(9.5, 100), active: true);
 
         Assert.Contains("![](" + GaugeSvg.DataUri(9.5, 100) + ")", markdown);
         Assert.DoesNotContain(GaugeSvg.DataUri(9.5, SpeedFormatter.ScaleFor(9.5)), markdown);
@@ -112,7 +112,7 @@ public sealed class MeterMarkdownTests
     [Fact]
     public void Meter_NotMeasured_ShowsPlaceholderAndEmptyDial()
     {
-        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, null, 0, active: false);
+        var markdown = MeterMarkdown.Meter(MeterMarkdown.UploadTitle, MeterFrame.Empty, active: false);
 
         Assert.EndsWith(")\n\n## —\n", markdown, StringComparison.Ordinal);
         Assert.Contains("![](" + GaugeSvg.DataUri(0, 0) + ")", markdown);
