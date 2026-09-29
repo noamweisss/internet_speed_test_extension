@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Command Palette rendering</title>
-<meta name="description" content="What PowerToys Command Palette can draw for an extension, why the session 4 gauge blinked and jumped, and the options for redrawing it.">
+<meta name="description" content="What PowerToys Command Palette can draw for an extension, why the session 4 gauge stepped and probably flashed, and the options for redrawing it.">
 <style>
 :root {
   --bg: #fafaf7; --surface: #ffffff; --ink: #1a1a1f; --ink-soft: #555560; --rule: #e7e5df;
@@ -81,9 +81,9 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 <body>
 <div class="page">
 <header>
-  <h1>What Command Palette can draw, and why the gauge blinked</h1>
+  <h1>What Command Palette can draw, and why the gauge looked wrong</h1>
   <p class="sub">Research for plan item 5.1 · PowerToys 0.101 · 29 September 2026 · the agents' version with every citation is <code>docs/CMDPAL-RENDERING.md</code></p>
-  <p class="tldr"><strong>Short version.</strong> Command Palette never moves a value for an extension: no easing, no transitions, no SVG animation (an animated GIF plays its own frames, untested here, and cannot show a value). Each frame is the extension replacing a value, the host reading it back over COM, waiting up to 40 ms, and rebuilding the whole markdown block on its UI thread. Images inside markdown are recreated empty and filled a moment later, and a <code>data:</code> image cannot take the host's size hints. That is why the arc jumped between measurements and flashed on every update. The fix is on our side: ease the value in the extension, put the moving part in its own small block, and prefer text or a fixed-size picture over a regenerated one. Details and options below.</p>
+  <p class="tldr"><strong>Short version.</strong> Command Palette never moves a value for an extension: no easing, no transitions, no SVG animation (an animated GIF plays its own frames, untested here, and cannot show a value). Each frame is the extension replacing a value, the host reading it back over COM, waiting up to 40 ms, and rebuilding the whole markdown block on its UI thread. Images inside markdown are recreated empty and filled a moment later, and a <code>data:</code> image cannot take the host's size hints. That is why the arc jumped between measurements, and the likely reason it looked wrong on every update (a blank interval per rebuild, inferred from the source, not yet observed). The fix is on our side: ease the value in the extension, put the moving part in its own small block, and prefer text or a fixed-size picture over a regenerated one. Details and options below.</p>
 </header>
 
 <div class="layout">
@@ -147,8 +147,8 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 
 <p>Three consequences follow directly. Nothing smooths between two values, so the arc moves in steps the size of the measurement interval. Every update rebuilds the whole block, so a picture inside it disappears for at least a frame. And no update can be faster than the 40 ms batch, so the host cannot show more than about 25 distinct frames a second. The technical document suggests 5 to 10 a second as the range to try; whether the eye gains anything above that is untested, since every extra frame is one more full rebuild.</p>
 
-<h2>2. See it: steps and blinks, then the fixes</h2>
-<p>The left gauge behaves like the session 4 build: it moves only when a measurement arrives and goes blank for a moment on each update. The right gauge applies the two changes that are ours to make. Both receive the same measurements.</p>
+<h2>2. See it: steps and blank frames, then the fixes</h2>
+<p>The left gauge behaves as the source says the session 4 build should: it moves only when a measurement arrives and goes blank for a moment on each update (the blank is inferred; whether it was visible on your PC is untested). The right gauge applies the two changes that are ours to make. Both receive the same measurements.</p>
 
 <figure class="demo" id="demo">
   <div class="gauges">
@@ -202,7 +202,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 <h2>4. Why the session 4 gauge looked wrong</h2>
 <ul>
   <li><strong>Steps.</strong> The arc changed only when a measurement arrived, every 200 ms. Nothing in the host eases values.</li>
-  <li><strong>Blink.</strong> Each update rebuilt the block and recreated the picture empty; it came back after decoding. Five times a second.</li>
+  <li><strong>Blank interval (inferred).</strong> Each update rebuilt the block and recreated the picture empty; it came back after decoding, five times a second. Whether that showed as a visible blink is untested.</li>
   <li><strong>Size.</strong> A <code>data:</code> picture gets no size hints, is capped at 256 pixels wide, and is rasterised with the width scaled to the monitor's DPI but the height not. What you saw depends on the display scaling.</li>
   <li><strong>Small numbers.</strong> The value sat under a third-level heading, which the host renders at 12 px in normal weight, smaller than body text.</li>
   <li><strong>One big block.</strong> The heading, status, latency, both meters and the ISP line were re-parsed for every arc movement.</li>
@@ -250,7 +250,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
 </ul>
 
 <h2>8. How sure is all this</h2>
-<p>Five research agents read the PowerToys source at the 0.101 release tag and at the latest 0.101 build, which bracket the 0.101.2652 your VM runs (every file cited is identical across them), and at today's main, the markdown control's source, the Adaptive Cards renderer's source, the Microsoft Learn pages, the release notes, and the relevant issues and pull requests. Every claim in the technical document carries a citation and a label: verified in source or documentation, inferred from it, or unknown. Nothing was run on Windows. The seven things only a Windows run can answer are listed at the end of the technical document; the first is whether the blink is visible at two to four updates a second.</p>
+<p>Five research agents read the PowerToys source at the 0.101 release tag and at the latest 0.101 build, which bracket the 0.101.2652 your VM runs (the rendering files cited are identical across them; the one toolkit file that changed in 0.101.2652 is cited at the later tag), and at today's main, the markdown control's source, the Adaptive Cards renderer's source, the Microsoft Learn pages, the release notes, and the relevant issues and pull requests. Every claim in the technical document carries a citation and a label: verified in source or documentation, inferred from it, or unknown. Nothing was run on Windows. The seven things only a Windows run can answer are listed at the end of the technical document; the first is whether the blink is visible at two to four updates a second.</p>
 
 </main>
 
@@ -259,7 +259,7 @@ footer { margin-top: 3rem; font-family: var(--sans); font-size: .85rem; color: v
   <dl>
     <dt>Host</dt><dd>The Command Palette window in PowerToys. It draws everything; the extension only sends data.</dd>
     <dt>COM hop</dt><dd>A call across the two processes. Setting a property costs two: the event out, the read back.</dd>
-    <dt>40 ms batch</dt><dd>The host waits 40 ms after a change and applies everything that arrived, once.</dd>
+    <dt>40 ms batch</dt><dd>The host waits 40 ms after a change and hands everything that arrived to the UI thread in one go; each change still costs its own rebuild.</dd>
     <dt>Markdown block</dt><dd>One <code>MarkdownContent</code> on a content page; each is rebuilt on its own.</dd>
     <dt>Blank frame</dt><dd>The moment after a rebuild when a picture exists but has not been decoded yet.</dd>
     <dt><code>data:</code> image</dt><dd>A picture embedded in the text itself, base64-encoded. Works, but takes no size hints.</dd>

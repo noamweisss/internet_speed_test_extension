@@ -12,7 +12,7 @@ run on Windows: every statement comes from reading source and documentation, and
 
 | Source | Revision read | Why this revision |
 |---|---|---|
-| `microsoft/PowerToys`, `src/modules/cmdpal/` | tag `v0.101.2362.0` (2026-08-25, the 0.101 release), tag `v0.101.2684.0` (2026-09-26, the latest 0.101 build), and `main` at `353caee0` (2026-09-29) | The owner's VM runs PowerToys 0.101.2652.0 (session 3 and 4 hand-offs), which lies between the two tags. Every file cited below was diffed between the release tag, the latest tag and `main`; where the text says "identical", the `main` line numbers apply to the owner's build as well. Post-0.101 changes are marked as such. |
+| `microsoft/PowerToys`, `src/modules/cmdpal/` | tag `v0.101.2362.0` (2026-08-25, the 0.101 release), tag `v0.101.2684.0` (2026-09-26, the latest 0.101 build), and `main` at `353caee0` (2026-09-29) | The owner's VM runs PowerToys 0.101.2652.0 (session 3 and 4 hand-offs), which lies between the two tags. The files cited for the markdown, image, icon, list, details, grid and card paths were diffed between the release tag, the latest tag and `main` and are identical, so their `main` line numbers apply to the owner's build; files that changed inside the 0.101 line are cited at the later tag and say so (the toolkit's `EventHelpers.cs`, PR #50485, in 0.101.2652). Post-0.101 changes are marked as such. |
 | `CommunityToolkit/Labs-Windows`, `components/MarkdownTextBlock` | `main` at `89328136` (last change 2026-01-15) | PowerToys 0.97 to 0.101 pin `CommunityToolkit.Labs.WinUI.Controls.MarkdownTextBlock` 0.1.260116-build.2514 (`Directory.Packages.props:32`), built the day after that last change. |
 | `microsoft/AdaptiveCards`, `source/uwp` and `source/shared` | `main` at `8b62e1d5` (2026-08-27) | PowerToys pins `AdaptiveCards.Rendering.WinUI3` 2.2.4-beta (2026-01-07), which has no git tag; `main` is the nearest source. Minor drift is possible. |
 | Microsoft Learn, Command Palette extension pages | fetched 2026-09-29 | `learn.microsoft.com/windows/powertoys/command-palette/…` |
@@ -187,7 +187,7 @@ creates a new image, re-decodes the data URI, parses the SVG twice (size probe a
 
 ## 5. The update pipeline: from `Body = …` to pixels
 
-Verified end to end (PowerToys tag `v0.101.2684.0`, identical to the 0.101 release and so to the owner's 0.101.2652 for every file named;
+Verified end to end (PowerToys tag `v0.101.2684.0`; every file named is identical to the 0.101 release except the toolkit's `EventHelpers.cs`, which 0.101.2652 changed, so all of it applies to the owner's 0.101.2652;
 Labs build 2514).
 
 1. **Extension.** `MarkdownContent.Body { set => SetProperty(ref field, value); }`
@@ -228,9 +228,10 @@ Labs build 2514).
    raises it from inside `GetContent()` recurses; this is the freeze session 2 hit. The content page has
    none of the generation guards `ListViewModel` has.
 
-**Cadence (Inferred from the above; no benchmark exists anywhere).** Two sets within 40 ms are merged into
-one UI pass; the pipeline cannot show more than about 25 distinct frames per second; each frame is a full
-rebuild; nobody in the PowerToys repository drives a `MarkdownContent` faster than 1 Hz (the samples update
+**Cadence (Inferred from the above; no benchmark exists anywhere).** Two sets within 40 ms share one
+dispatcher task, but the names are queued without de-duplication (step 3), so each set can still cost a full
+rebuild while only the last value is seen: the visible-frame ceiling is about 25 per second, the rebuild count
+follows the set count. Each frame is a full rebuild; nobody in the PowerToys repository drives a `MarkdownContent` faster than 1 Hz (the samples update
 list titles at 500 ms and a details body at 1 s; the Performance Monitor updates its card at 1 s). For a
 few-hundred-byte block with one small SVG the CPU cost is plausibly milliseconds, so 5 to 10 Hz is not
 CPU-bound; what limits perceived quality is the discrete steps between measurements and the empty-image
@@ -458,7 +459,8 @@ The markdown column width is whatever `RichTextBlock.ActualWidth` is at runtime 
 | 0.100 (2026-06) | SDK 0.11; parameter pages; tag pills capped at three |
 | 0.101.2362 (2026-08-25) | Live details pane (PR #48070); toast icons and buttons; Adaptive Cards packages upgraded; SDK 0.12 (NuGet 0.12.260812002) |
 | 0.101.26xx previews (Sept) | `IDetails2`, `IFormContent2`, failing handlers no longer block updates (#50483) |
-| `main`, unreleased | generated icon protocols (#50190 merged, #50191 open); in-place Adaptive Card updates (#50211, 0.102); graph content (#50443, draft) |
+| `main` (2026-09-29), unreleased | generated icon protocols `\|Swatch\|` and `\|Initials\|` (#50190, merged 2026-09-29); `\|AppIcon\|` (#50188); split glyph and image caches (#50187); `IconBox` slot reuse (#50189) |
+| proposed, not on `main` | in-place Adaptive Card updates (#50211, open, approved, milestone 0.102); `\|Svg\|` and `\|ThemedSvg\|` icons (#50191, open); graph content (#50443, draft, no milestone) |
 
 The extension template pins `Microsoft.CommandPalette.Extensions` 0.11.260520004; this repository builds
 against 0.9.260303001 (session 4). The Learn reference index (dated 2025-02) does not list `IImageContent`,
@@ -470,8 +472,9 @@ The session 4 build (`GaugeSvg`, commit `6034b22`; ADR-0011) embedded a 220×121
 inside the one markdown block, regenerated on every progress report (200 ms). Against §4 and §5:
 
 1. **Discrete steps.** The arc moved only when a measurement arrived; nothing in the host interpolates.
-2. **A blank frame per update.** Every `Body` set rebuilt the whole block and recreated the image empty
-   (§5 step 5); at 5 Hz the arc blinked and the text under it moved.
+2. **A blank interval per update (structure Verified, visibility Inferred).** Every `Body` set rebuilt the
+   whole block and recreated the image empty (§5 step 5). Whether that shows as a blink at 5 Hz is untested
+   (§16 item 1); the owner reported the animation as "not very good" without naming a blink.
 3. **No size control.** A `data:` image gets no hints, `Stretch = None`, a 256-DIP cap, a DPI-scaled
    rasterisation width and an unscaled height (§4). The result depends on the monitor's scaling.
 4. **Small readouts.** The value sat under `###`, which the host renders at 12 px normal weight (§3).
@@ -489,7 +492,7 @@ code. "Smooth" means no blank frame; "eased" means the value moves between measu
    drive the display from a timer (100 to 200 ms) that eases the shown value toward the last measurement,
    and set `Body` only when the rendered string changes (`SetProperty` already skips equal strings).
    Mechanism: §5 steps 1 to 3. Removes the jumping regardless of how the meter is drawn. Risk: none
-   beyond one more timer; never tick below 40 ms (merged) and keep 100 ms as the floor for headroom.
+   beyond one more timer; sets closer than 40 ms still each rebuild while only the last one shows, so keep 100 ms as the floor for headroom.
 2. **Split the page into blocks; churn only the moving one.** Return the same `MarkdownContent` instances
    from `GetContent()`: a static block (heading, status, latency, ISP line) and one block per meter, or one
    block for both meters. Only a block whose `Body` changed is rebuilt (§5 step 4, one `MarkdownTextBlock`
