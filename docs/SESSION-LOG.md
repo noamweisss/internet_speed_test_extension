@@ -4,6 +4,43 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Review workflow OIDC fix — 2026-09-29 — branch `fix/review-workflow-oidc-token` (local session on the owner's laptop)
+
+**Why**
+- The first run of "Review (Claude)" (PR #19) failed with "App token exchange failed: 401 Unauthorized - Invalid
+  OIDC token". The action's OIDC-to-app-token exchange rejects `pull_request_target` runs (anthropics/claude-code-action
+  issue 713), the event this workflow uses on purpose (ADR-0012). Session 5 (branch `docs/cmdpal-rendering-research`)
+  found the cause and left the change to the owner; the owner asked for it in this session.
+
+**Done**
+- `.github/workflows/review-claude.yml`: the action step passes `github_token: ${{ github.token }}`, which makes the
+  action skip the exchange; `id-token: write` removed. `docs/REVIEW-PROMPT.md`: setup step 1 says no GitHub App is
+  needed; the removal line drops "uninstall the app". ADR-0014 supersedes the token and permission points of
+  ADR-0012, which is not edited (`docs/CONVENTIONS.md`; Codex round 1 asked for the superseding ADR).
+- Checked first at the pinned commit 756cc22e: `setupGitHubToken()` in `src/github/token.ts` returns
+  `OVERRIDE_GITHUB_TOKEN` before any OIDC request; `action.yml` already passes `github.token` as
+  `DEFAULT_WORKFLOW_TOKEN`, so the action process gets nothing new.
+- PR [#20](https://github.com/noamweisss/internet_speed_test_extension/pull/20). Session 5's entry on PR #19 records
+  the outcome too (ca28624). The commit message of f4a5ef2 calls the function `setGitHubToken()`; the real name is
+  `setupGitHubToken()`.
+
+**Verified**
+- The workflow parses (PyYAML); job permissions `contents: read`, `pull-requests: write`, `issues: read`.
+  `scripts/check.sh all` green.
+- Codex round 1 on f4a5ef2, 3 findings: P1 "no `Guard-Change` trailer" on a commit `bb90775` that is not in this
+  branch (false: f4a5ef2 carries the trailer, `git interpret-trailers --parse` shows it; answered once, no change),
+  P1 "superseding ADR" (fixed: ADR-0014), P1 "hand-off not updated" (already fixed by a1d2a25, pushed after the
+  review started). One round by the owner's instruction: no re-review requested.
+
+**Not verified**
+- A real run of the reviewer with the workflow's own token: the workflow runs from `main`, so PR #20 gets only the
+  Codex review.
+
+**Next**
+- Owner: merge PR #20 with a merge commit, then edit PR #19's body or push to it; done when a comment headed
+  "Independent review (Claude)" appears there. PR #19 and PR #20 both add an entry at the top of this file, so the
+  second one to merge needs a small conflict resolution (keep both entries, newest first).
+
 ## Session 4a — 2026-09-29 — branch `chore/release-v0.1.1` (unplanned, local session on the owner's laptop)
 
 **Why**
