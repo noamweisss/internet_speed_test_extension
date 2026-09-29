@@ -16,7 +16,7 @@ and provable:
 | Privacy | Public IP and ISP are shown to the user, never logged or persisted. Only settings are persisted, by the host. |
 | Supply chain | NuGet packages: only those from the template plus xUnit for tests. Central version pinning in `Directory.Packages.props`. `NuGetAuditMode` on. New packages need an ADR. |
 | Capabilities | `internetClient` and `runFullTrust` only (`Package.appxmanifest`). |
-| Secrets | The extension has none: no keys, no certificates, no env files (the hooks refuse them, R2, R4). The repository holds none either: the review workflow that held one is gone (ADR-0018). |
+| Secrets | The extension has none: no keys, no certificates, no env files (the hooks refuse them, R2, R4). No workflow reads a secret since ADR-0018; the `claude-review` environment and its token, left over from ADR-0012, are deleted by the owner once PR #26 is merged. |
 
 ## Enforced rules (ids printed when a rule fires)
 

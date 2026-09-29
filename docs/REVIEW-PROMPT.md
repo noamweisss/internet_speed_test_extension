@@ -19,7 +19,8 @@ Verified 2026-09-29 against CodeRabbit's plans page and this repository's histor
 
 ## The four controls
 
-1. `.coderabbit.yaml` at the repository root. Wins over everything. `profile` (`chill` for fewer findings,
+1. `.coderabbit.yaml` at the repository root. It overrides the CodeRabbit dashboard settings and says how the
+   bot runs; the rules themselves stay in `AGENTS.md`, which wins when the two disagree. `profile` (`chill` for fewer findings,
    `assertive` for more), `auto_review.enabled`, `review_status` (the "review skipped" comment on every PR),
    `path_instructions` (the checklist per path), `chat.auto_reply`. A rule file: a change to it travels alone
    (R14).

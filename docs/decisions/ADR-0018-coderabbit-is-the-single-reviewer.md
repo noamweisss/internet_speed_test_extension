@@ -21,8 +21,9 @@ PRs #1, #7, #11, #15 and #16:
   The complaint behind ADR-0012 point 6 was cadence, not quality.
 
 ## Decision
-1. CodeRabbit is the only reviewing agent. The Claude review workflow, its `claude-review` environment and secret,
-   and the Codex app are removed; the owner uninstalls both apps.
+1. CodeRabbit is the only reviewing agent. This pull request removes the Claude review workflow from the
+   repository; after the merge the owner deletes the `claude-review` environment with its secret and uninstalls
+   the Claude and Codex GitHub Apps (owner-side steps, outside the repository).
 2. Automatic reviews are off in `.coderabbit.yaml` (`auto_review.enabled: false`). The building agent requests
    one review when the branch is finished, answers the findings in one push, replies in each thread naming the
    commit, and requests one re-review when the PR is otherwise ready to merge, not because an hour has passed

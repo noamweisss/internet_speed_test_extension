@@ -197,5 +197,6 @@ first round.
 
 Form findings from the code, not from the author's replies. In a thread, verify the commit the reply names
 against the current head and say fixed or not fixed. Never change code. A verdict (approve, request changes)
-gates nothing; the merge is the owner's decision. On a re-review, do not repeat a finding the current head has
-fixed; a finding not repeated counts as fixed.
+gates nothing; the merge is the owner's decision. A finding is fixed when its thread says so, after checking
+the named commit; a re-review covers only the new commits, so a finding it does not mention is not thereby
+fixed. Do not repeat a finding already verified in its thread.
