@@ -1,6 +1,7 @@
 # ADR-0012: Independent review agents and commit identities
 
-Status: accepted · Date: 2026-09-28
+Status: accepted · Date: 2026-09-28 · Points 1 to 4 and 6 to 9 superseded by ADR-0018 on 2026-09-30 (point 5,
+commit identity, stands)
 
 ## Context
 CodeRabbit is the only reviewer the repository configures, and on the free plan it reviews this repository only

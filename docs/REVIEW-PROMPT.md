@@ -1,117 +1,66 @@
-# Review prompt for any reviewer agent
+# Review runbook: CodeRabbit, and how the owner steers it
 
-Paste the block below into any code-review agent (Codex, Gemini, Claude, Copilot, a human) after replacing
-`<PR>`. It gives every reviewer the same job, so their answers can be compared. The reviewer must look at the
-code, not at other reviewers' threads or the author's replies; independence is the point.
+CodeRabbit reviews pull requests on request (ADR-0018). Its brief is the "Code Review Rules" section of
+`AGENTS.md`, which it reads on its own, plus the path instructions in `.coderabbit.yaml`. The building agent's
+steps are `AGENTS.md` §4 step 6. This file is the owner's side: the limits, the controls, how to read a result,
+when to stop.
+
+## The three limits
+
+Verified 2026-09-29 against CodeRabbit's plans page and this repository's history.
+
+- Trigger. A public repository under 10 stars gets no automatic review. Someone comments `@coderabbitai review`
+  or ticks "Trigger review" in the bot's status comment. `.coderabbit.yaml` also turns automatic reviews off,
+  so this stays true above 10 stars.
+- Review slot. One review per hour on this repository, shared by every open pull request. A trigger inside the
+  hour is refused with "Review rate limited" and costs nothing. `@coderabbitai rate limit` shows the slot
+  without spending it.
+- Chat. Replies in review threads have their own allowance, 25 per hour. They never touch the slot.
+
+## The four controls
+
+1. `.coderabbit.yaml` at the repository root. It overrides the CodeRabbit dashboard settings and says how the
+   bot runs; the rules themselves stay in `AGENTS.md`, which wins when the two disagree. `profile` (`chill` for fewer findings,
+   `assertive` for more), `auto_review.enabled`, `review_status` (the "review skipped" comment on every PR),
+   `path_instructions` (the checklist per path), `chat.auto_reply`. A rule file: a change to it travels alone
+   (R14).
+2. Comments on the pull request: `@coderabbitai review` (new commits only), `full review` (everything again),
+   `pause` and `resume`, `resolve` (closes every CodeRabbit thread; use only when you agree), `rate limit`,
+   `configuration` (prints the settings it resolved, which proves the file is read), `help`.
+3. The "Code Review Rules" section of `AGENTS.md`. Also a rule file.
+4. Learnings, in the CodeRabbit app. The bot stores one when a thread reply teaches it something and applies it
+   to later reviews of similar code. Delete a learning when the code it names is gone.
+
+## Reading a result
+
+- Findings arrive 5 to 15 minutes after the trigger, as review threads. The bot's Critical, Major, Minor and
+  Trivial are `AGENTS.md`'s Blocker, Major, Minor and Nit. The five safety answers are in its summary. The
+  "Summary by CodeRabbit" it writes into the PR description is a walkthrough, not a verdict.
+- The bot also posts Approve or Request changes. Neither gates a merge: the `main` ruleset requires resolved
+  threads, not approvals. You merge on a green CI and the findings you chose to have fixed.
+- A fix is confirmed in the thread. The building agent pushes, then replies naming the commit; the bot checks
+  the head, answers fixed or still an issue, and resolves what it agrees with. A thread it leaves open is
+  yours: resolve, dismiss, or hand it back to the agent. Order matters: the bot believes the reply, so "not yet
+  pushed" leaves the thread open for good.
+- When to stop (`AGENTS.md` §4 step 6, ADR-0016): the first review, one fix push, one re-review once the PR is
+  otherwise ready to merge. Another round only for a Blocker or Major in code, a safety finding, or a thread
+  you hand back. A reviewer that reads prose always finds a sentence that lags a change; that is not a reason
+  for a round. "Agree" means no open Blocker or Major, not a round with zero comments.
+- Rule changes come alone (R14): a PR that changes a rule or guard file changes nothing else except the session
+  log, the plan, the changelog and ADRs. The "Safety impact declared" CI check fails and names the files to
+  move.
+
+## A prompt for a second opinion
+
+To have another model review a pull request by hand (Gemini, Copilot, a Claude chat), paste this with `<PR>`
+replaced. It gives the outside reviewer the same job as CodeRabbit, so the answers can be compared.
 
 ```
 You are reviewing pull request <PR> in the GitHub repository noamweisss/internet_speed_test_extension.
 Review the diff between the base branch (main) and the PR's head. Read docs/SAFETY-CONTRACT.md,
-docs/SECURITY.md, and the "Code Review Rules" section of AGENTS.md first. Do not read other reviewers' comments
-or the author's replies before forming your own findings. Do not change any code.
-
-Part 1. Answer these five questions with Yes/No and a file:line for every Yes:
-1. Can the extension reach any host other than speed.cloudflare.com?
-2. Does it read, write, or delete files, registry keys, or processes?
-3. Does it store, log, or send anything about the user (IP, ISP, location, results)? (ADR-0007 accepts the
-   metadata every HTTPS request carries; anything beyond that is a Yes.)
-4. Does it add a dependency, a Windows capability, or weaken a guard (.githooks, .claude, scripts, workflows)?
-5. Is any network input used without bounds on size, time, or format?
-A Yes without a linked ADR in docs/decisions/ is a Blocker.
-
-Part 2. List correctness, stability, security, and maintainability findings. Maintainability means the "Design
-and maintainability" rules in AGENTS.md (wrong layer, missing test, duplication, speculative structure, hot-path
-work, waste on the measurement path, state outside the session, poor names); each of those is Major. For each
-finding: severity (Blocker, Major, Minor, Nit), file:line, what goes wrong and under which input (or what gets
-harder to change, and the smaller alternative), and the smallest fix. Verify every finding against the actual
-code before reporting it. Style remarks are Nits.
-
-Part 3. Documentation and instructions, as a separate list, never mixed with Part 2: apply the "Documentation
-and instructions" rules in AGENTS.md (a document that contradicts the code, another document, or an ADR; an
-instruction an agent or human could read two ways or that names something that does not exist; a behaviour or
-guard change without its docs, changelog, or ADR; a hand-off note or plan status that does not match the change).
-Severity Major when it could send an agent or a human the wrong way, Minor otherwise, with file:line and the fix.
-
-Part 4. One-line verdict: "No blocking findings" or "Blocking findings: <count>".
-
-Keep it short: Part 1 on one line, one bullet per finding ("**Major** file:line: what goes wrong. Fix: ..."),
-"None." for an empty part, no introduction, no summary of the pull request, nothing said twice.
-
-Post the result as a review on the pull request (with the gh CLI: gh pr review <PR> --comment --body-file
-<file>), or return it as text for a human to post. Do not approve or request changes on behalf of any other
-reviewer.
+docs/SECURITY.md, and the "Code Review Rules" section of AGENTS.md first, and apply every rule there. Do not
+read other reviewers' comments or the author's replies before forming your own findings. Do not change any code.
+Answer the five safety questions of docs/SAFETY-CONTRACT.md section 3 on one line, then list code findings and,
+separately, documentation findings, one bullet each: severity (Blocker, Major, Minor, Nit), file:line, what
+goes wrong and under which input, the smallest fix. End with "No blocking findings" or "Blocking findings: N".
 ```
-
-A pull request whose diff holds only documents that state no rule (`.md` files at the repository root or
-under `docs/`, and `.html` files under `docs/`, none of them a rule file, which are exactly `AGENTS.md`,
-`CLAUDE.md`, anything under `.github/`, `docs/SAFETY-CONTRACT.md`, `docs/SECURITY.md`, this file,
-`docs/CONVENTIONS.md` and `docs/TESTING.md`; the plan, the hand-off log, the changelog, the ADRs and research
-documents are documents) is reviewed with the same prompt; the "Documentation-only pull requests" rules in
-`AGENTS.md` say what Parts 1 to 3 then contain, so a reviewer does not ask for tests or ADRs for a document. A
-diff with anything else in it (a rule file, a workflow, a script, a guard file, a project file, code) is
-reviewed under every rule, whatever else it contains.
-
-## Who reviews, and when
-
-| Reviewer | Identity on GitHub | Trigger | Where its rules live |
-|----------|-------------------|---------|----------------------|
-| Codex (owner's ChatGPT plan) | `chatgpt-codex-connector` | automatic on every PR; `@codex review` to repeat (when: `AGENTS.md` §4) | `AGENTS.md` "Code Review Rules" |
-| Claude (owner's Claude plan) | `github-actions[bot]`, comment headed "Independent review (Claude)" | automatic on open, push, ready-for-review; re-run the workflow to repeat (when: `AGENTS.md` §4) | `.github/workflows/review-claude.yml` (same questions, input as files) |
-
-The Claude workflow reviews pull requests into `main` only (its token lives in an environment restricted to
-`main`). Neither reviewer shares context with the agent that wrote the change or with the other (ADR-0012). Codex posts P0 and
-P1 findings by default, as inline comments, plus the P2 findings the "Code Review Rules" in `AGENTS.md` ask for
-(documentation); anything else below P1 needs an explicit rule there. The Claude
-workflow and its settings always come from `main` (`pull_request_target`); the PR's files are checked out into a
-side directory as data, so a PR cannot change its own review or reach the token. The reviewer has no shell:
-a trusted step writes the diff, the PR metadata, and the reviewer's own earlier comments to files, the reviewer
-reads and writes files only, and another trusted step posts `review.md` after checking it does not contain the
-token. Drafts wait until ready; fork PRs get no Claude review (their authors have no write access here).
-A Dependabot PR is reviewed when GitHub grants the `claude-review` environment to its run; if such a PR shows
-the job's "not set" line, it did not, and that PR is left to Codex (step 5 below). A review is also re-run
-when the PR body is edited, since the "Safety impact" section lives there.
-
-### Setting up the Claude review workflow (owner, once)
-
-1. No GitHub App is needed. The workflow hands the action its own token (`github_token`), so the exchange of the
-   runner's OIDC token for a Claude GitHub App token never happens; that exchange rejects `pull_request_target`
-   runs (anthropics/claude-code-action issue 713), the event this workflow uses. An installed app is unused (ADR-0014).
-2. On a machine with Claude Code logged in to the subscription, run `claude setup-token` and copy the token.
-3. Repository Settings → Environments → New environment, name `claude-review`. Under "Deployment branches and
-   tags" choose "Selected branches and tags" and add `main`. Then, in that environment, "Add environment
-   secret": name `CLAUDE_CODE_OAUTH_TOKEN`, value the token. Never paste the token anywhere else, and do not
-   store it as a repository secret: a repository secret is readable by a workflow on any branch, an
-   environment secret restricted to `main` is not.
-4. Push to any open PR into `main`, or re-run the "Review (Claude)" workflow. A comment headed
-   "Independent review (Claude)" appears on the PR within a few minutes, posted by `github-actions[bot]`.
-5. Optional, for Dependabot PRs: if their runs log "CLAUDE_CODE_OAUTH_TOKEN is not set", GitHub is withholding
-   the environment from that run; leave those PRs to Codex.
-
-To pause it, delete the environment secret: the job then logs "not set" and exits green. To remove it, delete the workflow
-file and the secret.
-
-## Reading the results (owner)
-
-- Two different models answering the five questions the same way is the signal to look for. Their agreement
-  means "no known problem", not "correct".
-- Hand Blockers and Majors to the building agent: "address the review by <reviewer> on PR <PR>". Nits are optional.
-- When to stop (`AGENTS.md` §4, ADR-0016): the first review, one fix push, one re-review. That ends the loop,
-  unless a round reports a Blocker or Major in code or a safety finding (a Yes to one of the five questions, or
-  a weakened guard). Documentation findings after the fix round are fixed if cheap and answered once; the
-  building agent does not request another review for them and reports the PR as ready; you merge. A reviewer
-  that reads prose will always find a sentence that lags a change; that is not a reason for a round. Asking the
-  reviewers to "agree" means no open Blocker or Major, not a round with zero comments. Threads left open after
-  the stop are yours to resolve or dismiss.
-- Rule changes come alone: a PR that changes a rule or guard file changes nothing else except the session log,
-  the plan, the changelog and ADRs (R14; the "Safety impact declared" CI check fails and names the files to
-  move). Your merges of `main` into a branch and Dependabot PRs pass it.
-- How a reviewer confirms a fix: neither replies in threads. The one re-review after the fix push does it
-  (`@codex review`, and the push itself for Claude). The Claude workflow opens its re-review with a count of
-  fixed findings and one line per finding not fixed (it gets its own earlier comments as a file), and reports
-  only new Blockers and Majors; Codex simply does not repeat what is fixed. A review of the fixed commit that does not repeat the finding is agreement, and then the building agent
-  resolves the thread, naming that review (`AGENTS.md` §2).
-- Every reviewer posts comments, never "Request changes" (the Claude prompt forbids it; Codex only
-  comments). Nothing an agent posts blocks a merge: the merge is your
-  decision, taken on a green CI and on the findings you chose to have fixed. Keep "Require conversation
-  resolution before merging" on in the `main` ruleset: with the resolution rule above, an open thread means
-  "the reviewer that found this has not yet seen it fixed", which is the one gate worth keeping.

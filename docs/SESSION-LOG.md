@@ -4,6 +4,46 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## CodeRabbit is the single reviewer — 2026-09-30 — branch `chore/coderabbit-only-review` (local session on the owner's laptop)
+
+**Why**
+- The owner asked for a review stack they can understand and steer: one product, controlled by plain files.
+  CodeRabbit comes back, the Claude workflow and Codex go (ADR-0018). The owner did the GitHub-side work by hand
+  in this session, with the agent instructing; the agent drafted the repository changes.
+
+**Done**
+- PR #25 (merged by the owner): `.coderabbit.yaml` restored with automatic reviews off, the reviewer pointed at
+  the "Code Review Rules" section of `AGENTS.md`, the five safety questions and the guard instruction as path
+  instructions, `review_status: false` so the bot no longer posts "review skipped" on every PR. CodeRabbit
+  reviewed it on request (2 Minor findings, one fixed, one withdrawn by the bot after it read R14) and approved.
+- This PR (R14: rule files only): `.github/workflows/review-claude.yml` deleted; `docs/REVIEW-PROMPT.md`
+  rewritten as the owner's runbook (limits, controls, reading a result, a prompt for a second opinion);
+  `AGENTS.md` §2 (R14 list gains `.coderabbit.yaml`, the thread rule now says the reviewer resolves), §3, §4
+  step 6 (the CodeRabbit recipe: one trigger per finished branch, one fix push, reply per thread with the commit
+  after the push, one re-review when the PR is otherwise ready), "Code Review Rules" intro and Conduct;
+  `scripts/safety-impact.sh`
+  R14 list; `docs/SECURITY.md`, `docs/SAFETY-CONTRACT.md`, `docs/CONVENTIONS.md` describe one reviewer;
+  `docs/PLAN.md` 4.0; ADR-0018; ADR-0012, ADR-0014 and ADR-0016 status lines.
+- Verified before deciding (recorded in ADR-0018): the 10-star rule and the "1-10 per hour by star count" OSS
+  allowance are on CodeRabbit's plans page; this repository gets 1 per hour, shared across PRs (PR #16 was
+  refused three times while PR #15 held the hour on 2026-09-28); a thread reply naming a pushed commit makes the
+  bot check the head and resolve (PR #15, `7fa6516`), a reply saying "not yet pushed" leaves the thread open.
+  The session 1 note below ("reply on each thread before pushing") had the order backwards.
+- Owner's private explainer with the evidence and a simulator: `docs/internal-docs/` (gitignored).
+
+**Verified**
+- `scripts/check.sh all` green in the worktree. R14 replayed on this branch's diff against `main`: rule files
+  plus the log, plan, changelog and ADRs only.
+
+**Not verified**
+- A PR reviewed under the new step 6 from start to finish by a building agent; this PR is the first candidate.
+
+**Next**
+- Owner, after merging this PR with a merge commit: uninstall the Codex and Claude GitHub Apps (account
+  Settings → Applications), delete the `claude-review` environment (repository Settings → Environments), and
+  in the CodeRabbit app delete any learning that names code that no longer exists.
+- Plan item 5.1 (the meter design choice) continues on its own branches.
+
 ## Session 5 (release) — 2026-09-29 — branch `chore/release-v0.2.0`
 
 **Why**

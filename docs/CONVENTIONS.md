@@ -43,9 +43,8 @@ Types inside it use the `SpeedTest.Extension` namespace and PascalCase names.
 - Merge to `main` only through a pull request.
 - Who did what (ADR-0012): a human commits as themselves. A building agent commits with author name `Claude Code`
   (set by the `env` block in `.claude/settings.json`) and the owner as committer, plus a `Co-Authored-By` trailer.
-  A reviewing agent never commits; it posts as `chatgpt-codex-connector` (Codex) or as `github-actions[bot]`
-  under the heading "Independent review (Claude)". `git log --format='%h %an | %cn %s'` tells the first two
-  apart. Every identity uses the owner's GitHub noreply address; the real address never goes into a commit.
+  A reviewing agent never commits; it posts as `coderabbitai` (ADR-0018). `git log --format='%h %an | %cn %s'`
+  tells the first two apart. Every identity uses the owner's GitHub noreply address; the real address never goes into a commit.
 
 ## Pull requests
 

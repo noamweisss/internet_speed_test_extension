@@ -9,7 +9,7 @@ set -u
 BASE="$1"; HEAD="$2"
 # --no-renames lists both sides of a rename, so moving a rule or sensitive file out of its path still counts.
 CHANGED="$(git diff --no-renames --name-only "$BASE" "$HEAD")"
-RULE_FILES='^(AGENTS\.md$|CLAUDE\.md$|\.github/|\.githooks/|\.claude/|scripts/|docs/(SAFETY-CONTRACT|SECURITY|REVIEW-PROMPT|CONVENTIONS|TESTING)\.md$)'
+RULE_FILES='^(AGENTS\.md$|CLAUDE\.md$|\.coderabbit\.yaml$|\.github/|\.githooks/|\.claude/|scripts/|docs/(SAFETY-CONTRACT|SECURITY|REVIEW-PROMPT|CONVENTIONS|TESTING)\.md$)'
 HANDOFF_FILES='^(docs/SESSION-LOG\.md$|docs/PLAN\.md$|CHANGELOG\.md$|docs/decisions/)'
 RULES="$(printf '%s\n' "$CHANGED" | grep -E "$RULE_FILES" || true)"
 OTHERS="$(printf '%s\n' "$CHANGED" | grep -vE "$RULE_FILES" | grep -vE "$HANDOFF_FILES" | grep -v '^$' || true)"
