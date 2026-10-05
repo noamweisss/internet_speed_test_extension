@@ -4,6 +4,42 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Publishing explainer; the laptop VM stays the test surface — 2026-10-05 — branch `docs/publishing-explainer` (local session on the owner's laptop)
+
+**Why**
+- The owner has a Dell OptiPlex 3020 (2014, Windows 10 past end of support, TPM 1.2) and asked to plan it as a home
+  server whose first job would be to replace the Hyper-V test VM and to "run the things needed to publish to
+  winget". The session interviewed the owner (base OS, storage, remote access, identities for agents, the test
+  flow) and checked the hardware and publishing facts with a research subagent.
+- Result: nothing in building or signing needs a machine. CI already builds the MSIX; signing is a certificate
+  question; the only road that keeps `docs/SAFETY-CONTRACT.md` is the Store, by browser upload; a self-hosted
+  runner is unsafe on a public repository. The owner decided to keep the laptop VM and drop the server from this
+  project's plans. The server planning notes live in the owner's OptiPlex repository, outside this one.
+
+**Done**
+- `docs/PUBLISHING.md`: words (compile, package, build, MSIX, sign, certificate, Visual Studio), what CI and the
+  install script do today, whose seal Windows trusts, the three roads measured against the contract, what a
+  machine would and would not change, the Store steps for later, sources.
+- ADR-0019: the Hyper-V VM stays the test surface; no self-hosted runner; no build or signing machine; the Store
+  is the publishing road if 4.4 ever goes ahead.
+- `docs/PLAN.md`: item 4.4 rewritten to point at the explainer (the Store is free for individuals since
+  2025-09-10); item 5.5 added. `CHANGELOG.md` Unreleased; `README.md` one sentence under Install.
+
+**Verified**
+- Facts, by a research subagent on 2026-10-05, each against a primary source: the 3020 ships TPM 1.2 with no
+  2.0 upgrade (Dell); the i5-4590 is not on Microsoft's Windows 11 list and the documented bypass is gone;
+  GitHub's self-hosted runner warning (quoted in the explainer); Store individual registration free since
+  2025-09-10 (Windows Developer Blog); CI builds with `dotnet build` and `AppxPackageSigningEnabled=false`
+  (`.github/workflows/ci.yml`).
+- `scripts/check.sh all` on this branch.
+
+**Not verified**
+- Nothing ran on Windows. No code changed.
+
+**Next**
+- Owner: merge with a merge commit, or ask for changes to the explainer's wording.
+- Plan items 5.4 (publish the v0.2.0 draft) and 5.3 (backlog meters) continue as before. 4.4 waits for the owner.
+
 ## CodeRabbit is the single reviewer — 2026-09-30 — branch `chore/coderabbit-only-review` (local session on the owner's laptop)
 
 **Why**

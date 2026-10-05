@@ -21,6 +21,8 @@ Usable, early. v0.2.0 measures latency, jitter, download and upload and shows th
 Download the newest release's `.zip` from the repository's **Releases** page and follow `docs/INSTALL.md`
 (no Visual Studio, no certificate; Windows Sandbox recommended). Builds of unreleased commits are the
 `internet-speed-test-extension-x64-<commit>` artifacts of the CI workflow.
+Not in the Microsoft Store or in `winget` yet: `docs/PUBLISHING.md` explains what that would take and why
+only the Store route fits the safety contract.
 
 ## Development
 

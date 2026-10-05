@@ -5,7 +5,10 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- `docs/PUBLISHING.md`, for the owner: what building, packaging and signing are, what CI does today, and why
+  the Microsoft Store is the only publishing road that keeps the safety contract. Plan item 4.4 stays the owner's
+  decision. ADR-0019: the laptop Hyper-V VM stays the test surface; no build, signing or runner machine.
 
 ## [0.2.0] - 2026-09-29
 
