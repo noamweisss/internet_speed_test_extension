@@ -7,9 +7,11 @@ verified, blocked, next.
 ## Publishing explainer; the laptop VM stays the test surface — 2026-10-05 — branch `docs/publishing-explainer` (local session on the owner's laptop)
 
 **Why**
-- The owner has a Dell OptiPlex 3020 (2014, Windows 10 past end of support, TPM 1.2) and asked to plan it as a home
-  server whose first job would be to replace the Hyper-V test VM and to "run the things needed to publish to
-  winget". The session interviewed the owner (base OS, storage, remote access, identities for agents, the test
+- The owner has a Dell OptiPlex 3020 (2014, Windows 10 Pro, TPM 1.2) and asked to plan it as a home server whose
+  first job would be to replace the Hyper-V test VM and to "run the things needed to publish to winget". Windows
+  10 is past end of support: Microsoft ended support on 2025-10-14 and its consumer Extended Security Updates
+  programme runs to 2027-10-12 (Verified: microsoft.com, "Extended Security Updates", read 2026-10-05). TPM 1.2:
+  Verified, Dell's OptiPlex 3020 datasheet. The session interviewed the owner (base OS, storage, remote access, identities for agents, the test
   flow) and checked the hardware and publishing facts with a research subagent.
 - Result: nothing in building or signing needs a machine. CI already builds the MSIX; signing is a certificate
   question; the only road that keeps `docs/SAFETY-CONTRACT.md` is the Store, by browser upload; a self-hosted
@@ -23,7 +25,18 @@ verified, blocked, next.
 - ADR-0019: the Hyper-V VM stays the test surface; no self-hosted runner; no build or signing machine; the Store
   is the publishing road if 4.4 ever goes ahead.
 - `docs/PLAN.md`: item 4.4 rewritten to point at the explainer (the Store is free for individuals since
-  2025-09-10); item 5.5 added. `CHANGELOG.md` Unreleased; `README.md` one sentence under Install.
+  2025-09-10); item 5.5 added. `README.md`: one sentence under Install. No `CHANGELOG.md` line: the explainer is
+  an owner document, and users see no change (`AGENTS.md`, documentation-only pull requests).
+
+**Review round, 2026-10-07**
+- CodeRabbit, one review on request: 5 Minor findings, all fixed in one push. The changelog line is removed. The
+  WinGet road was described wrongly, here and in plan item 4.4 since 2026-09-28: the template's Inno Setup
+  installer runs per user without elevation (`PrivilegesRequired=lowest`, `{autopf}`) and writes the COM class
+  under HKCU; `docs/PUBLISHING.md` §4, plan 4.4 and ADR-0019 now say so and keep the objections that hold (leaves
+  MSIX, registry writes need an ADR, the `.exe` still needs a seal). Every external claim in the explainer, the
+  ADR, plan 4.4 and this entry carries a confidence label and a source; the explainer's §7 lists them as S1 to S12.
+- Codex posted two threads on the same commit. The owner asked to ignore and resolve them; its P1 was the same
+  WinGet finding and is fixed by the same change.
 
 **Verified**
 - Facts, by a research subagent on 2026-10-05, each against a primary source: the 3020 ships TPM 1.2 with no
@@ -31,6 +44,10 @@ verified, blocked, next.
   GitHub's self-hosted runner warning (quoted in the explainer); Store individual registration free since
   2025-09-10 (Windows Developer Blog); CI builds with `dotnet build` and `AppxPackageSigningEnabled=false`
   (`.github/workflows/ci.yml`).
+- Read on 2026-10-07 for the review round: the template's `winget-publishing.md` and `store-publishing.md` in
+  `.github/skills/publish-extension/references/`; the Inno Setup help on `PrivilegesRequired` and `{autopf}`;
+  Microsoft Learn on package signing certificates, the `winget install` `msstore` source, and the Windows App
+  Certification Kit; reseller price lists for OV code-signing certificates.
 - `scripts/check.sh all` on this branch.
 
 **Not verified**
