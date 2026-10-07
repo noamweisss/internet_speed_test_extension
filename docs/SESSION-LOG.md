@@ -4,6 +4,46 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Eighth-block meter bar in plain text — 2026-10-07 — branch `feat/meter-eighth-block-bar` (local session on the owner's laptop)
+
+**Why**
+- The owner uses v0.2.0 daily and wants the meter to look better. They asked whether a font made for progress
+  bars exists and could ship with the extension. It exists (Fira Code's progress glyphs U+EE00–U+EE0B; Sparks by
+  After the Flood; Chartwell), but the host picks every font, so it cannot be used. The research found that the
+  host's monospace plain-text block asks for Cascadia Mono first, and Cascadia Mono has all the eighth blocks. The
+  owner said "go, build step 1 and don't forget to document". Step 2 (bundling Cascadia Mono through
+  `windows.sharedFonts`) waits for the VM run.
+
+**Done**
+- `SpeedFormatter.Bar` fills 24 cells in eighth steps (192 instead of 48); `SpeedFormatter.BarWithScale` draws
+  the bar and the scale line for a `MeterFrame`. `MeterMarkdown.Meter` became `MeterMarkdown.Readout` (title,
+  marker, H2 value; no fenced block).
+- `MeterPage` returns six fixed blocks: header, download readout, download bar, upload readout, upload bar,
+  footer. The bars are `PlainTextContent` with `FontFamily.Monospace`, set in place on each tick.
+- `Microsoft.CommandPalette.Extensions` 0.9.260303001 to 0.12.260812002: 0.9 has no `PlainTextContent`.
+- ADR-0020 (proposed until the owner merges after the VM run); ADR-0017 status line; `docs/CMDPAL-RENDERING.md`
+  §3, §8 (new "Fonts" paragraphs), §13, §16; `docs/CMDPAL-RENDERING.html` options and "cannot work" list;
+  `docs/ARCHITECTURE.md`; `docs/PLAN.md` item 5.6; `CHANGELOG.md`.
+
+**Verified**
+- PowerToys source at tags `v0.101.2362.0` and `v0.101.2684.0`: `PlainTextContentViewer.xaml.cs:96` sets
+  `"Cascadia Mono, Consolas"` for monospace. IDL: `FontFamily` has only `UserInterface` and `Monospace`.
+- Owner's laptop: Cascadia Mono is not in `C:\Windows\Fonts`; Windows Terminal 1.24.12741.0 publishes it through
+  `windows.sharedFonts`; its Cascadia Mono 2407.024 has all seven eighth blocks at one advance width; Consolas has
+  one of them.
+- `dotnet test tests/SpeedTest.Core.Tests`: 161 passed.
+
+**Not verified**
+- The extension build: the laptop has no Windows SDK (`cswinrt.exe`: "Could not find the Windows SDK in the
+  registry"), so CI on this branch is the first compile of `MeterPage` against SDK 0.12.
+- Anything on a real host: whether the VM has Windows Terminal, how the plain-text block lines up under the
+  readout, whether the bar looks smoother than v0.2.0's.
+
+**Next**
+- Push, let CI build, install the CI artifact on `SpeedTest-Win11` next to a v0.2.0 capture, and show the owner.
+- If the VM lacks Windows Terminal, propose step 2 (bundle Cascadia Mono, OFL 1.1, via `windows.sharedFonts`) as
+  its own pull request with an ADR and a "Yes" to safety question 4.
+
 ## Publishing explainer; the laptop VM stays the test surface — 2026-10-05 — branch `docs/publishing-explainer` (local session on the owner's laptop)
 
 **Why**
