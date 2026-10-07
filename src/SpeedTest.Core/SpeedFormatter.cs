@@ -34,21 +34,37 @@ public static class SpeedFormatter
     /// </summary>
     public const int BarCells = 24;
 
+    /// <summary>Eighths of a cell: the bar's resolution is <see cref="BarCells"/> times this, 192 steps.</summary>
+    private const int EighthsPerCell = 8;
+
+    /// <summary>The partial cells from one eighth to seven eighths, U+258F down to U+2589.</summary>
+    private const string PartialCells = "▏▎▍▌▋▊▉";
+
     /// <summary>
-    /// The meter bar, <see cref="BarCells"/> cells in half-cell steps: full cells "█", one "▌" when the remainder is
-    /// at least half a cell, "░" for the rest, for example "███████████▌░░░░░░░░░░░░". The meter shows it in a fenced
-    /// code block, which the host draws in Consolas (docs/CMDPAL-RENDERING.md §3). Consolas has these three block
-    /// glyphs but not the eighth blocks "▏▎▍▋▊▉", which fall back to a narrower font and break the grid (ADR-0017).
-    /// Rounds down, so the bar is full only at the scale. A value at or below 0, or no scale, draws an empty bar.
+    /// The meter bar, <see cref="BarCells"/> cells in eighth-cell steps: full cells "█", one partial cell "▏" to "▉"
+    /// for the remainder, "░" for the rest, for example "████████████▉░░░░░░░░░░░". The meter shows it in a plain-text
+    /// block in the host's monospace font, Cascadia Mono, which has all eight block widths at one advance width
+    /// (ADR-0020). Rounds down, so the bar is full only at the scale. A value at or below 0, or no scale, draws an
+    /// empty bar.
     /// </summary>
     public static string Bar(double value, double max)
     {
-        // Multiply before dividing: 0.5 of 24 cells is exactly one half cell, not 0.999… of one.
-        var halfCells = value > 0 && max > 0 ? (int)Math.Floor(Math.Min(value * BarCells * 2 / max, BarCells * 2)) : 0;
-        var fullCells = halfCells / 2;
-        var halfCell = halfCells % 2 == 1 ? "▌" : string.Empty;
-        return new string('█', fullCells) + halfCell + new string('░', BarCells - fullCells - halfCell.Length);
+        // Multiply before dividing: one eighth of a cell is exactly one step, not 0.999… of one.
+        var steps = value > 0 && max > 0
+            ? (int)Math.Floor(Math.Min(value * BarCells * EighthsPerCell / max, BarCells * EighthsPerCell))
+            : 0;
+        var fullCells = steps / EighthsPerCell;
+        var eighths = steps % EighthsPerCell;
+        var partialCell = eighths > 0 ? PartialCells[eighths - 1].ToString() : string.Empty;
+        return new string('█', fullCells) + partialCell + new string('░', BarCells - fullCells - partialCell.Length);
     }
+
+    /// <summary>
+    /// What one meter's plain-text block shows: the bar for <paramref name="frame"/> and the scale line under it,
+    /// separated by "\n". A frame not measured yet draws an empty bar.
+    /// </summary>
+    public static string BarWithScale(MeterFrame frame) =>
+        Bar(frame.Shown ?? 0, frame.Scale) + "\n" + BarScale(frame.Scale);
 
     /// <summary>
     /// The line under the bar, as wide as it: "0" at the left, the scale's end at the right, so the reader sees what a

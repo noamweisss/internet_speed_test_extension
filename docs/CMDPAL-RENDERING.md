@@ -111,7 +111,8 @@ Consolas and Segoe UI Variable contain only `▀ ▄ █ ▌ ▐ ░ ▒ ▓` fr
 `▏▎▍▋▊▉` and `▰▱` are missing there and fall back to Segoe UI Symbol, whose glyphs are narrower and shorter.
 Inferred: a bar that mixes fallback glyphs with Consolas glyphs misaligns visibly. The safe glyph set for a
 text bar is `█ ▌ ░` (plus `▀ ▄ ▐ ▒ ▓`); use no eighth blocks. Equal glyph widths of the safe set in the
-inline-code font are not verified.
+inline-code font are not verified. The one place the eighth blocks are safe is a `PlainTextContent` in
+monospace mode, which asks for Cascadia Mono first (§8).
 
 **Theme (Verified).** Text, headings, links, code and table brushes come from the host theme
 (`Labs/MarkdownThemes.cs:37–128`, `ContentPage.xaml:25–33`). Markdown cannot set a colour, and nothing tells
@@ -349,6 +350,34 @@ request in `IconBox.cs:209–222`), which is plausibly less blinking than markdo
 **`PlainTextContent` (Verified, `ExtViews/Controls/PlainTextContentViewer.xaml`).** A selectable `TextBlock`
 with monospace and word-wrap toggles and zoom; `Text` updates in place. Inside a `TreeContent` neither
 `ImageContent` nor `PlainTextContent` has a template (`ContentPage.xaml:115–132`; Inferred: renders nothing).
+The block has 12/8/8/8 DIP padding and a horizontal `ScrollViewer`, and no card border
+(`PlainTextContentViewer.xaml:10–16`). Its context menu lets the user turn monospace and word wrap off and zoom;
+the extension cannot hide those toggles.
+
+**Fonts: what an extension can choose (Verified, 2026-10-07).** Nothing, except one switch.
+`IPlainTextContent.FontFamily` is an enum with two values, `UserInterface` and `Monospace` (IDL lines 480–491).
+`Monospace` sets `FontFamily("Cascadia Mono, Consolas")`, `UserInterface` the XAML default
+(`PlainTextContentViewer.xaml.cs:96`, identical at tags `v0.101.2362.0` and `v0.101.2684.0` and on `main`).
+Markdown has no font control at all (§3), and Adaptive Cards map `monospace` to `'Courier New', Courier`
+(`Controls/AdaptiveCardsConfig.cs:52–53`). A font inside the extension's own MSIX is private to the extension's
+process; the host is another process and never sees it. An MSIX can publish a font to every app with the
+`windows.sharedFonts` manifest extension (`uap4:SharedFonts`); the host would use it only under a family name it
+already asks for.
+
+Cascadia Mono is not in `C:\Windows\Fonts` on the owner's laptop. Windows Terminal (1.24.12741.0 there) publishes
+Cascadia Code and Cascadia Mono through `windows.sharedFonts` in its own manifest, which is how every app,
+the host included, finds them (`Get-AppxPackageManifest`, WPF `Fonts.SystemFontFamilies`, 2026-10-07). Its
+Cascadia Mono 2407.024 has, checked through WPF `GlyphTypeface.CharacterToGlyphMap`: all seven eighth blocks
+U+2589–U+258F, `█ ▌ ░ ▒ ▓`, `▰ ▱`, 168 glyphs of Symbols for Legacy Computing (U+1FB00 block), and one advance
+width (0.586 em) for `█ ▊ ▏ ░`. It does not have Fira Code's progress-bar glyphs (U+EE00–U+EE0B). Consolas
+has one of the seven eighth blocks (`▌`). So a bar with eighth blocks draws on one grid in a monospace
+`PlainTextContent` wherever Windows Terminal is installed, and falls back to Consolas, where the grid breaks,
+wherever it is not. Windows Terminal comes preinstalled on Windows 11 and can be uninstalled; whether the
+test VM has it is Unverified.
+
+The SDK must be 0.12 or later: the `Microsoft.CommandPalette.Extensions` 0.9.260303001 package has no
+`PlainTextContent` or `IPlainTextContent` in its toolkit DLL or WinMD, 0.12.260812002 has both (metadata string
+search of both packages, 2026-10-07).
 
 ## 9. Adaptive Cards (`FormContent`)
 
@@ -476,8 +505,8 @@ The markdown column width is whatever `RichTextBlock.ActualWidth` is at runtime 
 | `main` (2026-09-29), unreleased | generated icon protocols `\|Swatch\|` and `\|Initials\|` (#50190, merged 2026-09-29); `\|AppIcon\|` (#50188); split glyph and image caches (#50187); `IconBox` slot reuse (#50189) |
 | proposed, not on `main` | in-place Adaptive Card updates (#50211, open, approved, milestone 0.102); `\|Svg\|` and `\|ThemedSvg\|` icons (#50191, open); graph content (#50443, draft, no milestone) |
 
-The extension template pins `Microsoft.CommandPalette.Extensions` 0.11.260520004; this repository builds
-against 0.9.260303001 (session 4). The Learn reference index (dated 2025-02) does not list `IImageContent`,
+The extension template pins `Microsoft.CommandPalette.Extensions` 0.11.260520004; this repository built
+against 0.9.260303001 from session 4 and against 0.12.260812002 since ADR-0020, for `PlainTextContent` (§8). The Learn reference index (dated 2025-02) does not list `IImageContent`,
 `IPlainTextContent` or the later interfaces.
 
 ## 14. What the session 4 gauge ran into
@@ -573,6 +602,8 @@ Rules that follow from the evidence:
   and attributes; `stroke-opacity` rather than 8-digit hex; no text; transparent background; centring with
   `<p align="center">` is the design's choice.
 - Big numbers in H1/H2 or bold; never H3.
+- Eighth blocks only in a monospace `PlainTextContent` (Cascadia Mono, §8); in markdown, fenced code included,
+  only `█ ▌ ░` and the other glyphs Consolas has (§3).
 - Do not add a file write, a temp folder, or a network fetch for images: each breaks a promise in
   `docs/SAFETY-CONTRACT.md` §1 and needs the owner's decision, a change to that contract and to
   `docs/SECURITY.md`, an ADR, and a "Yes" in the PR's safety questions.
@@ -591,6 +622,8 @@ Unknown until a Windows run (all Inferred above):
 6. The real cost of a full card or markdown rebuild on the owner's laptop (no benchmark exists).
 7. Whether the DPI mismatch of §4 rule 3 is what the owner saw; a screenshot at 100 % and 150 % would
    tell.
+8. Whether the test VM has Windows Terminal, so Cascadia Mono, and how a monospace `PlainTextContent` with eighth
+   blocks lines up under a markdown block (padding, spacing, height of the block glyphs).
 
 ## 17. Sources
 

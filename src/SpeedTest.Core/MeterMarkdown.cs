@@ -3,9 +3,9 @@ using System.Text;
 namespace SpeedTest.Core;
 
 /// <summary>
-/// Renders the meter dashboard as markdown (ADR-0017), one string per content block of the
-/// extension's MeterPage. The page keeps each block as its own MarkdownContent because the host rebuilds a block
-/// whole whenever its Body changes (docs/CMDPAL-RENDERING.md §5): a live value must not re-parse the static text.
+/// Renders the markdown blocks of the meter dashboard (ADR-0017, ADR-0020), one string per block of the extension's
+/// MeterPage. The page keeps each block as its own content because the host rebuilds a markdown block whole whenever
+/// its Body changes (docs/CMDPAL-RENDERING.md §5): a live value must not re-parse the static text.
 /// Pure functions, so the layout is unit-tested here.
 /// </summary>
 public static class MeterMarkdown
@@ -34,18 +34,15 @@ public static class MeterMarkdown
     }
 
     /// <summary>
-    /// One speed section, drawn from <paramref name="frame"/> (<see cref="MeterEasing.Next"/>): its shown value, which
-    /// may be eased, and its bar scale. The readout is H2, not H3, for the reason given on <see cref="Header"/>.
-    /// The bar and its scale line sit in a fenced code block, not inline code: the host draws fenced code in Consolas,
-    /// whose glyphs share one width, and inline code in a 10 px font that is not monospace (docs/CMDPAL-RENDERING.md §3).
+    /// One speed meter's title (with the active marker) and readout, drawn from <paramref name="frame"/>
+    /// (<see cref="MeterEasing.Next"/>), whose shown value may be eased. The readout is H2, not H3, for the reason
+    /// given on <see cref="Header"/>. The bar is not here: it sits in its own plain-text block under this one, drawn by
+    /// <see cref="SpeedFormatter.BarWithScale"/>, because only that block draws in Cascadia Mono, which has the eighth
+    /// blocks; fenced code is Consolas, which does not (ADR-0020).
     /// </summary>
-    public static string Meter(string title, MeterFrame frame, bool active) =>
+    public static string Readout(string title, MeterFrame frame, bool active) =>
         "## " + title + ActiveMarker(active) + "\n\n"
-        + "## " + SpeedFormatter.Speed(frame.Shown) + "\n\n"
-        + "```\n"
-        + SpeedFormatter.Bar(frame.Shown ?? 0, frame.Scale) + "\n"
-        + SpeedFormatter.BarScale(frame.Scale) + "\n"
-        + "```\n";
+        + "## " + SpeedFormatter.Speed(frame.Shown) + "\n";
 
     /// <summary>The connection line. Its fields come from the server and are escaped before they touch the markdown.</summary>
     public static string Footer(SpeedTestSnapshot snapshot)

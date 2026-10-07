@@ -42,30 +42,47 @@ public sealed class SpeedFormatterTests
     public void Bar_AtOrAboveScale_IsAllFullCells(double value) =>
         Assert.Equal(new string('█', 24), SpeedFormatter.Bar(value, 250));
 
-    [Fact]
-    public void Bar_HalfCellRemainder_EndsWithHalfBlock() =>
-        Assert.Equal("▌" + new string('░', 23), SpeedFormatter.Bar(0.5, 24));
+    [Theory]
+    [InlineData(1, "▏")]
+    [InlineData(2, "▎")]
+    [InlineData(3, "▍")]
+    [InlineData(4, "▌")]
+    [InlineData(5, "▋")]
+    [InlineData(6, "▊")]
+    [InlineData(7, "▉")]
+    public void Bar_EighthsOfACell_EndWithMatchingPartialBlock(int eighths, string partialCell) =>
+        Assert.Equal(partialCell + new string('░', 23), SpeedFormatter.Bar(eighths / 8.0, 24));
 
     [Fact]
-    public void Bar_QuarterCellRemainder_RoundsDownToNothing() =>
-        Assert.Equal(new string('░', 24), SpeedFormatter.Bar(0.25, 24));
+    public void Bar_LessThanAnEighth_RoundsDownToNothing() =>
+        Assert.Equal(new string('░', 24), SpeedFormatter.Bar(0.1, 24));
 
     [Theory]
     [InlineData(125, "████████████░░░░░░░░░░░░")]
-    [InlineData(135, "████████████▌░░░░░░░░░░░")]
+    [InlineData(135, "████████████▉░░░░░░░░░░░")]
     [InlineData(245.3, "███████████████████████▌")]
-    public void Bar_PartOfScale_FillsInHalfCells(double value, string expected) =>
+    public void Bar_PartOfScale_FillsInEighthCells(double value, string expected) =>
         Assert.Equal(expected, SpeedFormatter.Bar(value, 250));
 
     [Fact]
-    public void Bar_AnyValue_UsesOnlyGlyphsConsolasHas()
+    public void Bar_AnyValue_UsesOnlyBlockGlyphsCascadiaMonoHas()
     {
-        // The eighth blocks fall back to another font on Windows and break the grid (ADR-0017).
+        // Cascadia Mono, the host's plain-text monospace font, has all of these at one width; Consolas has only
+        // "█▌░" of them, so this bar must never be drawn in fenced code (ADR-0020).
         for (var value = 0.0; value <= 250; value += 0.7)
         {
-            Assert.All(SpeedFormatter.Bar(value, 250), cell => Assert.Contains(cell, "█▌░"));
+            Assert.All(SpeedFormatter.Bar(value, 250), cell => Assert.Contains(cell, "█▉▊▋▌▍▎▏░"));
         }
     }
+
+    // 9.5 alone would pick the 10 scale and fill 22.8 cells; the frame's 100 keeps the bar where the run left it.
+    [Fact]
+    public void BarWithScale_Measured_FillsAgainstFrameScaleWithScaleLineUnder() =>
+        Assert.Equal("██▎░░░░░░░░░░░░░░░░░░░░░\n0               100 Mbps", SpeedFormatter.BarWithScale(new MeterFrame(9.5, 100)));
+
+    [Fact]
+    public void BarWithScale_NotMeasured_IsEmptyBarAndZero() =>
+        Assert.Equal(new string('░', 24) + "\n0" + new string(' ', 23), SpeedFormatter.BarWithScale(MeterFrame.Empty));
 
     [Theory]
     [InlineData(10, "0                10 Mbps")]

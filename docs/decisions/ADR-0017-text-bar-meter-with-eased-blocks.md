@@ -1,6 +1,7 @@
 # ADR-0017: A text bar meter in fixed content blocks, eased between measurements
 
-Status: accepted · Date: 2026-09-29 · Supersedes ADR-0013 (and ADR-0006's bar; ADR-0011's gauge is not restored)
+Status: accepted · Date: 2026-09-29 · Supersedes ADR-0013 (and ADR-0006's bar; ADR-0011's gauge is not restored) ·
+Decision 5 (the bar in fenced code, half-cell steps) superseded by ADR-0020 when that is accepted
 
 ## Context
 The session 4 meter (ADR-0011) drew each speed as an SVG arc in a `data:` image inside one markdown block,

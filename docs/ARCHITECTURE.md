@@ -7,7 +7,7 @@ Command Palette host (PowerToys)
    │  COM (out-of-process)                        internet_speed_test_extension/   (Windows, MSIX)
    ▼
 SpeedTestExtension ─► SpeedTestCommandsProvider ─► SettingsManager (defaultView)
-                                                 ├► MeterPage   (ContentPage, markdown dashboard)
+                                                 ├► MeterPage   (ContentPage, markdown and plain-text dashboard)
                                                  └► DetailsPage (ListPage, one item per value, copy commands)
                                                        │ both observe one
                                                        ▼
@@ -49,15 +49,19 @@ the extension, which owns its lifetime.
 
 ## Views
 
-- **Meter** (`ContentPage` + four `MarkdownContent` blocks: heading with status and latency, download, upload,
-  connection line): the dashboard. The page returns the same blocks every time, so the host rebuilds only a block
+- **Meter** (`ContentPage` + six blocks: a `MarkdownContent` heading with status and latency; per speed a
+  `MarkdownContent` readout over a monospace `PlainTextContent` bar; a `MarkdownContent` connection line): the
+  dashboard. The page returns the same blocks every time, so the host rebuilds only a block
   whose text changed (`docs/CMDPAL-RENDERING.md` §5). While a test runs, a 100 ms ticker in the page moves each
   meter toward the last measurement and snaps it to the exact value when its phase ends: `MeterEasing.Next` in Core
-  returns a `MeterFrame` (shown value, scale), the scale never shrinks during a run, and the page redraws a meter
-  block when its frame changed or a new snapshot arrived (the phase marker lives in the block). Each speed is an H2 readout over a fenced code block with a 24-cell text bar in
-  half-cell steps (`███████▌░░░`) and a scale line (`0 … 250 Mbps`), drawn by `MeterMarkdown.Meter`, ADR-0017; the
-  SVG gauge of ADR-0011 is not restored. Shows the phase in progress, the live value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
-  the summary (`ResultSummary.PlainText`), `Ctrl+Shift+M` copies it as a markdown table.
+  returns a `MeterFrame` (shown value, scale), the scale never shrinks during a run, and the page redraws a
+  meter's two blocks when its frame changed or a new snapshot arrived (the phase marker lives in the readout). Each
+  speed is an H2 readout (`MeterMarkdown.Readout`) over a plain-text block with a 24-cell bar in eighth-cell steps
+  (`███████▊░░░`) and a scale line (`0 … 250 Mbps`), drawn by `SpeedFormatter.BarWithScale` (ADR-0017, ADR-0020).
+  The host draws a monospace plain-text block in Cascadia Mono, the only font it offers with the eighth blocks
+  (`docs/CMDPAL-RENDERING.md` §8). The SVG gauge of ADR-0011 is not restored. Shows the phase in progress, the live
+  value, and the final summary. `Ctrl+L` opens Details, `Ctrl+R` reruns, `Ctrl+Shift+C` copies the summary
+  (`ResultSummary.PlainText`), `Ctrl+Shift+M` copies it as a markdown table.
 - **Details** (`ListPage`): one `ListItem` per value (download, upload, latency, jitter, ISP, IP, location, server,
   test time). Each item's command copies the value. `Ctrl+L` opens Meter, `Ctrl+R` reruns, `Ctrl+Shift+C` copies
   the summary, `Ctrl+Shift+M` copies it as a markdown table. The summary leaves the IP address out; it is copyable

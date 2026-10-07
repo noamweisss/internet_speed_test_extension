@@ -5,7 +5,11 @@ Versioning: [SemVer](https://semver.org/). The version also lives in `internet_s
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+- Meter: the bar fills in eighth-cell steps (192 steps over 24 cells instead of 48) and sits in its own monospace
+  plain-text block under the readout, which the host draws in Cascadia Mono and updates in place (ADR-0020). Needs
+  PowerToys 0.99 or later. `Microsoft.CommandPalette.Extensions` 0.9.260303001 to 0.12.260812002 for
+  `PlainTextContent`.
 
 ## [0.2.0] - 2026-09-29
 

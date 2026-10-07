@@ -7,9 +7,12 @@ using SpeedTest.Core;
 namespace SpeedTest.Extension.Pages;
 
 /// <summary>
-/// The meter dashboard (ADR-0017): four markdown blocks rendered by <see cref="MeterMarkdown"/>, returned as the same
-/// instances every time. The host rebuilds a block whole when its Body changes and leaves the others alone
-/// (docs/CMDPAL-RENDERING.md §5), so a live download value does not re-parse the heading or the connection line.
+/// The meter dashboard (ADR-0017, ADR-0020): six blocks returned as the same instances every time. Markdown from
+/// <see cref="MeterMarkdown"/> for the header, each meter's readout and the footer; under each readout a monospace
+/// plain-text block with the bar from <see cref="SpeedFormatter.BarWithScale"/>, because the host draws that block in
+/// Cascadia Mono, the only font it offers with the eighth blocks. The host rebuilds a markdown block whole when its
+/// Body changes and leaves the others alone (docs/CMDPAL-RENDERING.md §5), so a live download value does not
+/// re-parse the heading or the connection line; a plain-text block is updated in place.
 /// Never RaiseItemsChanged here: the host answers it by calling GetContent again on the same thread
 /// (ContentPageViewModel.Model_ItemsChanged in PowerToys), which looped and froze the first real run.
 /// <para>
@@ -26,8 +29,10 @@ internal sealed partial class MeterPage : ContentPage
 {
     private readonly SpeedTestSession _session;
     private readonly MarkdownContent _header = new();
-    private readonly MarkdownContent _downloadMeter = new();
-    private readonly MarkdownContent _uploadMeter = new();
+    private readonly MarkdownContent _downloadReadout = new();
+    private readonly PlainTextContent _downloadBar = new() { FontFamily = FontFamily.Monospace };
+    private readonly MarkdownContent _uploadReadout = new();
+    private readonly PlainTextContent _uploadBar = new() { FontFamily = FontFamily.Monospace };
     private readonly MarkdownContent _footer = new();
     private readonly IContent[] _blocks;
     private readonly Timer _ticker;
@@ -42,7 +47,7 @@ internal sealed partial class MeterPage : ContentPage
     public MeterPage(SpeedTestSession session)
     {
         _session = session;
-        _blocks = [_header, _downloadMeter, _uploadMeter, _footer];
+        _blocks = [_header, _downloadReadout, _downloadBar, _uploadReadout, _uploadBar, _footer];
         // Segoe Fluent Icons U+E9D9 (Diagnostic), the icon this page has on main. Written as an escape: the
         // raw private-use character is invisible in an editor, and one edit stripped it and left an empty icon.
         Icon = new IconInfo("\uE9D9");
@@ -105,8 +110,8 @@ internal sealed partial class MeterPage : ContentPage
         SpeedTestSnapshot snapshot;
         string? header = null;
         string? footer = null;
-        string? downloadMeter;
-        string? uploadMeter;
+        MeterFrame? download;
+        MeterFrame? upload;
         lock (_gate)
         {
             snapshot = _session.Snapshot;
@@ -117,8 +122,8 @@ internal sealed partial class MeterPage : ContentPage
                 footer = MeterMarkdown.Footer(snapshot);
             }
 
-            downloadMeter = NextMeter(ref _download, MeterMarkdown.DownloadTitle, snapshot.DownloadMbps, snapshot.Phase == SpeedTestPhase.Download, snapshotChanged);
-            uploadMeter = NextMeter(ref _upload, MeterMarkdown.UploadTitle, snapshot.UploadMbps, snapshot.Phase == SpeedTestPhase.Upload, snapshotChanged);
+            download = NextFrame(ref _download, snapshot.DownloadMbps, snapshot.Phase == SpeedTestPhase.Download, snapshotChanged);
+            upload = NextFrame(ref _upload, snapshot.UploadMbps, snapshot.Phase == SpeedTestPhase.Upload, snapshotChanged);
             _drawnSnapshot = snapshot;
         }
 
@@ -130,26 +135,28 @@ internal sealed partial class MeterPage : ContentPage
             IsLoading = snapshot.IsRunning;
         }
 
-        if (downloadMeter is not null)
+        if (download is not null)
         {
-            _downloadMeter.Body = downloadMeter;
+            _downloadReadout.Body = MeterMarkdown.Readout(MeterMarkdown.DownloadTitle, download, snapshot.Phase == SpeedTestPhase.Download);
+            _downloadBar.Text = SpeedFormatter.BarWithScale(download);
         }
 
-        if (uploadMeter is not null)
+        if (upload is not null)
         {
-            _uploadMeter.Body = uploadMeter;
+            _uploadReadout.Body = MeterMarkdown.Readout(MeterMarkdown.UploadTitle, upload, snapshot.Phase == SpeedTestPhase.Upload);
+            _uploadBar.Text = SpeedFormatter.BarWithScale(upload);
         }
     }
 
     /// <summary>
-    /// Advances one meter's frame (called under _gate) and returns its new markdown, or null when neither the frame
-    /// nor the snapshot changed: between measurements the eased value settles and the meter is not rendered again.
+    /// Advances one meter's frame (called under _gate) and returns it, or null when neither the frame nor the snapshot
+    /// changed: between measurements the eased value settles and the meter is not drawn again.
     /// </summary>
-    private static string? NextMeter(ref MeterFrame frame, string title, double? measured, bool live, bool snapshotChanged)
+    private static MeterFrame? NextFrame(ref MeterFrame frame, double? measured, bool live, bool snapshotChanged)
     {
         var next = MeterEasing.Next(frame, measured, live);
         var changed = snapshotChanged || next != frame;
         frame = next;
-        return changed ? MeterMarkdown.Meter(title, next, live) : null;
+        return changed ? next : null;
     }
 }
