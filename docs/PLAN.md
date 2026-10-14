@@ -74,6 +74,7 @@ the owner wanted the fixes on the laptop before the gauge is redone, so session 
 | 5.3 | Backlog, owner's decision 2026-09-29: the drawn meters B (`feat/meter-arc-gauge`, dial) and C (`feat/meter-svg-bars`, bar) stay as branches until Command Palette changes its rendering (PR #50211 in-place updates, milestone 0.102, or PR #50443 graph content). Then: merge `main` into the branch, re-run the VM harness (session 5 hand-off), and count the blank frames again; adopt only if the blink is gone | todo |
 | 5.4 | Tag v0.2.0, GitHub release with the zip and install notes | doing (draft on the release branch head; the owner publishes the draft, which creates the tag, then merges PR #24) |
 | 5.5 | Publishing explainer for the owner (`docs/PUBLISHING.md`) and the decision that the laptop Hyper-V VM stays the test surface, no build, signing or runner machine (ADR-0019), after the OptiPlex 3020 planning session | done (2026-10-05, branch `docs/publishing-explainer`) |
+| 5.7 | Local builds on the owner's laptop without full Visual Studio: Windows SDK through VS Build Tools, the CI build command plus `DefaultLanguage=en-US`, test in Sandbox or the VM (`docs/LOCAL-DEVELOPMENT.md`). 5.6 is the eighth-block meter on `feat/meter-eighth-block-bar` | done (2026-10-14, branch `docs/local-development`) |
 
 ## Out of scope (unless asked)
 

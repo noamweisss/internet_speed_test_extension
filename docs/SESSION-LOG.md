@@ -4,6 +4,41 @@ Hand-off notes between agent sessions, newest first. The SessionStart hook print
 refuses to end a session that changed the repo without a new entry. Keep entries factual: done, verified, not
 verified, blocked, next.
 
+## Local builds without Visual Studio — 2026-10-14 — branch `docs/local-development` (local session on the owner's laptop)
+
+**Why**
+- The owner asked to build the extension locally instead of waiting for CI, with the lightest tools, and to
+  document it. Until now the laptop could run only the Core tests: the extension build stopped in `cswinrt.exe`
+  with "Could not find the Windows SDK in the registry" (hand-off of 2026-10-07).
+
+**Done**
+- Installed on the laptop, owner approving the UAC prompts: Visual Studio 2022 Build Tools with only the
+  `Microsoft.VisualStudio.Component.Windows11SDK.26100` component (Windows SDK 10.0.26100 in
+  `C:\Program Files (x86)\Windows Kits\10`). Not Visual Studio Community.
+- `docs/LOCAL-DEVELOPMENT.md`: prerequisites, the build commands, measured disk and time, testing in Sandbox or
+  the VM, and safety notes (outbound only, cancel firewall prompts, the `Get-NetTCPConnection -State Listen`
+  check). Linked from `README.md`. `docs/PLAN.md` item 5.7. No `CHANGELOG.md` line: nothing changes for users.
+
+**Verified**
+- The standalone installer (`winget install Microsoft.WindowsSDK.10.0.26100`, versions 10.0.26100.7705 and
+  .7463) fails with exit code 15605: its payloads come from an `http://go.microsoft.com/fwlink` root, and the
+  owner's network answers every plain-HTTP request with 403 (`curl.exe http://example.com` from the owner's own
+  terminal: 403; the same fwlink over HTTPS: 302). Build Tools downloads over HTTPS and installed cleanly.
+- With the SDK, the CI build command fails with `APPX1685: Default language 'en-IL' is not valid`: the manifest
+  uses `x-generate`, and the laptop's language settings give `en-IL`. Adding `-p:DefaultLanguage=en-US` builds
+  the package: 26 s, 0 errors, 4 warnings (trim and packaging warnings from NuGet packages), a 14 MB `.msix` that
+  holds `AppxManifest.xml`, `internet_speed_test_extension.exe` and `coreclr.dll` (the CI check). An incremental
+  build takes 4 s. `dotnet test tests/SpeedTest.Core.Tests`: 154 passed, 11 s.
+- No `dotnet`, `MSBuild` or installer process listens on a TCP port after the build.
+
+**Not verified**
+- The locally built package was not installed anywhere: the laptop stays clean (ADR-0019) and the VM is deleted.
+- A first build on a PC without the NuGet cache (1.7 GB download) was not timed.
+
+**Next**
+- Owner: review and merge. Whether CI should also pass `DefaultLanguage=en-US` (or the manifest name a language)
+  is a separate change to a guard file and the project, not part of this PR.
+
 ## Publishing explainer; the laptop VM stays the test surface — 2026-10-05 — branch `docs/publishing-explainer` (local session on the owner's laptop)
 
 **Why**
