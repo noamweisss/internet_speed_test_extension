@@ -28,6 +28,7 @@ Not published to the Microsoft Store or to `winget`: plan item 4.4 in `docs/PLAN
 
 Read `AGENTS.md` first (it applies to humans too). Then `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`,
 `docs/TESTING.md`, `docs/SECURITY.md`. Run `scripts/setup.sh` once after cloning to install the git hooks.
+To build the extension on your own Windows PC instead of waiting for CI, see `docs/LOCAL-DEVELOPMENT.md`.
 
 ## Authorship
 
